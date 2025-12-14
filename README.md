@@ -25,3 +25,4 @@ Source available under the [Commons Clause](https://commonsclause.com/)
 <img width="1247" height="668" alt="Screenshot_141" src="https://github.com/user-attachments/assets/37088e72-e15c-4696-8e91-fb07131a2442" />
 <img width="1239" height="678" alt="Screenshot_143" src="https://github.com/user-attachments/assets/56c088f9-b72b-4763-b8de-ec7de611e82e" />
 <img width="1262" height="672" alt="Screenshot_144" src="https://github.com/user-attachments/assets/ff7e0371-7e6e-4c48-9060-b48d2215fd52" />
+<img width="1261" height="678" alt="Screenshot (154)" src="https://github.com/user-attachments/assets/d3558ca3-3150-4069-9ce6-26645b745e81" />
