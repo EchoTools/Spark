@@ -52,7 +52,7 @@ namespace Spark
 				if (xplatformidToken != null)
 				{
 					var xplatformid = (string)xplatformidToken;
-					if (!string.IsNullOrEmpty(xplatformid))
+					if (xplatformidToken != null && xplatformidToken.Type == JTokenType.String)if (!string.IsNullOrEmpty(xplatformid))
 					{
 						var parts = xplatformid.Split("-");
 						if (parts.Length > 0 && long.TryParse(parts.Last(), out long parsedId))
