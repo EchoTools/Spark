@@ -19,7 +19,7 @@ https://echopedia.gg/wiki/Spark
 Spark is a Windows desktop program that can record, process, and upload EchoVR data from either a local EchoVR client or an Oculus Quest on the same network.
 
 ## License
-Source available under the [Commons Clause](https://commonsclause.com/)
+Source available under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
 <img width="1262" height="680" alt="Screenshot_135" src="https://github.com/user-attachments/assets/5b0248ce-ac43-474f-a4a4-a150aa12fa68" />
 <img width="1259" height="668" alt="Screenshot_142" src="https://github.com/user-attachments/assets/02343413-5605-41d5-b612-5d3a578e37c7" />
 <img width="1247" height="668" alt="Screenshot_141" src="https://github.com/user-attachments/assets/37088e72-e15c-4696-8e91-fb07131a2442" />
