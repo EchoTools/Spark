@@ -27,3 +27,4 @@ Source available under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
 <img width="1262" height="672" alt="Screenshot_144" src="https://github.com/user-attachments/assets/ff7e0371-7e6e-4c48-9060-b48d2215fd52" />
 <img width="1261" height="678" alt="Screenshot (154)" src="https://github.com/user-attachments/assets/d3558ca3-3150-4069-9ce6-26645b745e81" />
 <img width="1261" height="682" alt="Screenshot (225)" src="https://github.com/user-attachments/assets/b7945c10-2d2c-48a3-baac-3580ac89f289" />
+<img width="1261" height="677" alt="Screenshot (228)" src="https://github.com/user-attachments/assets/b2b7b868-9d22-45bd-91d9-f0980317bc2b" />
