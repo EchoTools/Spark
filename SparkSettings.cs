@@ -1,4 +1,4 @@
-﻿//using ButterReplays;
+//using ButterReplays;
 
 using Newtonsoft.Json;
 using System;
@@ -38,6 +38,7 @@ namespace Spark
 		/// </summary>
 		public bool enableFullLogging { get; set; } = false;
 
+        public int ttsSpeedIndex { get; set; } = 1;
 		public bool onlyRecordPrivateMatches { get; set; } = false;
 		public bool batchWrites { get; set; } = true;
 		public bool useCompression { get; set; } = true;
