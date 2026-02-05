@@ -716,6 +716,8 @@
 							<LineBreak />
 							h4ck3r210
 							<LineBreak/>
+							he_is_the_cat
+							<LineBreak/>
 							<LineBreak/>
 							<Run Text="{x:Static p:Resources.Japanese_Translation_}" Foreground="{DynamicResource ControlDisabledGlythColour}" />
 							<LineBreak/>
