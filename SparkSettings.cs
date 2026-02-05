@@ -32,6 +32,7 @@ namespace Spark
 		public bool uploadToFirestore { get; set; } = true;
 		public bool saveEventsToCSV { get; set; } = false;
 		public bool fetchBones { get; set; } = false;
+		public bool questSpectatorAutoJoin { get; set; } = true;
 
 		/// <summary>
 		/// Enable replay files
