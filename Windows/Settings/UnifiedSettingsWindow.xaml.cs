@@ -17,6 +17,7 @@ using Newtonsoft.Json.Linq;
 using System.Net;
 using EchoVRAPI;
 
+
 namespace Spark
 {
 	/// <summary>
@@ -152,6 +153,203 @@ namespace Spark
 			}
 		}
 
+		private void OpenQuestSpectatorPopup(object sender, RoutedEventArgs e)
+		{
+			if (!string.IsNullOrEmpty(SparkSettings.instance.followPlayerName))
+			{
+				TargetNameInput.Text = SparkSettings.instance.followPlayerName;
+			}
+			SpectatorNameInput.Text = SparkSettings.instance.client_name ?? "";
+			
+			AutoJoinCheckbox.IsChecked = SparkSettings.instance.questSpectatorAutoJoin;
+			
+			QuestSpectatorPopup.Visibility = Visibility.Visible;
+		}
+
+		private void CloseSpectatorPopup(object sender, RoutedEventArgs e)
+		{
+			QuestSpectatorPopup.Visibility = Visibility.Collapsed;
+		}
+
+private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
+		{
+			string spectatorName = SpectatorNameInput.Text.Trim();
+			string targetName = TargetNameInput.Text.Trim();
+
+			if (string.IsNullOrEmpty(targetName))
+			{
+				new Spark.MessageBox("Please enter the name of the player you want to spectate.", Properties.Resources.Error).Show();
+				return;
+			}
+
+			// 1. Save Settings
+			SparkSettings.instance.followPlayerName = targetName;
+			SparkSettings.instance.client_name = spectatorName;
+			SparkSettings.instance.questSpectatorAutoJoin = AutoJoinCheckbox.IsChecked == true;
+			SparkSettings.instance.Save();
+
+			// 2. Set Camera Mode to 'Follow specific player' (Index 3)
+			SparkSettings.instance.spectatorCamera = 3;
+			CameraModeDropdownChanged(3);
+
+			// 3. Hide Popup
+			QuestSpectatorPopup.Visibility = Visibility.Collapsed;
+
+			// 4. Async Launch & Monitor
+			Task.Run(async () =>
+			{
+				// --- PHASE 1: INITIAL LAUNCH ---
+				// Try to find them immediately to generate Launch Arguments
+				string initialLobbyId = "";
+				Logger.LogRow(Logger.LogType.Info, $"Quest Spectator: Initial check for '{targetName}'...");
+				
+				try 
+				{
+					using (WebClient client = new WebClient()) 
+					{
+						string json = await client.DownloadStringTaskAsync("https://g.echovrce.com/status/matches");
+						JObject data = JObject.Parse(json);
+						JArray labels = (JArray)data["labels"];
+						if (labels != null) 
+						{
+							foreach (var server in labels) 
+							{
+								var players = server["players"] as JArray;
+								if (players != null && players.Any(p => string.Equals((string)p["display_name"], targetName, StringComparison.OrdinalIgnoreCase))) 
+								{
+									initialLobbyId = (string)server["id"];
+									break;
+								}
+							}
+						}
+					}
+				} 
+				catch (Exception) { /* Ignore initial error */ }
+
+				string args = "-spectatorstream";
+				if (SparkSettings.instance.spectatorStreamNoOVR) args += " -noovr";
+				if (!string.IsNullOrEmpty(initialLobbyId)) args += $" -lobbyid {initialLobbyId}";
+
+				if (File.Exists(SparkSettings.instance.echoVRPath)) 
+				{
+					try 
+					{ 
+						Process.Start(SparkSettings.instance.echoVRPath, args); 
+					}
+					catch (Exception ex) 
+					{ 
+						Logger.LogRow(Logger.LogType.Error, $"Error launching Echo VR: {ex.Message}"); 
+						return; 
+					}
+				} 
+				else 
+				{
+					Logger.LogRow(Logger.LogType.Error, "Echo VR executable not found.");
+					return;
+				}
+
+				// --- PHASE 2: MONITOR LOOP ---
+				if (SparkSettings.instance.questSpectatorAutoJoin)
+				{
+					string lastAttemptedSessionId = initialLobbyId;
+
+					using (WebClient client = new WebClient())
+					{
+						while (Program.running)
+						{
+							try
+							{
+								// STEP 1: Check Local State (Are we already with the player?)
+								bool targetInLocalMatch = false;
+								if (Program.lastFrame != null && !string.IsNullOrEmpty(Program.lastFrame.sessionid))
+								{
+									// Check if the target is in our current player list
+									var allPlayers = Program.lastFrame.GetAllPlayers();
+									if (allPlayers.Any(p => string.Equals(p.name, targetName, StringComparison.OrdinalIgnoreCase)))
+									{
+										targetInLocalMatch = true;
+									}
+								}
+
+								// IF FOUND LOCALLY: Do nothing, just wait. We are where we want to be.
+								if (targetInLocalMatch)
+								{
+									// Clear the last attempted ID so if they leave and rejoin the same server, we can follow.
+									lastAttemptedSessionId = ""; 
+									await Task.Delay(3000);
+									continue; 
+								}
+
+								// STEP 2: Target NOT in local match. Search API.
+								// We only query the API if the player is missing locally.
+								
+								string json = await client.DownloadStringTaskAsync("https://g.echovrce.com/status/matches");
+								JObject data = JObject.Parse(json);
+								JArray labels = (JArray)data["labels"];
+								
+								if (labels != null)
+								{
+									foreach (var server in labels)
+									{
+										var players = server["players"] as JArray;
+										if (players != null)
+										{
+											bool targetHere = false;
+											bool spectatorHere = false;
+
+											foreach (var p in players)
+											{
+												string pName = (string)p["display_name"];
+												if (string.Equals(pName, targetName, StringComparison.OrdinalIgnoreCase)) targetHere = true;
+												if (string.Equals(pName, spectatorName, StringComparison.OrdinalIgnoreCase)) spectatorHere = true;
+											}
+
+											if (targetHere)
+											{
+												string serverId = (string)server["id"];
+
+												// JOIN CRITERIA:
+												// 1. We aren't already trying to join this specific server (Loop protection)
+												// 2. The API doesn't see us inside that server already (Safeguard)
+												// 3. Our local game isn't already in that session (Double check)
+												
+												if (serverId != lastAttemptedSessionId && !spectatorHere)
+												{
+													if (Program.lastFrame == null || Program.lastFrame.sessionid != serverId)
+													{
+														Logger.LogRow(Logger.LogType.Info, $"Quest Spectator: Found {targetName} in {serverId}. Joining...");
+														
+														lastAttemptedSessionId = serverId;
+														await Program.APIJoin(serverId);
+
+														// Wait for join to process
+														await Task.Delay(5000);
+														
+														// Force Camera Lock
+														Application.Current.Dispatcher.Invoke(() => {
+															CameraWriteController.UseCameraControlKeys();
+														});
+													}
+												}
+												break; // Found them, stop checking other servers
+											}
+										}
+									}
+								}
+								// If target not found in API, we simply loop again. We stay in the current match (if any).
+							}
+							catch (Exception ex)
+							{
+								Console.WriteLine($"Quest Spectator Loop Error: {ex.Message}");
+							}
+
+							await Task.Delay(3000);
+						}
+					}
+				}
+			});
+		}
+		
 		private async void FindQuestClick(object sender, RoutedEventArgs e)
 		{
 			if (!initialized) return;
@@ -920,8 +1118,7 @@ namespace Spark
 			Program.synth.SpeakAsync("THIS IS A TEST SOUND!");
 		}
 	}
-
-
+	
 	public class SettingBindingExtension : Binding
 	{
 		public SettingBindingExtension()
