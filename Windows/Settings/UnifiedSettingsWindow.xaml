@@ -421,9 +421,6 @@
 				<l:ClipsSettings></l:ClipsSettings>
 			</TabItem>
 
-			<TabItem Header="Update Spark" Padding="8,6,8,6">
-				<l:UpdateSparkControl/>
-			</TabItem>
 
 			<!--<TabItem Header="{x:Static p:Resources.NVIDIAHighlights}" Padding="8,6,8,6">
 				<ScrollViewer VerticalScrollBarVisibility="Auto">
