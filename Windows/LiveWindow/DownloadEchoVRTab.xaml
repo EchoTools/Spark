@@ -1,0 +1,104 @@
+<UserControl x:Class="Spark.DownloadEchoVRTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Spark"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="600"
+             Background="{DynamicResource BackgroundColour}"
+             DataContext="{Binding RelativeSource={RelativeSource Self}}">
+    <UserControl.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ControlDefaultForeground}"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="Margin" Value="0,5"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource BackgroundColour}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="10">
+            <TextBlock Text="Download and Install Echo VR" FontSize="20" FontWeight="Bold" Margin="0,0,0,20" TextAlignment="Center"/>
+
+            <!-- Step 1: Download -->
+            <GroupBox Header="Step 1: Download Echo VR" Margin="0,0,0,10">
+                <StackPanel Margin="10">
+                    <TextBlock Text="Download the Echo VR game files. The default location is C:\EchoVR\. You can change this if you want." TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="DownloadPathTextBox" Text="C:\EchoVR\" VerticalContentAlignment="Center"/>
+                        <Button x:Name="BrowseButton" Content="Browse..." Grid.Column="1" Click="BrowseButton_Click" Margin="5,0,0,0"/>
+                    </Grid>
+                    <Button x:Name="DownloadButton" Content="Download and Extract Echo VR" Click="DownloadButton_Click" Margin="0,10,0,0"/>
+                    <ProgressBar x:Name="DownloadProgressBar" Height="20" Margin="0,5,0,0" Visibility="Collapsed"/>
+                    <TextBlock x:Name="DownloadStatusTextBlock" Text="" Margin="0,5,0,0"/>
+                    <CheckBox x:Name="DeleteZipCheckBox" Content="Delete ZIP file after extraction" IsChecked="False" Margin="0,10,0,0"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Step 2: Patch -->
+            <GroupBox Header="Step 2: Patch the game" Margin="0,10,0,10">
+                <StackPanel Margin="10">
+                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                        <Run Text="To play Echo as a new player or if you get any errors. Join the Echo VR Patcher Discord server to get the required patch file (pnsovr.dll)."/>
+                        <LineBreak/>
+                        <Run Text="Click the link below, and react to the message in the #patch-quest-or-pc channel to receive a download link."/>
+                    </TextBlock>
+                    <TextBlock Margin="0,0,0,10">
+                        <Hyperlink NavigateUri="https://discord.gg/KQ8qGPKQeF" RequestNavigate="Hyperlink_RequestNavigate">
+                            Join the Patcher Discord Server
+                        </Hyperlink>
+                    </TextBlock>
+                    <TextBlock Text="Once you have the 'pnsovr.dll' file, you can either select it below, or paste the download link." TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    
+                    <Grid Margin="0,5,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="DllLinkTextBox" Text="Paste DLL download link here" VerticalContentAlignment="Center" GotFocus="DllLinkTextBox_GotFocus" LostFocus="DllLinkTextBox_LostFocus" Foreground="{DynamicResource ControlDisabledGlythColour}"/>
+                        <Button x:Name="DownloadDllButton" Content="Download DLL" Grid.Column="1" Click="DownloadDllButton_Click" Margin="5,0,0,0"/>
+                    </Grid>
+                    
+                    <Button x:Name="SelectDllButton" Content="Or Select pnsovr.dll file..." Click="SelectDllButton_Click" Margin="0,10,0,0"/>
+                    <Button x:Name="PatchButton" Content="Patch Game" Click="PatchButton_Click" Margin="0,10,0,0" IsEnabled="False"/>
+                    <TextBlock x:Name="PatchStatusTextBlock" Text="" Margin="0,5,0,0"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Step 3: Create Shortcut -->
+            <GroupBox Header="Step 3: Create Shortcuts" Margin="0,10,0,0">
+                <StackPanel Margin="10">
+                    <TextBlock Text="Create shortcuts on your Desktop and in the Start Menu for easy access to Echo VR." TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Button x:Name="ShortcutButton" Content="Create Shortcuts" Click="ShortcutButton_Click"/>
+                    <TextBlock x:Name="ShortcutStatusTextBlock" Text="" Margin="0,5,0,0"/>
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
