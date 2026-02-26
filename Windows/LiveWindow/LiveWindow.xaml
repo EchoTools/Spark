@@ -227,6 +227,10 @@
                     </TabItem.Header>
                     <l:Portal />
                 </TabItem>
+
+                <TabItem Header="⏬ Download EchoVR" Padding="8,6,8,6">
+				  <l:DownloadEchoVRTab/>
+			    </TabItem>
                 
                 <TabItem x:Name="LinksTab" FontSize="14" Padding="10,0,10,0" >
                     <TabItem.Header>
