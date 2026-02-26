@@ -33,7 +33,7 @@ namespace Spark
                 PortalWebView.NavigationCompleted += PortalWebView_NavigationCompleted;
 
                 // Navigate to the portal URL
-                PortalWebView.Source = new Uri("https://echovrce.com/portal/");
+                PortalWebView.Source = new Uri("https://echovrce.com/");
             }
             catch (Exception ex)
             {
@@ -173,4 +173,5 @@ namespace Spark
             return null;
         }
     }
+
 }
