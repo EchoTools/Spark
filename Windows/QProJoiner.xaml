@@ -11,7 +11,7 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
         Icon="/img/ignite_logo.ico"
-        Background="#FF232323"
+        Background="{DynamicResource ControlDarkerBackground}"
         FontSize="16"
         Closed="CloseButtonClicked">
     <StackPanel Margin="30">

@@ -6,11 +6,41 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using ButterReplays;
+using System.Windows;
 
 namespace Spark
 {
 	class SparkSettings
 	{
+		[JsonIgnore]
+		public Visibility EchoVRPathNotSetVisibility
+		{
+			get
+			{
+				bool echoVrInstalled = false;
+				if (!string.IsNullOrEmpty(echoVRPath))
+				{
+					try
+					{
+						string exeDir = Path.GetDirectoryName(echoVRPath);
+						if (exeDir != null)
+						{
+							string arenaPath = Path.GetFullPath(Path.Combine(exeDir, "..", ".."));
+							if (Directory.Exists(arenaPath) && Path.GetFileName(arenaPath).Equals("ready-at-dawn-echo-arena", StringComparison.OrdinalIgnoreCase))
+							{
+								echoVrInstalled = true;
+							}
+						}
+					}
+					catch (Exception)
+					{
+						// path is likely invalid, so we'll consider it not installed.
+					}
+				}
+				return echoVrInstalled ? Visibility.Collapsed : Visibility.Visible;
+			}
+		}
+		
 		#region Settings
 
 		public bool startOnBoot { get; set; } = false;
@@ -23,7 +53,12 @@ namespace Spark
 		public bool discordRichPresenceServerLocation { get; set; } = false;
 		public bool discordRichPresenceSpectator { get; set; } = false;
 		public bool logToServer { get; set; } = false;
-		public string echoVRPath { get; set; } = "";
+		private string _echoVRPath = "";
+		public string echoVRPath
+		{
+			get => _echoVRPath;
+			set => _echoVRPath = value.Trim().Trim('"');
+		}
 		public string echoVRIP { get; set; } = "127.0.0.1";
 		public int echoVRPort { get; set; } = 6721;
 		public bool enableStatsLogging { get; set; } = false;
@@ -86,6 +121,11 @@ namespace Spark
 		public int atlasHostingVisibility { get; set; } = 0;
 		public int languageIndex { get; set; } = 0;
 		public int theme { get; set; } = 0;
+
+		// Custom theme colours (hex strings, e.g. "#c32b61")
+		public string customThemeDark  { get; set; } = "#c32b61";
+		public string customThemeMid   { get; set; } = "#ea6192";
+		public string customThemeLight { get; set; } = "#ffaac9";
 		public bool betaUpdates { get; set; } = false;
 		public int dashboardItem1 { get; set; } = 0;
 		public int dashboardJoustTimeOrder { get; set; } = 0;
@@ -135,6 +175,7 @@ namespace Spark
 		public bool playspaceTTS { get; set; } = false;
 		public bool rulesChangedTTS { get; set; } = false;
 		public int ttsVoice { get; set; } = 0;
+		public string ttsCacheFolder { get; set; } = "";
 		public int ttsCacheSizeBytes { get; set; } = 100000000;
 
 		#endregion

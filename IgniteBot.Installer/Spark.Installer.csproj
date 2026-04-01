@@ -1,0 +1,67 @@
+﻿<Project>
+	<Import Project="Sdk.props" Sdk="WixToolset.Sdk" Version="6.0.2" />
+	<PropertyGroup>
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+	</PropertyGroup>
+	<PropertyGroup>
+		<Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+		<Name>Spark.Installer</Name>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+		<DefineConstants>Debug</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup>
+		<Compile Include="Components.wxs" />
+		<Compile Include="ComponentsGenerated.wxs" />
+		<Compile Include="Directories.wxs" />
+		<Compile Include="Product.wxs" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="WixToolset.Util.wixext" Version="6.0.2" />
+		<PackageReference Include="WixToolset.UI.wixext" Version="6.0.2" />
+		<PackageReference Include="WixToolset.Heat" Version="6.0.2" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Spark\Spark.csproj">
+			<Name>Spark</Name>
+			<Project>{f2ea4914-2372-49d5-83cc-a11302747291}</Project>
+			<Private>True</Private>
+			<DoNotHarvest>True</DoNotHarvest>
+			<RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+			<RefTargetDir>INSTALLFOLDER</RefTargetDir>
+		</ProjectReference>
+	</ItemGroup>
+	<PropertyGroup>
+		<InstallerPlatform>x64</InstallerPlatform>
+		<Platform>x64</Platform>
+	</PropertyGroup>
+	<PropertyGroup>
+		<RunWixToolsOutOfProc Condition=" '$(PROCESSOR_ARCHITECTURE)'!='x86' ">true</RunWixToolsOutOfProc>
+	</PropertyGroup>
+	<Import Project="Sdk.targets" Sdk="WixToolset.Sdk" Version="6.0.2" />
+	<Target Name="BeforeBuild">
+		<!-- Get assembly version -->
+		<GetAssemblyIdentity AssemblyFiles="..\bin\publish_files\Spark.dll">
+			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
+		</GetAssemblyIdentity>
+		<!-- Define some variables we need -->
+		<PropertyGroup>
+			<DefineConstants>
+				BuildVersion=%(AssemblyVersion.Version);
+				BasePath=..\bin\publish_files
+			</DefineConstants>
+		</PropertyGroup>
+		<!-- Harvest file components from publish folder -->
+		<HeatDirectory Directory="..\bin\publish_files" OutputFile="ComponentsGenerated.wxs" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="PublishedComponents" SuppressCom="true" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" AutoGenerateGuids="false" GenerateGuidsNow="true" ToolPath="$(WixToolPath)" PreprocessorVariable="var.BasePath" />
+		<!--<Exec Command='"$(WIX)bin\heat.exe" dir "..\bin\publish_files" -cg PublishedComponents -dr INSTALLFOLDER -sreg -srd -var var.HarvestPath -ag -sfrag -suid -out "ComponentsGenerated.wxs"'/>-->
+		<!--<HeatDirectory Directory="$(MSBuildThisFileDirectory)lib\" PreprocessorVariable="var.HarvestPath" OutputFile=".\clients\sftp\OmsFileServer\SFTPFileServerInstaller\SFTPFileServerInstaller\HeatGeneratedFileList.wxs" ComponentGroupName="HeatGenerated" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressUniqueIds="true" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true"/>-->
+	</Target>
+	<Target Name="AfterBuild">
+		<!-- Get assembly version -->
+		<GetAssemblyIdentity AssemblyFiles="..\bin\publish_files\Spark.dll">
+			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
+		</GetAssemblyIdentity>
+		<!-- Rename and move final MSI -->
+		<Exec Command="if not exist Installs mkdir Installs" />
+	</Target>
+</Project>

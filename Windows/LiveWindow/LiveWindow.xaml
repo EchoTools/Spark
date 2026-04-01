@@ -11,7 +11,7 @@
         Title="Spark" 
         Height="720" Width="1280" 
         FontSize="14" 
-        Background="{DynamicResource BackgroundColour}" 
+        Background="{DynamicResource ControlDarkerBackground}" 
         ResizeMode="CanResize" 
         Name="liveWindow"
         Closed="liveWindow_FormClosed"
@@ -38,17 +38,18 @@
             </Grid.RowDefinitions>
             <StackPanel HorizontalAlignment="Stretch" Height="Auto">
                 <Button x:Name="loginButton" Height="40" Width="220" Click="LoginWindowButtonClicked" Padding="0,0,0,0"
-                        HorizontalContentAlignment="Left" ToolTip="{x:Static p:Resources.login_button_tooltip}">
+                        HorizontalContentAlignment="Left" ToolTip="{x:Static p:Resources.login_button_tooltip}"
+                        Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                     <StackPanel Orientation="Horizontal" Width="220" ScrollViewer.VerticalScrollBarVisibility="Disabled">
                         <Image x:Name="discordPFPImage" Height="40" Width="40"
                                Source="https://cdn.discordapp.com/avatars/174743468004868097/f15fadcd0b3c236ebaf4744227f68086"
                                Visibility="Collapsed" />
-                        <Label x:Name="discordUsernameLabel" Content="{x:Static p:Resources.Discord_Login}"
-                               VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Width="200"
+                        <TextBlock x:Name="discordUsernameLabel" Text="{x:Static p:Resources.Discord_Login}"
+                               VerticalAlignment="Center" TextAlignment="Center" Width="200"
                                HorizontalAlignment="Center" />
                     </StackPanel>
                 </Button>
-                <GroupBox x:Name="statusBox">
+                <GroupBox x:Name="statusBox" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
                     <GroupBox.Header>
                         <StackPanel Orientation="Horizontal">
                             <Ellipse x:Name="statusCircle" Width="10" Height="10" Fill="Red" Stroke="Black" StrokeThickness="1"
@@ -62,24 +63,26 @@
                             </TextBlock>
                         </StackPanel>
                     </GroupBox.Header>
-                    <StackPanel>
+                    <StackPanel Background="{DynamicResource ControlDarkerBackground}">
                         <StackPanel Orientation="Horizontal">
                             <Label x:Name="sessionIdLabel" Content="{x:Static p:Resources.Join_Link_}" />
                             <Button x:Name="copySessionIdButton" Content="{x:Static p:Resources.Copy}" Margin="40,0,0,0"
                                     VerticalAlignment="Center" Padding="1,1,1,1" HorizontalAlignment="Stretch" Click="CopyIgniteJoinLink"
-                                    Width="75" ToolTip="{x:Static p:Resources.copy_link_tooltip}">
+                                    Width="75" ToolTip="{x:Static p:Resources.copy_link_tooltip}"
+                                    Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                             </Button>
                         </StackPanel>
                         <TextBox x:Name="sessionIdTextBox" Text="********-****-****-****-************" TextWrapping="NoWrap" MaxLines="1"
                                  FontSize="14" FontFamily="Courier New" IsReadOnly="True" Height="16"
-                                 ToolTip="{x:Static p:Resources.join_link_tooltip}" />
-                        <Button Click="ServerLocationButtonClicked" Margin="0,4,0,0" Padding="0,0,0,0" HorizontalContentAlignment="Left">
+                                 ToolTip="{x:Static p:Resources.join_link_tooltip}" Background="{DynamicResource ControlDefaultBackground}"/>
+                        <Button Click="ServerLocationButtonClicked" Margin="0,4,0,0" Padding="0,0,0,0" HorizontalContentAlignment="Left"
+                                Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                             <Label x:Name="serverLocationLabel" Content="{x:Static p:Resources.Server_IP_}"
                                    ToolTip="{x:Static p:Resources.server_location_tooltip}" Margin="0,0,0,0" Padding="1,1,1,1" />
                         </Button>
                     </StackPanel>
                 </GroupBox>
-                <GroupBox x:Name="blueTeamBox" BorderBrush="#FF31507a">
+                <GroupBox x:Name="blueTeamBox" Width="Auto" VerticalAlignment="Top" BorderBrush="#FF4A689F" Background="{DynamicResource ControlDarkerBackground}">
                     <GroupBox.Header>
                         <StackPanel Orientation="Horizontal">
                             <!-- <Label Content="{x:Static p:Resources.blue_caps}" Width="50" /> -->
@@ -89,10 +92,10 @@
                             <Button x:Name="BlueTeamRestart" Height="26" Visibility="Collapsed" DockPanel.Dock="Right" Padding="4,0,4,0"  Margin="4,2,-2,4" Background="#ff1f334f" Click="BlueTeamRestartClick">Restart</Button>
                         </StackPanel>
                     </GroupBox.Header>
-                    <StackPanel x:Name="BlueTeamPlayersBox" Margin="-3,-3,-3,-3" >
+                    <StackPanel x:Name="BlueTeamPlayersBox" Margin="-3,-3,-3,-3" Background="{DynamicResource ControlDarkerBackground}">
                     </StackPanel>
                 </GroupBox>
-                <GroupBox x:Name="orangeTeamBox" Width="Auto" VerticalAlignment="Top" BorderBrush="#FF8c5c2a">
+                <GroupBox x:Name="orangeTeamBox" Width="Auto" VerticalAlignment="Top" BorderBrush="#FFB57837" Background="{DynamicResource ControlDarkerBackground}">
                     <GroupBox.Header>
                         <StackPanel Orientation="Horizontal">
                             <!-- <Label Content="{x:Static p:Resources.orange_caps}"  Width="50" /> -->
@@ -102,16 +105,16 @@
                             <Button x:Name="OrangeTeamRestart" Height="26" Visibility="Collapsed" DockPanel.Dock="Right" Padding="4,0,4,0"  Margin="4,2,-2,4" Background="#ff5e3e1c" Click="OrangeTeamRestartClick">Restart</Button>
                         </StackPanel>
                     </GroupBox.Header>
-                    <StackPanel x:Name="OrangeTeamPlayersBox" Margin="-3,-3,-3,-3" >
+                    <StackPanel x:Name="OrangeTeamPlayersBox" Margin="-3,-3,-3,-3" Background="{DynamicResource ControlDarkerBackground}">
                     </StackPanel>
                 </GroupBox>
-                <GroupBox x:Name="spectatorsBox" Header="{x:Static p:Resources.Spectators}" BorderBrush="#FF515151">
-                    <StackPanel x:Name="SpectatorsPlayersBox" Margin="-3,-3,-3,-3" >
+                <GroupBox x:Name="spectatorsBox" Header="{x:Static p:Resources.Spectators}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}" Background="{DynamicResource ControlDarkerBackground}">
+                    <StackPanel x:Name="SpectatorsPlayersBox" Margin="-3,-3,-3,-3" Background="{DynamicResource ControlDarkerBackground}">
                     </StackPanel>
                 </GroupBox>
             </StackPanel>
             
-            <Border Grid.Row="1" Background="GhostWhite" BorderBrush="Black" BorderThickness="0,1,0,0">
+            <Border Grid.Row="1" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}" BorderThickness="0,1,0,0">
             <Grid >
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -119,7 +122,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock x:Name="OrangePoints" Grid.Column="0" Background="#FF8c5c2a" TextAlignment="Center" VerticalAlignment="Stretch" Padding="0,10,0,0" FontSize="26" FontFamily="Consolas" FontWeight="Black">0</TextBlock>
-                <TextBlock x:Name="GameClock" Grid.Column="1" Background="#FF515151" TextAlignment="Center" VerticalAlignment="Stretch" Padding="0,14,0,0" FontSize="20" FontFamily="Consolas">00:00.00</TextBlock>
+                <TextBlock x:Name="GameClock" Grid.Column="1" Background="{DynamicResource ControlDefaultBackground}" TextAlignment="Center" VerticalAlignment="Stretch" Padding="0,14,0,0" FontSize="20" FontFamily="Consolas">00:00.00</TextBlock>
                 <TextBlock x:Name="BluePoints" Grid.Column="2" Background="#FF31507a" TextAlignment="Center" VerticalAlignment="Stretch" Padding="0,10,0,0" FontSize="26" FontFamily="Consolas" FontWeight="Black">0</TextBlock>
             </Grid>
                 </Border>
@@ -138,25 +141,25 @@
                             <Image Source="/img/view-dashboard.png" Height="16"/>
                         </StackPanel>
                     </TabItem.Header>
-                    <Grid Background="{DynamicResource ContainerBackground}">
+                    <Grid Background="{DynamicResource ControlDarkerBackground}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="5*"/>
+                            <RowDefinition Height="3*" />
+                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="6*"/>
                             <ColumnDefinition Width="3*"/>
                             <ColumnDefinition Width="3*"/>
                             <ColumnDefinition Width="6*"/>
                         </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="5*"/>
-                            <RowDefinition Height="3*" />
-                        </Grid.RowDefinitions>
-                        <GroupBox x:Name="playerSpeedsGroupbox" Grid.Row="0" Grid.Column="0" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <GroupBox x:Name="playerSpeedsGroupbox" Grid.Row="0" Grid.Column="0" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
                             <GroupBox.Header>
                                 <ComboBox SelectedIndex="{l:SettingBinding dashboardItem1}" SelectionChanged="DashboardItem1Changed">
                                     <ComboBoxItem Content="{x:Static p:Resources.Last_Throw}"/>
                                     <ComboBoxItem Content="{x:Static p:Resources.Player_Speeds}" />
                                 </ComboBox>
                             </GroupBox.Header>
-                            <StackPanel>
+                            <StackPanel Background="{DynamicResource ControlDarkerBackground}">
                                 <StackPanel x:Name="playerSpeedsBox" Orientation="Vertical" Margin="0,10,10,10">
                                     <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
                                         <TextBlock x:Name="bluePlayerSpeedsSpeeds" Text="" VerticalAlignment="Top" Width="35" Padding="0,0,5,0" HorizontalAlignment="Right" Margin="10,0,0,0" />
@@ -170,11 +173,11 @@
                                 <TextBlock x:Name="lastThrowStats" Margin="4,4,4,4" />
                             </StackPanel>
                         </GroupBox>
-                        <GroupBox x:Name="discSpeedsGroupbox" Header="{x:Static p:Resources.Disc_Speed}" Grid.Row="0" Grid.Column="1" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Top" Grid.ColumnSpan="2" Panel.ZIndex="-2">
+                        <GroupBox x:Name="discSpeedsGroupbox" Header="{x:Static p:Resources.Disc_Speed}" Grid.Row="0" Grid.Column="1" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Top" Grid.ColumnSpan="2" Panel.ZIndex="-2" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
                             <TextBlock x:Name="discSpeedLabel" Text="0" Height="30" HorizontalAlignment="Center" Padding="15,5,15,5" VerticalAlignment="Stretch"/>
                         </GroupBox>
-                        <GroupBox x:Name="playerPingsGroupbox" Header="{x:Static p:Resources.Player_Pings}" Grid.Row="0" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="3">
-                            <StackPanel Orientation="Vertical" Margin="0,10,0,10">
+                        <GroupBox x:Name="playerPingsGroupbox" Header="{x:Static p:Resources.Player_Pings}" Grid.Row="0" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="3" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                            <StackPanel Orientation="Vertical" Margin="0,10,0,10" Background="{DynamicResource ControlDarkerBackground}">
                                 <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight">
                                     <TextBlock x:Name="bluePlayerPingsPings" Text="" VerticalAlignment="Top" Width="100"  Padding="5,0,0,0" HorizontalAlignment="Right" Margin="10,0,0,0"/>
                                     <TextBlock x:Name="bluePlayerPingsNames" Text="" VerticalAlignment="Top" Foreground="CornflowerBlue"/>
@@ -185,13 +188,13 @@
                                 </StackPanel>
                             </StackPanel>
                         </GroupBox>
-                        <GroupBox Header="{x:Static p:Resources.Previous_Rounds}" Grid.Column="0" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.ColumnSpan="2" Grid.Row="1">
-                            <StackPanel x:Name="LastRoundScoresBox" Margin="-3,-3,-3,-3"></StackPanel>
+                        <GroupBox Header="{x:Static p:Resources.Previous_Rounds}" Grid.Column="0" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.ColumnSpan="2" Grid.Row="1" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                            <StackPanel x:Name="LastRoundScoresBox" Margin="-3,-3,-3,-3" Background="{DynamicResource ControlDarkerBackground}"></StackPanel>
                         </GroupBox>
-                        <GroupBox Header="{x:Static p:Resources.Previous_Goals}" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left" Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="1">
-                            <StackPanel x:Name="LastGoalsBox" Margin="-3,-3,-3,-3"></StackPanel>
+                        <GroupBox Header="{x:Static p:Resources.Previous_Goals}" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left" Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="1" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                            <StackPanel x:Name="LastGoalsBox" Margin="-3,-3,-3,-3" Background="{DynamicResource ControlDarkerBackground}"></StackPanel>
                         </GroupBox>
-                        <GroupBox x:Name="lastJoustsBox" Grid.Row="0" Margin="10,90,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="1" Grid.ColumnSpan="2">
+                        <GroupBox x:Name="lastJoustsBox" Grid.Row="0" Margin="10,90,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="1" Grid.ColumnSpan="2" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
                             <GroupBox.Header>
                                 <StackPanel Orientation="Horizontal">
                                     <Label Content="{x:Static p:Resources.Joust_Times}"/>
@@ -199,7 +202,7 @@
                                         <ComboBoxItem Content="{x:Static p:Resources.Recent}"/>
                                         <ComboBoxItem Content="{x:Static p:Resources.Fastest}"/>
                                     </ComboBox>
-                                    <Button Click="OpenLocalDatabaseBrowser" Margin="50,0,0,0"><Image Source="/img/open-in-new.png" Height="16"></Image></Button>
+                                    <Button Click="OpenLocalDatabaseBrowser" Margin="50,0,0,0" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"><Image Source="/img/open-in-new.png" Height="16"></Image></Button>
                                     
                                 </StackPanel>
                             </GroupBox.Header>
@@ -208,15 +211,15 @@
                     </Grid>
                 </TabItem>
                 
-                <TabItem x:Name="PlayerStatsTab" FontSize="14" Padding="10,0,10,0" Visibility="Visible">
+                <!--<TabItem x:Name="PlayerStatsTab" FontSize="14" Padding="10,0,10,0" Visibility="Visible">
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal">
-                            <Label Content="Player Stats 👤"/>
+                            <Label Content="Player Stats 👤/>
                             <Image Source="/img/chart-bar.png" Height="16"/>
                         </StackPanel>
                     </TabItem.Header>
                     <l:PlayerStats/>
-                </TabItem>
+                </TabItem>-->
 
                 <TabItem x:Name="PortalTab" FontSize="14" Padding="10,0,10,0">
                    <TabItem.Header>
@@ -247,8 +250,8 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel>
-                            <GroupBox Header="{x:Static p:Resources.Settings}" Margin="10,10,10,10">
-                                <StackPanel Orientation="Horizontal" Margin="10,5,0,0">
+                            <GroupBox Header="{x:Static p:Resources.Settings}" Margin="10,10,10,10" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                                <StackPanel Orientation="Horizontal" Margin="10,5,0,0" Background="{DynamicResource ControlDarkerBackground}">
                                     <Label Content="{x:Static p:Resources.Link_Type_}" Margin="10,0,10,0"/>
                                     <ComboBox x:Name="linkTypeComboBox" Width="120" HorizontalAlignment="Left" Margin="10,0,10,0" SelectedIndex="{Binding LinkType}">
                                         <ComboBoxItem Content="{x:Static p:Resources.Choose}" ToolTip="{x:Static p:Resources.The_Choose_type_shows_a_popup_when_you_click_the_link_to_either_join_as_a_player_or_spectator_}"/>
@@ -262,29 +265,29 @@
                             </GroupBox>
 
                             <StackPanel Orientation="Horizontal" Grid.Row="1">
-                                <Button Margin="10,0,10,0" Click="CopyMainLinkToClipboard">
+                                <Button Margin="10,0,10,0" Click="CopyMainLinkToClipboard" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                                     <StackPanel Orientation="Horizontal" >
                                         <Label Content="{x:Static p:Resources.Copy_to_Clipboard}"/>
                                         <Image Source="/img/clipboard-outline.png" Height="18"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Margin="10,0,10,0" Click="FollowMainLink">
+                                <Button Margin="10,0,10,0" Click="FollowMainLink" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                                     <StackPanel Orientation="Horizontal">
                                         <Label Content="{x:Static p:Resources.Follow_Link}"/>
                                         <Image Source="/img/open-in-new.png" Height="18"/>
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
-                            <TextBox x:Name="joinLink" Text="---" TextWrapping="NoWrap" Margin="8,8,8,8" VerticalAlignment="Top" HorizontalAlignment="Stretch" IsReadOnly="True"/>
+                            <TextBox x:Name="joinLink" Text="---" TextWrapping="NoWrap" Margin="8,8,8,8" VerticalAlignment="Top" HorizontalAlignment="Stretch" IsReadOnly="True" Background="{DynamicResource ControlDefaultBackground}"/>
 
                         </StackPanel>
 
                         
-                        <GroupBox Margin="10,10,10,10" Grid.Row="1">
+                        <GroupBox Margin="10,10,10,10" Grid.Row="1" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
                             <GroupBox.Header>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,10,0" Background="{DynamicResource ControlDarkerBackground}">
                                     <Label Content="{x:Static p:Resources.Hosted_Matches}"/>
-                                    <Button x:Name="refreshMatchesButton" Margin="0,0,0,0" Click="RefreshMatchesClicked" HorizontalAlignment="Right" Padding="5,5,5,5">
+                                    <Button x:Name="refreshMatchesButton" Margin="0,0,0,0" Click="RefreshMatchesClicked" HorizontalAlignment="Right" Padding="5,5,5,5" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                                         <StackPanel Orientation="Horizontal">
                                             <Image Source="/img/baseline_replay_white_48dp.png" Width="20"/>
                                         </StackPanel>
@@ -292,20 +295,20 @@
                                 </StackPanel>
                             </GroupBox.Header>
                             <ScrollViewer MaxHeight="480">
-                                <StackPanel x:Name="MatchesBox">
+                                <StackPanel x:Name="MatchesBox" Background="{DynamicResource ControlDarkerBackground}">
                                     
-                                    <StackPanel x:Name="IgniteMatchesBox">
-                                        <GroupBox x:Name="button" Margin="10,10,10,10" Visibility="Collapsed">
+                                    <StackPanel x:Name="IgniteMatchesBox" Background="{DynamicResource ControlDarkerBackground}">
+                                        <GroupBox x:Name="button" Margin="10,10,10,10" Visibility="Collapsed" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
 
                                             <GroupBox.Header>
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,10,0">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,10,0" Background="{DynamicResource ControlDarkerBackground}">
                                                     <TextBlock Text="{x:Static p:Resources.Public}" Margin="0,0,10,0" Foreground="{DynamicResource ControlDisabledGlythColour}"></TextBlock>
-                                                    <Button Content="{x:Static p:Resources.Copy_Atlas_Link}" Margin="200,0,10,0" Background="{DynamicResource ControlDisabledBackground}"/>
-                                                    <Button Content="{x:Static p:Resources.Join}" Margin="10,0,10,0"/>
+                                                    <Button Content="{x:Static p:Resources.Copy_Atlas_Link}" Margin="200,0,10,0" Background="{DynamicResource ControlDisabledBackground}" Foreground="{DynamicResource ControlDisabledGlythColour}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}"/>
+                                                    <Button Content="{x:Static p:Resources.Join}" Margin="10,0,10,0" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
                                                 </StackPanel>
                                             </GroupBox.Header>
 
-                                            <Grid HorizontalAlignment="Stretch" ShowGridLines="True">
+                                            <Grid HorizontalAlignment="Stretch" ShowGridLines="True" Background="{DynamicResource ControlDarkerBackground}">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="100"/>
                                                     <ColumnDefinition Width="5*"/>
@@ -314,44 +317,44 @@
                                                 </Grid.ColumnDefinitions>
 
 
-                                                <StackPanel>
+                                                <StackPanel Background="{DynamicResource ControlDarkerBackground}">
                                                     <Image Source="https://vrmasterleague.com/images/logos/teams/09093858-5626-404d-97a3-10b8353fcc47.png" Width="100" Height="100"></Image>
                                                     <Label Content="Ignite" HorizontalAlignment="Center"></Label>
                                                 </StackPanel>
                                                 <TextBlock x:Name="textBlock" FlowDirection="RightToLeft" Margin="10,10,10,10" Grid.Column="1"><Run Text="Player 1"/><LineBreak/><Run Text="Player 2 Long"/><LineBreak/><Run Text="Player 3"/><LineBreak/><Run Text="Player 4"/><LineBreak/><Run Text="Player 5"/></TextBlock>
                                                 <TextBlock x:Name="textBlock2" Margin="10,10,10,10" Grid.Column="2"><Run Text="Player 1"/><LineBreak/><Run Text="Player 2"/><LineBreak/><Run Text="Player 3 Long"/><LineBreak/><Run Text="Player 4"/></TextBlock>
 
-                                                <StackPanel Grid.Column="3">
+                                                <StackPanel Grid.Column="3" Background="{DynamicResource ControlDarkerBackground}">
                                                     <Image Source="https://vrmasterleague.com/images/logos/teams/f5850b3b-0f78-42d1-8b57-119af08195be.png" Width="100" Height="100"></Image>
                                                     <Label Content="Kangorillaz" HorizontalAlignment="Center"></Label>
                                                 </StackPanel>
                                             </Grid>
                                         </GroupBox>
                                     </StackPanel>
-                                    <StackPanel x:Name="AtlasMatchesBox"></StackPanel>
+                                    <StackPanel x:Name="AtlasMatchesBox" Background="{DynamicResource ControlDarkerBackground}"></StackPanel>
                                     
                                 </StackPanel>
                             </ScrollViewer>
                         </GroupBox>
-                        <StackPanel Grid.Row="2">
-                            <Button x:Name="hostMatchButton" Margin="10,10,10,10" Click="HostMatchClicked" Height="54" IsEnabled="False">
+                        <StackPanel Grid.Row="2" Background="{DynamicResource ControlDarkerBackground}">
+                            <Button x:Name="hostMatchButton" Margin="10,10,10,10" Click="HostMatchClicked" Height="54" IsEnabled="False" Background="{DynamicResource ControlDisabledBackground}" Foreground="{DynamicResource ControlDisabledGlythColour}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
                                 <StackPanel Orientation="Horizontal">
                                     <CheckBox x:Name="hostingMatchCheckbox" Margin="10,0,10,0"/>
                                     <Label x:Name="hostingMatchLabel" Content="{x:Static p:Resources.Host_Match}"/>
                                     
-                                    <TextBlock x:Name="DiscordNotLoggedInHosting" Padding="10,10,10,10" Background="#FF492727" TextWrapping="Wrap" >
+                                    <TextBlock x:Name="DiscordNotLoggedInHosting" Padding="10,10,10,10" Background="{DynamicResource ControlDarkerBackground}" TextWrapping="Wrap" >
                                         <Run Text="Match Hosting only works when you're logged in with Discord." />
                                     </TextBlock>
                                 </StackPanel>
                             </Button>
-                            <StackPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal" Background="{DynamicResource ControlDarkerBackground}">
                                 <Label Content="{x:Static p:Resources.Visibility_}"/>
                                 <ComboBox Width="150" SelectedIndex="{l:SettingBinding atlasHostingVisibility}">
                                     <ComboBoxItem Content="{x:Static p:Resources.Public}"/>
                                     <!-- <ComboBoxItem Content="{x:Static p:Resources.Casters_Only}"/> -->
                                     <ComboBoxItem Content="{x:Static p:Resources.Private}"/>
                                 </ComboBox>
-                                <Button Content="{x:Static p:Resources.Whitelist}" Click="WhitelistButtonClicked" Margin="10,0,10,0" Padding="10,0,10,0"/>
+                                <Button Content="{x:Static p:Resources.Whitelist}" Click="WhitelistButtonClicked" Margin="10,0,10,0" Padding="10,0,10,0" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -363,9 +366,9 @@
                             <Image Source="/img/script-text-outline.png" Height="16"/>
                         </StackPanel>
                     </TabItem.Header>
-                    <Grid>
-                        <TextBox x:Name="mainOutputTextBox" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible" IsReadOnly="True"/>
-                        <Button x:Name="showEventLogFileButton" Content="{x:Static p:Resources.Open_Event_Log_Folder}" Width="183" Margin="0,10,30,0" HorizontalAlignment="Right" Click="showEventLogFileButton_Click" VerticalAlignment="Top" Height="30" ToolTip="{x:Static p:Resources.Opens_the_folder_where_the_event_logs_are_stored_on_your_computer__Only_works_once_you_have_logged_at_least_one_event_}"/>
+                    <Grid Background="{DynamicResource ControlDarkerBackground}">
+                        <TextBox x:Name="mainOutputTextBox" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible" IsReadOnly="True" Background="{DynamicResource ControlDefaultBackground}"/>
+                        <Button x:Name="showEventLogFileButton" Content="{x:Static p:Resources.Open_Event_Log_Folder}" Width="183" Margin="0,10,30,0" HorizontalAlignment="Right" Click="showEventLogFileButton_Click" VerticalAlignment="Top" Height="30" ToolTip="{x:Static p:Resources.Opens_the_folder_where_the_event_logs_are_stored_on_your_computer__Only_works_once_you_have_logged_at_least_one_event_}" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
                     </Grid>
                 </TabItem>
                 <TabItem x:Name="ScoreboardTab" FontSize="14" Padding="10,0,10,0" Visibility="Collapsed">
@@ -375,12 +378,12 @@
                             <Image Source="/img/text-box-outline.png" Height="16"/>
                         </StackPanel>
                     </TabItem.Header>
-                    <Grid>
+                    <Grid Background="{DynamicResource ControlDarkerBackground}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="1*"/>
                             <RowDefinition Height="1*"/>
                         </Grid.RowDefinitions>
-                        <Grid x:Name="orangeScoreboardGrid">
+                        <Grid x:Name="orangeScoreboardGrid" Background="{DynamicResource ControlDarkerBackground}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="2*"/>
                                 <ColumnDefinition Width="1*"/>
@@ -400,18 +403,18 @@
                                 <RowDefinition Height="1*"/>
                             </Grid.RowDefinitions>
 
-                            <Label Content="Player" Width="100" HorizontalContentAlignment="Center"/>
-                            <Label Content="Points" HorizontalContentAlignment="Center" Grid.Column="1"/>
-                            <Label Content="Assists" HorizontalContentAlignment="Center" Grid.Column="2"/>
-                            <Label Content="Saves" HorizontalContentAlignment="Center" Grid.Column="3"/>
-                            <Label Content="Steals" HorizontalContentAlignment="Center" Grid.Column="4"/>
-                            <Label Content="Stuns" HorizontalContentAlignment="Center" Grid.Column="5"/>
-                            <Label Content="Poss. Time" HorizontalContentAlignment="Center" Grid.Column="6"/>
-                            <Label Content="Avg. Spd." HorizontalContentAlignment="Center" Grid.Column="7"/>
+                            <Label Content="Player" Width="100" HorizontalContentAlignment="Center" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                            <Label Content="Points" HorizontalContentAlignment="Center" Grid.Column="1" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                            <Label Content="Assists" HorizontalContentAlignment="Center" Grid.Column="2" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                            <Label Content="Saves" HorizontalContentAlignment="Center" Grid.Column="3" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                            <Label Content="Steals" HorizontalContentAlignment="Center" Grid.Column="4" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                            <Label Content="Stuns" HorizontalContentAlignment="Center" Grid.Column="5" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                            <Label Content="Poss. Time" HorizontalContentAlignment="Center" Grid.Column="6" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                            <Label Content="Avg. Spd." HorizontalContentAlignment="Center" Grid.Column="7" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
 
 
                         </Grid>
-                        <Grid x:Name="blueScoreboardGrid" Grid.Row="1">
+                        <Grid x:Name="blueScoreboardGrid" Grid.Row="1" Background="{DynamicResource ControlDarkerBackground}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="2*"/>
                                 <ColumnDefinition Width="1*"/>
@@ -431,14 +434,14 @@
                                 <RowDefinition Height="1*"/>
                             </Grid.RowDefinitions>
 
-                            <Label Content="Player" Width="100" HorizontalContentAlignment="Center" BorderBrush="{DynamicResource ControlBrightDefaultBackground}"/>
-                            <Label Content="Points" HorizontalContentAlignment="Center" Grid.Column="1"/>
-                            <Label Content="Assists" HorizontalContentAlignment="Center" Grid.Column="2"/>
-                            <Label Content="Saves" HorizontalContentAlignment="Center" Grid.Column="3"/>
-                            <Label Content="Steals" HorizontalContentAlignment="Center" Grid.Column="4"/>
-                            <Label Content="Stuns" HorizontalContentAlignment="Center" Grid.Column="5"/>
-                            <Label Content="Poss. Time" HorizontalContentAlignment="Center" Grid.Column="6"/>
-                            <Label Content="Avg. Spd." HorizontalContentAlignment="Center" Grid.Column="7"/>
+                            <Label Content="Player" Width="100" HorizontalContentAlignment="Center" BorderBrush="{DynamicResource ControlDefaultBorderBrush}" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                            <Label Content="Points" HorizontalContentAlignment="Center" Grid.Column="1" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                            <Label Content="Assists" HorizontalContentAlignment="Center" Grid.Column="2" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                            <Label Content="Saves" HorizontalContentAlignment="Center" Grid.Column="3" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                            <Label Content="Steals" HorizontalContentAlignment="Center" Grid.Column="4" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                            <Label Content="Stuns" HorizontalContentAlignment="Center" Grid.Column="5" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                            <Label Content="Poss. Time" HorizontalContentAlignment="Center" Grid.Column="6" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                            <Label Content="Avg. Spd." HorizontalContentAlignment="Center" Grid.Column="7" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}"/>
 
 
                         </Grid>
@@ -453,10 +456,10 @@
                             <Image Source="/img/speaker.png" Height="16"/>
                         </StackPanel>
                     </TabItem.Header>
-                    <Grid>
-                        <Button x:Name="installEchoSpeakerSystem" Content="{x:Static p:Resources.Install_Echo_Speaker_System}" Width="183" Margin="0,10,10,0" HorizontalAlignment="Right" Click="installEchoSpeakerSystem_Click" VerticalAlignment="Top" Height="30"/>
-                        <Button x:Name="updateEchoSpeakerSystem" Content="{x:Static p:Resources.Update_Echo_Speaker_System}" Width="190" Margin="0,10,210,0" HorizontalAlignment="Right" Click="installEchoSpeakerSystem_Click" VerticalAlignment="Top" Height="30"/>
-                        <Button x:Name="startStopEchoSpeakerSystem" Content="{x:Static p:Resources.Start_Echo_Speaker_System}" Width="183" Margin="0,10,10,0" HorizontalAlignment="Right" Click="startStopEchoSpeakerSystem_Click"  VerticalAlignment="Top" Height="30"/>
+                    <Grid Background="{DynamicResource ControlDarkerBackground}">
+                        <Button x:Name="installEchoSpeakerSystem" Content="{x:Static p:Resources.Install_Echo_Speaker_System}" Width="183" Margin="0,10,10,0" HorizontalAlignment="Right" Click="installEchoSpeakerSystem_Click" VerticalAlignment="Top" Height="30" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
+                        <Button x:Name="updateEchoSpeakerSystem" Content="{x:Static p:Resources.Update_Echo_Speaker_System}" Width="190" Margin="0,10,210,0" HorizontalAlignment="Right" Click="installEchoSpeakerSystem_Click" VerticalAlignment="Top" Height="30" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
+                        <Button x:Name="startStopEchoSpeakerSystem" Content="{x:Static p:Resources.Start_Echo_Speaker_System}" Width="183" Margin="0,10,10,0" HorizontalAlignment="Right" Click="startStopEchoSpeakerSystem_Click"  VerticalAlignment="Top" Height="30" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
                         <Label x:Name="speakerSystemInstallLabel" Visibility="Hidden" Content="{x:Static p:Resources.Installing_Echo_Speaker_System}" Width="200" Margin="10,10,00,0" VerticalAlignment="Top" HorizontalAlignment="Left" FontSize="10" FontStyle="Italic"/>
                         <ContentPresenter x:Name="speakerSystemPanel" Visibility="Visible" Margin="0,50,0,0" SizeChanged="speakerSystemPanel_Resize" IsVisibleChanged="speakerSystemPanel_IsVisibleChanged"/>
                     </Grid>
@@ -483,7 +486,6 @@
                     </TabItem.Header>
                     <l:ServerInfo/>
                 </TabItem>
-                
 
                 <TabItem x:Name="WriteAPITab" FontSize="14" Padding="10,0,10,0" Visibility="Visible">
                     <TabItem.Header>
@@ -528,79 +530,79 @@
             </TabControl>
             <StackPanel Height="48" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,4" Grid.Row="1">
                 <Button x:Name="rejoinButton" Content="{x:Static p:Resources.Rejoin}" Width="110" Background="#FF6E2F2F" VerticalAlignment="Stretch" Margin="4,4,4,5" Click="RejoinClicked" ToolTip="{x:Static p:Resources.rejoin_tooltip}" Visibility="Collapsed"/>
-                <Button x:Name="settingsButton" Content="{x:Static p:Resources.Settings}" Width="100" Margin="4,4,4,4" Click="SettingsButtonClicked" ToolTip="{x:Static p:Resources.settings_button_tooltip}"/>
-                <Button x:Name="exitButton" Content="{x:Static p:Resources.Exit}" Width="100" Margin="4,4,4,4" Click="QuitButtonClicked" ToolTip="{x:Static p:Resources.close_tooltip}"/>
-                <Button x:Name="hideButton" Content="{x:Static p:Resources.Hide}" Width="100" Margin="4,4,4,4" Click="CloseButtonClicked" ToolTip="{x:Static p:Resources.hide_tooltip}"/>
+                <Button x:Name="settingsButton" Content="{x:Static p:Resources.Settings}" Width="100" Margin="4,4,4,4" Click="SettingsButtonClicked" ToolTip="{x:Static p:Resources.settings_button_tooltip}" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
+                <Button x:Name="exitButton" Content="{x:Static p:Resources.Exit}" Width="100" Margin="4,4,4,4" Click="QuitButtonClicked" ToolTip="{x:Static p:Resources.close_tooltip}" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
+                <Button x:Name="hideButton" Content="{x:Static p:Resources.Hide}" Width="100" Margin="4,4,4,4" Click="CloseButtonClicked" ToolTip="{x:Static p:Resources.hide_tooltip}" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
             </StackPanel>
         </Grid>
         <GridSplitter x:Name="gridSplitter_Copy" HorizontalAlignment="Stretch" Margin="1055,242,0,242" Grid.Column="3"/>
         <StackPanel x:Name="Right_Sidebar" Grid.Column="4" HorizontalAlignment="Stretch" Height="Auto">
-            <GroupBox x:Name="casterToolsBox" Header="Caster Tools" Visibility="Visible">
-                <StackPanel>
-                    <Button Content="{x:Static p:Resources.Restart_as_Spectator}" Height="35" Margin="4,4,4,4" Click="RestartAsSpectatorClick" ToolTip="{x:Static p:Resources.Restarts_the_game_in_the_2D_spectator_mode_}"/>
-                    <Button Content="{x:Static p:Resources.Find_All_Quests}" Height="35" Margin="4,4,4,4" Click="FindAllQuests" ToolTip="{x:Static p:Resources.Shows_a_list_of_all_the_Quest_IPs_on_the_network_}"/>
-                    <Button x:Name="PasteLinkInLiveButton" Content="{x:Static p:Resources.Paste_link_in__live}" Height="35" Margin="4,4,4,4" Click="PasteLinkInLive"></Button>
-                    <Button x:Name="LeagueOverlaysButton" Content="{x:Static p:Resources.League_Overlays}" Height="35" Margin="4,4,4,4" Click="LeagueOverlaysClick"></Button>
-                    <Button x:Name="MatchSetupButton" Content="{x:Static p:Resources.Match_Setup_Page}" Height="35" Margin="4,4,4,4" Click="MatchSetupClick"></Button>
+            <GroupBox x:Name="casterToolsBox" Header="Caster Tools" Visibility="Visible" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                <StackPanel Background="{DynamicResource ControlDarkerBackground}">
+                    <Button Content="{x:Static p:Resources.Restart_as_Spectator}" Height="35" Margin="4,4,4,4" Click="RestartAsSpectatorClick" ToolTip="{x:Static p:Resources.Restarts_the_game_in_the_2D_spectator_mode_}" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
+                    <Button Content="{x:Static p:Resources.Find_All_Quests}" Height="35" Margin="4,4,4,4" Click="FindAllQuests" ToolTip="{x:Static p:Resources.Shows_a_list_of_all_the_Quest_IPs_on_the_network_}" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
+                    <Button x:Name="PasteLinkInLiveButton" Content="{x:Static p:Resources.Paste_link_in__live}" Height="35" Margin="4,4,4,4" Click="PasteLinkInLive" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"></Button>
+                    <Button x:Name="LeagueOverlaysButton" Content="{x:Static p:Resources.League_Overlays}" Height="35" Margin="4,4,4,4" Click="LeagueOverlaysClick" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"></Button>
+                    <Button x:Name="MatchSetupButton" Content="{x:Static p:Resources.Match_Setup_Page}" Height="35" Margin="4,4,4,4" Click="MatchSetupClick" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"></Button>
                 </StackPanel>
             </GroupBox>
-            <GroupBox x:Name="toolsBox" Header="{x:Static p:Resources.Tools}" Margin="0,8,0,0" VerticalAlignment="Top">
-                <StackPanel VerticalAlignment="Top">
+            <GroupBox x:Name="toolsBox" Header="{x:Static p:Resources.Tools}" Margin="0,8,0,0" VerticalAlignment="Top" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                <StackPanel VerticalAlignment="Top" Background="{DynamicResource ControlDarkerBackground}">
                     <Button x:Name="updateButton" Content="{x:Static p:Resources.Download_Update}" Height="40" Margin="4,4,4,4" Background="#FF8B3434" Click="updateButton_Click" ToolTip="{x:Static p:Resources.Downloads_and_installs_the_most_recent_update__recommended_}" Visibility="Collapsed"/>
                     <ProgressBar x:Name="updateProgressBar" Height="15" Visibility="Collapsed" Margin="4,4,4,4"/>
-                    <Button x:Name="enableAPIButton"  Visibility="Collapsed" Content="{x:Static p:Resources.Enable_API_in_Settings}" Height="40" Margin="4,4,4,4" Click="enableAPIButton_Click"/>
+                    <Button x:Name="enableAPIButton"  Visibility="Collapsed" Content="{x:Static p:Resources.Enable_API_in_Settings}" Height="40" Margin="4,4,4,4" Click="enableAPIButton_Click" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
                     <StackPanel Orientation="Horizontal">
-                        <Button x:Name="startSpectatorStream" Content="{x:Static p:Resources.Open_Spectatorstream}" Height="40" Width="153" Margin="4,4,1,4" Click="StartSpectatorStreamClick" ToolTip="{x:Static p:Resources.Spectatorstream_tooltip}"/>
-                        <Button Height="40" Width="25" Margin="1,4,4,4" Click="CombatSpectatorstreamClick" Visibility="Visible" ToolTip="{x:Static p:Resources.Opens_Spectatorstream_for_Echo_Combat_matches_}">
+                        <Button x:Name="startSpectatorStream" Content="{x:Static p:Resources.Open_Spectatorstream}" Height="40" Width="153" Margin="4,4,1,4" Click="StartSpectatorStreamClick" ToolTip="{x:Static p:Resources.Spectatorstream_tooltip}" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
+                        <Button Height="40" Width="25" Margin="1,4,4,4" Click="CombatSpectatorstreamClick" Visibility="Visible" ToolTip="{x:Static p:Resources.Opens_Spectatorstream_for_Echo_Combat_matches_}" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                             <Image Source="/img/flamingo-white.png" Margin="3,3,3,3"/>
                         </Button>
                     </StackPanel>
-                    <Button x:Name="chooseServerRegion" Height="40" Margin="4,4,4,4" Click="chooseServerRegion_Click" ToolTip="{x:Static p:Resources.This_creates_a_private_match_in_a_region_of_your_choice_}">
+                    <Button x:Name="chooseServerRegion" Height="40" Margin="4,4,4,4" Click="chooseServerRegion_Click" ToolTip="{x:Static p:Resources.This_creates_a_private_match_in_a_region_of_your_choice_}" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{x:Static p:Resources.Choose_Server_Region}" VerticalAlignment="Center"></TextBlock>
                             <Image Source="/img/earth.png" Margin="8,8,0,8"></Image>
                         </StackPanel>
                     </Button>
-                    <Button x:Name="playspaceButton" Content="{x:Static p:Resources.Show_Playspace}" Height="40" Margin="4,4,4,4" Click="playspaceButton_Click" Visibility="Collapsed"/>
-                    <Button x:Name="loneEchoSubtitlesButton" Height="40" Margin="4,4,4,4" Click="LoneEchoSubtitlesClick" Visibility="Visible">
+                    <Button x:Name="playspaceButton" Content="{x:Static p:Resources.Show_Playspace}" Height="40" Margin="4,4,4,4" Click="playspaceButton_Click" Visibility="Collapsed" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
+                    <Button x:Name="loneEchoSubtitlesButton" Height="40" Margin="4,4,4,4" Click="LoneEchoSubtitlesClick" Visibility="Visible" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{x:Static p:Resources.Lone_Echo_Subtitles}" VerticalAlignment="Center"></TextBlock>
                             <Image Source="/img/closed-caption-outline.png" Margin="8,8,0,8"></Image>
                         </StackPanel>
                     </Button>
-                    <Button Content="ASCIIECHO" Height="40" Click="ACIIECHO_Click" Margin="4,4,4,4" FontFamily="Cascadia Mono"/>
+                    <Button Content="ASCIIECHO" Height="40" Click="ACIIECHO_Click" Margin="4,4,4,4" FontFamily="Cascadia Mono" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
                     <StackPanel Orientation="Horizontal">
-                        <Button Height="40" Click="ReplayViewer_Click" Margin="4,4,1,4" Width="141">
+                        <Button Height="40" Click="ReplayViewer_Click" Margin="4,4,1,4" Width="141" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Replay Viewer" VerticalAlignment="Center"></TextBlock>
                                 <Image Source="/img/replay_viewer_logo.png" Margin="10,0,0,0" Height="26" Width="26" VerticalAlignment="Center"></Image>
                             </StackPanel>
                         </Button>
-                        <Button Height="40" Width="36" Margin="1,4,4,4" Click="ReplayViewerVR_Click" Content="VR">
+                        <Button Height="40" Width="36" Margin="1,4,4,4" Click="ReplayViewerVR_Click" Content="VR" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                         </Button>
                     </StackPanel>
                     <ProgressBar x:Name="ReplayViewerProgressBar" Height="15" Visibility="Collapsed" Margin="4,4,4,4" IsIndeterminate="True"/>
-                    <Button Height="40" Margin="4,4,4,4" Click="TabletStatsUploadClick" Visibility="Visible">
+                    <Button Height="40" Margin="4,4,4,4" Click="TabletStatsUploadClick" Visibility="Visible" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{x:Static p:Resources.Upload_Tablet_Stats}" VerticalAlignment="Center"></TextBlock>
                             <Image Source="/img/text-box-outline.png" Margin="8,8,0,8"></Image>
                         </StackPanel>
                     </Button>
-                    <Button x:Name="SpeedometerButton" Content="{x:Static p:Resources.Speedometer}" Height="40" Margin="4,4,4,4" Click="OpenSpeedometer" Visibility="Collapsed" />
+                    <Button x:Name="SpeedometerButton" Content="{x:Static p:Resources.Speedometer}" Height="40" Margin="4,4,4,4" Click="OpenSpeedometer" Visibility="Collapsed" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}" />
                     <StackPanel Orientation="Horizontal">
-                        <Button x:Name="OverlaysButton" Content="{x:Static p:Resources.Overlays}" Height="40" Width="137" Margin="4,4,1,4" HorizontalAlignment="Stretch" Click="OpenOverlays" Visibility="Visible"/>
-                        <Button Height="40" Width="40" Margin="1,4,4,4" Click="DefaultMatchSetupClick" Visibility="Visible">
+                        <Button x:Name="OverlaysButton" Content="{x:Static p:Resources.Overlays}" Height="40" Width="137" Margin="4,4,1,4" HorizontalAlignment="Stretch" Click="OpenOverlays" Visibility="Visible" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
+                        <Button Height="40" Width="40" Margin="1,4,4,4" Click="DefaultMatchSetupClick" Visibility="Visible" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                             <Image Source="/img/cog.png" Margin="5,5,5,5"/>
                         </Button>
                     </StackPanel>
-                    <Button x:Name="ShowClickableOverlayButton" Visibility="Visible" Height="40" Click="showOverlay_Click" Margin="4,4,4,4">
+                    <Button x:Name="ShowClickableOverlayButton" Visibility="Visible" Height="40" Click="showOverlay_Click" Margin="4,4,4,4" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                         <StackPanel>
                             <Label x:Name="ClickableOverlayLabel" Content="Spectator Overlay" Margin="0,-6,0,0"/>
                             <TextBlock x:Name="ClickableOverlaySubtitle" Text="{x:Static p:Resources.Not_active}" Margin="0,-8,0,0" FontSize="11" Foreground="{DynamicResource ControlDisabledGlythColour}" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button x:Name="showHighlights" Content="{x:Static p:Resources.NVIDIAHighlights}" Height="40" Click="showHighlights_Click" Margin="4,4,4,4"/>
-                    <Button x:Name="spectateMeButton" Height="40" Click="SpectateMeClicked" ToolTip="Spectate Me launches the PC version of Echo VR in spectator mode into your Quest match. Spectate Me is not necessary for Spark to work." Margin="4,4,4,4">
+                    <Button x:Name="showHighlights" Content="{x:Static p:Resources.NVIDIAHighlights}" Height="40" Click="showHighlights_Click" Margin="4,4,4,4" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>
+                    <Button x:Name="spectateMeButton" Height="40" Click="SpectateMeClicked" ToolTip="Spectate Me launches the PC version of Echo VR in spectator mode into your Quest match. Spectate Me is not necessary for Spark to work." Margin="4,4,4,4" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
                         <StackPanel>
                             <Label x:Name="spectateMeLabel" Content="{x:Static p:Resources.Spectate_Me}" Margin="0,-6,0,0"/>
                             <TextBlock x:Name="spectateMeSubtitle" Text="{x:Static p:Resources.Not_active}" Margin="0,-8,0,0" FontSize="11" Foreground="{DynamicResource ControlDisabledGlythColour}" HorizontalAlignment="Center"/>

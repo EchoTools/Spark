@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Windows;
 
@@ -28,7 +28,7 @@ namespace Spark
 				_ => System.Threading.Thread.CurrentThread.CurrentUICulture
 			};
 
-			ThemesController.SetTheme((ThemesController.ThemeTypes)SparkSettings.instance.theme);
+			ThemesController.ApplyFromSettings();
 			CheckWindowPositionsValid();
 
 			base.OnStartup(e);

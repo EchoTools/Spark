@@ -11,7 +11,7 @@
 		Width="440" 
 		WindowStartupLocation="CenterOwner" 
 		ResizeMode="NoResize" 
-		Background="#FF232323" 
+		Background="{DynamicResource ControlDarkerBackground}" 
 		FontSize="16"
         Icon="/img/ignite_logo.ico"
         >

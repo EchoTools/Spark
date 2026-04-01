@@ -10,69 +10,105 @@
              mc:Ignorable="d"
              d:DesignHeight="900"
              d:DesignWidth="1400"
-             Background="#2b2b2b"
+             Background="{DynamicResource ControlDarkerBackground}"
              FontSize="16"
              DataContext="{Binding RelativeSource={RelativeSource Self}}">
     
     <UserControl.Resources>
         <Style x:Key="ServerCardStyle" TargetType="Border">
-            <Setter Property="Background" Value="#1e1e1e"/>
+            <Setter Property="Background" Value="{DynamicResource ControlDarkerBackground}"/>
             <Setter Property="Margin" Value="10,6"/>
             <Setter Property="Padding" Value="15,12"/>
             <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="BorderBrush" Value="#404040"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlDefaultBackground}"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
         
         <Style x:Key="StatusBadgeStyle" TargetType="Border">
-            <Setter Property="Background" Value="#10b981"/>
+            <Setter Property="Background" Value="{DynamicResource ControlBrightDefaultBackground}"/>
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="6,2"/>
         </Style>
         
         <Style x:Key="TitleTextStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#ffffff"/>
+            <Setter Property="Foreground" Value="{DynamicResource ControlDefaultForeground}"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="FontWeight" Value="Bold"/>
         </Style>
         
         <Style x:Key="InfoTextStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#cccccc"/>
+            <Setter Property="Foreground" Value="{DynamicResource ControlBrightDefaultBackground}"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontSize" Value="9"/>
         </Style>
         
         <Style x:Key="ServerBrowserButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#232323"/>
+            <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="Padding" Value="20,8"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#2d2d2d"/>
+                    <Setter Property="Background" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <Style x:Key="TeamButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Opacity" Value="0.9"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <Style x:Key="CopyButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="15,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlDefaultBackground}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
     </UserControl.Resources>
     
-    <Grid>
+    <Grid Background="{DynamicResource ControlDarkerBackground}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*"/>
             <ColumnDefinition Width="3*"/>
         </Grid.ColumnDefinitions>
         
-        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="20">
-            <StackPanel>
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="20" Background="{DynamicResource ControlDarkerBackground}">
+            <StackPanel Background="{DynamicResource ControlDarkerBackground}">
                 <Label Content="{x:Static p:Resources.Create_Server_in_Region}" 
                        HorizontalAlignment="Center"
                        VerticalAlignment="Top"
                        FontSize="20"
                        FontWeight="Bold"
-                       Foreground="#ffffff"
+                       Foreground="{DynamicResource ControlDefaultForeground}"
                        Margin="0,0,0,10"/>
                 
                 <TextBlock Text="{x:Static p:Resources.This_creates_a_private_match_in_a_region_of_your_choice_}"
@@ -80,23 +116,23 @@
                            HorizontalAlignment="Center" 
                            VerticalAlignment="Top"
                            FontSize="14" 
-                           Foreground="#cccccc" 
+                           Foreground="{DynamicResource ControlBrightDefaultBackground}" 
                            Margin="0,0,0,20"/>
                 
-                <Border Background="#232323" CornerRadius="8" Padding="15" Margin="0,0,0,15">
-                    <StackPanel>
-                        <Label Content="Region:" Foreground="#ffffff" FontWeight="Bold"/>
+                <Border Background="{DynamicResource ControlDefaultBackground}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                    <StackPanel Background="{DynamicResource ControlDefaultBackground}">
+                        <Label Content="Region:" Foreground="{DynamicResource ControlDefaultForeground}" FontWeight="Bold"/>
                         <ComboBox SelectedIndex="{l:SettingBinding chooseRegionIndex}" 
-                                  Background="#1e1e1e"
-                                  Foreground="#ffffff"
-                                  BorderBrush="#404040"
+                                  Background="{DynamicResource ControlDarkerBackground}"
+                                  Foreground="{DynamicResource ControlDefaultForeground}"
+                                  BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}"
                                   Height="54" 
                                   Margin="0,0,0,10">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding}" Foreground="#ffffff"/>
-                                        <TextBlock FontSize="12" Foreground="#cccccc">
+                                    <StackPanel Background="{DynamicResource ControlDarkerBackground}">
+                                        <TextBlock Text="{Binding}" Foreground="{DynamicResource ControlDefaultForeground}"/>
+                                        <TextBlock FontSize="12" Foreground="{DynamicResource ControlBrightDefaultBackground}">
                                             <TextBlock.Text>
                                                 <MultiBinding StringFormat="{}{0}">
                                                     <Binding Path="Tag"/>
@@ -117,11 +153,11 @@
                             <ComboBoxItem Content="{x:Static p:Resources.Singapore}" Tag="{x:Static p:Resources.e_g__Singapore}"/>
                         </ComboBox>
                         
-                        <Label Content="Map:" Foreground="#ffffff" FontWeight="Bold"/>
+                        <Label Content="Map:" Foreground="{DynamicResource ControlDefaultForeground}" FontWeight="Bold"/>
                         <ComboBox SelectedIndex="{l:SettingBinding chooseMapIndex}" 
-                                  Background="#1e1e1e"
-                                  Foreground="#ffffff"
-                                  BorderBrush="#404040"
+                                  Background="{DynamicResource ControlDarkerBackground}"
+                                  Foreground="{DynamicResource ControlDefaultForeground}"
+                                  BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}"
                                   Height="32" 
                                   Margin="0,0,0,10">
                             <ComboBoxItem Content="{x:Static p:Resources.Arena}"/>
@@ -132,11 +168,11 @@
                             <ComboBoxItem Content="{x:Static p:Resources.Combat_Surge}"/>
                         </ComboBox>
                         
-                        <Label Content="Game Type:" Foreground="#ffffff" FontWeight="Bold"/>
+                        <Label Content="Game Type:" Foreground="{DynamicResource ControlDefaultForeground}" FontWeight="Bold"/>
                         <ComboBox SelectedIndex="{l:SettingBinding chooseGameTypeIndex}" 
-                                  Background="#1e1e1e"
-                                  Foreground="#ffffff"
-                                  BorderBrush="#404040"
+                                  Background="{DynamicResource ControlDarkerBackground}"
+                                  Foreground="{DynamicResource ControlDefaultForeground}"
+                                  BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}"
                                   Height="32" 
                                   Margin="0,0,0,10"
                                   ToolTip="Not all of these will work">
@@ -167,71 +203,113 @@
                                   Content="{x:Static p:Resources.Spectator_Mode}"
                                   ToolTip="{x:Static p:Resources.chooseRegionSpectator_ToolTip}"
                                   IsChecked="{l:SettingBinding chooseRegionSpectator}" 
-                                  Foreground="#ffffff"
+                                  Foreground="{DynamicResource ControlDefaultForeground}"
                                   Margin="0,10,0,5"/>
                         
                         <CheckBox Content="{x:Static p:Resources.noovrCheckbox_Content}"
                                   ToolTip="{x:Static p:Resources.Anonymous_accounts_allow_you_to_join_the_match_twice_on_the_same_computer_}"
                                   IsChecked="{l:SettingBinding chooseRegionNoOVR}" 
-                                  Foreground="#ffffff"
+                                  Foreground="{DynamicResource ControlDefaultForeground}"
                                   Margin="0,5,0,20"
                                   IsEnabled="{Binding ElementName=spectatorModeCheckbox, Path=IsChecked}"/>
                         
-                        <Button Content="🚀 LAUNCH SERVER" 
+                        <Button Content="LAUNCH SERVER" 
                                 Click="Create"
-                                Background="#4CAF50"
+                                Background="{DynamicResource ControlDefaultBackground}"
                                 Foreground="White"
                                 FontSize="12"
                                 FontWeight="Bold"
                                 Height="50"
                                 Cursor="Hand"
-                                BorderThickness="0"
-                                Margin="0,0,0,10"/>
+                                Margin="0,0,0,10"
+                                BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                    <Setter Property="BorderThickness" Value="1"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                     </StackPanel>
                 </Border>
                 
-                <Border Background="#232323" CornerRadius="8" Padding="15">
-                    <StackPanel>
+                <Border Background="{DynamicResource ControlDefaultBackground}" CornerRadius="8" Padding="15">
+                    <StackPanel Background="{DynamicResource ControlDefaultBackground}">
                         <Label Content="OfflineEcho:" 
-                               Foreground="#ffffff" 
+                               Foreground="{DynamicResource ControlDefaultForeground}" 
                                FontWeight="Bold"
                                Margin="0,0,0,10"/>
                         
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <Button Content="Install" 
                                     Click="InstallOfflineEcho" 
-                                    Background="#2196F3"
+                                    Background="{DynamicResource ControlBrightDefaultBackground}"
                                     Foreground="White"
                                     FontSize="11"
                                     Padding="20,8"
-                                    BorderThickness="0"
                                     Cursor="Hand"
                                     Margin="0,0,10,0"
-                                    Width="120"/>
+                                    Width="120"
+                                    BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
                             
                             <Button Content="Remove" 
                                     Click="RemoveOfflineEcho" 
-                                    Background="#f44336"
+                                    Background="{DynamicResource ControlDefaultBackground}"
                                     Foreground="White"
                                     FontSize="11"
                                     Padding="20,8"
-                                    BorderThickness="0"
                                     Cursor="Hand"
-                                    Width="120"/>
+                                    Width="120"
+                                    BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
                         </StackPanel>
                     </StackPanel>
                 </Border>
             </StackPanel>
         </ScrollViewer>
         
-        <Grid Grid.Column="1" Background="#2b2b2b" Margin="20">
+        <Grid Grid.Column="1" Background="{DynamicResource ControlDarkerBackground}" Margin="20">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             
-            <Border Grid.Row="0" Background="#232323" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+            <Border Grid.Row="0" Background="{DynamicResource ControlDefaultBackground}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -242,48 +320,62 @@
                         <TextBlock Text="EchoVR Server Browser" 
                                    FontSize="24" 
                                    FontWeight="Bold"
-                                   Foreground="#ffffff"/>
+                                   Foreground="{DynamicResource ControlDefaultForeground}"/>
                         <TextBlock Text="Browse and join Echo Arena/Combat servers" 
                                    FontSize="11"
-                                   Foreground="#cccccc"
+                                   Foreground="{DynamicResource ControlBrightDefaultBackground}"
                                    Margin="0,2,0,0"/>
                     </StackPanel>
                     
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="🔄 Refresh" 
+                        <Button Content="Refresh" 
                                 Click="RefreshServers_Click"
                                 Style="{StaticResource ServerBrowserButtonStyle}"
                                 Margin="0,0,10,0"/>
                         
-                        <Button Content="⚙️ Settings" 
+                        <Button Content="Settings" 
                                 Click="ShowSettings_Click"
-                                Background="#1e1e1e"
-                                Foreground="#ffffff"
+                                Background="{DynamicResource ControlDarkerBackground}"
+                                Foreground="{DynamicResource ControlDefaultForeground}"
                                 Padding="20,8"
-                                BorderThickness="0"
                                 Cursor="Hand"
-                                Margin="0,0,20,0"/>
+                                Margin="0,0,20,0"
+                                BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="{DynamicResource ControlDarkerBackground}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                    <Setter Property="BorderThickness" Value="1"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                         
-                        <Ellipse x:Name="StatusIndicator" Width="12" Height="12" Fill="#ef4444" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <Ellipse x:Name="StatusIndicator" Width="12" Height="12" Fill="{DynamicResource ControlDefaultBackground}" VerticalAlignment="Center" Margin="0,0,5,0"/>
                         <TextBlock x:Name="StatusTextBlock" 
                                    Text="Disconnected"
-                                   Foreground="#cccccc"
+                                   Foreground="{DynamicResource ControlBrightDefaultBackground}"
                                    VerticalAlignment="Center"/>
                     </StackPanel>
                 </Grid>
             </Border>
             
-            <Grid Grid.Row="1" Margin="0,0,0,15">
+            <Grid Grid.Row="1" Margin="0,0,0,15" Background="{DynamicResource ControlDarkerBackground}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="400"/>
                 </Grid.ColumnDefinitions>
                 
                 <Border Grid.Column="0" 
-                        Background="#232323" 
+                        Background="{DynamicResource ControlDefaultBackground}" 
                         CornerRadius="8" 
                         Margin="0,0,15,0"
-                        BorderBrush="#404040"
+                        BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}"
                         BorderThickness="1">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -292,27 +384,29 @@
                         </Grid.RowDefinitions>
                         
                         <Border Grid.Row="0" 
-                                Background="#1e1e1e" 
+                                Background="{DynamicResource ControlDarkerBackground}" 
                                 CornerRadius="8,8,0,0"
-                                Padding="15">
+                                Padding="15"
+                                BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}"
+                                BorderThickness="0,0,0,1">
                             <Grid>
                                 <TextBlock Text="Available Servers" 
                                            FontSize="16"
                                            FontWeight="Bold"
-                                           Foreground="#ffffff"
+                                           Foreground="{DynamicResource ControlDefaultForeground}"
                                            VerticalAlignment="Center"/>
                                 
                                 <TextBlock x:Name="ServerCountLabel" 
                                            Text="0 servers"
                                            FontSize="11"
-                                           Foreground="#cccccc"
+                                           Foreground="{DynamicResource ControlBrightDefaultBackground}"
                                            VerticalAlignment="Center"
                                            HorizontalAlignment="Right"/>
                             </Grid>
                         </Border>
                         
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                            <ItemsControl x:Name="ServerListControl">
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="{DynamicResource ControlDefaultBackground}">
+                            <ItemsControl x:Name="ServerListControl" Background="{DynamicResource ControlDefaultBackground}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border Style="{StaticResource ServerCardStyle}" 
@@ -337,7 +431,7 @@
                                                     
                                                     <Border Grid.Column="1" Style="{StaticResource StatusBadgeStyle}">
                                                         <TextBlock Text="{Binding StatusText}" 
-                                                                   Foreground="White"
+                                                                   Foreground="{DynamicResource ControlDarkerBackground}"
                                                                    FontSize="8"
                                                                    FontWeight="Bold"/>
                                                     </Border>
@@ -355,30 +449,44 @@
                                                     
                                                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                                                         <TextBlock Text="{Binding BlueScore}"
-                                                                   Foreground="#60a5fa"
+                                                                   Foreground="#a3d4ff"
                                                                    FontSize="9"
                                                                    FontWeight="Bold"/>
                                                         <TextBlock Text=" - " 
-                                                                   Foreground="#ffffff"
+                                                                   Foreground="{DynamicResource ControlBrightDefaultBackground}"
                                                                    FontSize="9"/>
                                                         <TextBlock Text="{Binding OrangeScore}"
-                                                                   Foreground="#fb923c"
+                                                                   Foreground="#ffc8a3"
                                                                    FontSize="9"
                                                                    FontWeight="Bold"/>
                                                     </StackPanel>
                                                 </Grid>
                                                 
                                                 <Button Grid.Row="2" 
-                                                        Content="Spectate →"
+                                                        Content="Spectate"
                                                         Click="QuickJoinButton_Click"
                                                         HorizontalAlignment="Right"
-                                                        Background="#232323"
+                                                        Background="{DynamicResource ControlDefaultBackground}"
                                                         Foreground="White"
                                                         FontSize="9"
                                                         Padding="15,4"
-                                                        BorderThickness="0"
                                                         Cursor="Hand"
-                                                        Margin="0,8,0,0"/>
+                                                        Margin="0,8,0,0"
+                                                        BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}"/>
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                                            <Setter Property="BorderThickness" Value="1"/>
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter Property="Background" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                                                    <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -389,9 +497,9 @@
                 </Border>
                 
                 <Border Grid.Column="1" 
-                        Background="#232323" 
+                        Background="{DynamicResource ControlDefaultBackground}" 
                         CornerRadius="8"
-                        BorderBrush="#404040"
+                        BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}"
                         BorderThickness="1">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -400,21 +508,23 @@
                         </Grid.RowDefinitions>
                         
                         <Border Grid.Row="0" 
-                                Background="#1e1e1e" 
+                                Background="{DynamicResource ControlDarkerBackground}" 
                                 CornerRadius="8,8,0,0"
-                                Padding="15">
+                                Padding="15"
+                                BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}"
+                                BorderThickness="0,0,0,1">
                             <TextBlock Text="Server Details" 
                                        FontSize="16"
                                        FontWeight="Bold"
-                                       Foreground="#ffffff"/>
+                                       Foreground="{DynamicResource ControlDefaultForeground}"/>
                         </Border>
                         
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                            <Border Background="#1e1e1e" Padding="20,25">
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="{DynamicResource ControlDefaultBackground}">
+                            <Border Background="{DynamicResource ControlDarkerBackground}" Padding="20,25">
                                 <StackPanel x:Name="ServerDetailsPanel">
                                     <TextBlock Text="Select a server to view details" 
                                                FontSize="14"
-                                               Foreground="#cccccc"
+                                               Foreground="{DynamicResource ControlBrightDefaultBackground}"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"
                                                Margin="0,100,0,0"/>
@@ -426,9 +536,11 @@
             </Grid>
             
             <Border Grid.Row="2" 
-                    Background="#232323" 
+                    Background="{DynamicResource ControlDefaultBackground}" 
                     CornerRadius="8" 
-                    Padding="15">
+                    Padding="15"
+                    BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}"
+                    BorderThickness="1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -438,14 +550,14 @@
                     <TextBlock x:Name="UpdateLabel" 
                                Text="Last update: Never"
                                FontSize="9"
-                               Foreground="#999999"
+                               Foreground="{DynamicResource ControlBrightDefaultBackground}"
                                VerticalAlignment="Center"/>
                     
                     <TextBlock x:Name="ApiStatusLabel" 
                                Grid.Column="1"
                                Text="API: Disconnected"
                                FontSize="9"
-                               Foreground="#ef4444"
+                               Foreground="{DynamicResource ControlDefaultBackground}"
                                VerticalAlignment="Center"/>
                 </Grid>
             </Border>

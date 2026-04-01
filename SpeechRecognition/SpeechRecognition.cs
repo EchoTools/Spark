@@ -13,7 +13,7 @@ using System.IO.Compression;
 
 namespace Spark
 {
-	public class SpeechRecognition
+	public class SpeechRecognition : IDisposable
 	{
 		public float micLevel = 0;
 		public float speakerLevel = 0;
@@ -31,24 +31,37 @@ namespace Spark
 			{
 				if (value != capturing)
 				{
+					capturing = value;
 					try
 					{
-						if (value)
+						if (capturing)
 						{
-							// speechRecognizer.ContinuousRecognitionSession.StartAsync();
+							if (micCapture != null)
+							{
+								try { micCapture.StartRecording(); } catch (Exception ex) { Logger.LogRow(Logger.LogType.Error, "Error starting mic: " + ex.Message); }
+							}
+							if (speakerCapture != null)
+							{
+								try { speakerCapture.StartRecording(); } catch { }
+							}
 						}
 						else
 						{
-							// speechRecognizer.ContinuousRecognitionSession.StopAsync();
+							if (micCapture != null)
+							{
+								try { micCapture.StopRecording(); } catch { }
+							}
+							if (speakerCapture != null)
+							{
+								try { speakerCapture.StopRecording(); } catch { }
+							}
 						}
 					}
 					catch (Exception e)
 					{
-						Logger.LogRow(Logger.LogType.Error, "Error starting/stopping voice rec.\n" + e);
+						Logger.LogRow(Logger.LogType.Error, "Error toggling voice rec state.\n" + e);
 					}
 				}
-
-				capturing = value;
 			}
 		}
 
@@ -57,7 +70,6 @@ namespace Spark
 			try
 			{
 				Vosk.Vosk.SetLogLevel(0);
-
 				_ = Task.Run(DownloadVoskModel);
 			}
 			catch (Exception e)
@@ -68,7 +80,9 @@ namespace Spark
 
 		private async Task DownloadVoskModel()
 		{
-			string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "IgniteVR", "Spark", "vosk-model-small-en-us-0.15");
+			string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "IgniteVR", "Spark");
+			string path = Path.Combine(appDataPath, "vosk-model-small-en-us-0.15");
+			
 			if (Directory.Exists(path))
 			{
 				AfterDownload(path);
@@ -76,44 +90,69 @@ namespace Spark
 			else
 			{
 				Logger.LogRow(Logger.LogType.Error, "Vosk model not found. Downloading.");
-				WebClient webClient = new WebClient();
-				webClient.Headers.Add("Accept: text/html, application/xhtml+xml, */*");
-				webClient.Headers.Add("User-Agent: Spark");
-				string zipFile = Path.Combine(Path.GetTempPath(), "vosk_model.zip");
-				await webClient.DownloadFileTaskAsync(new Uri("https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"), zipFile);
-				ZipFile.ExtractToDirectory(zipFile, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "IgniteVR", "Spark"));
-				if (Directory.Exists(path))
+				try 
 				{
-					AfterDownload(path);
+					if (!Directory.Exists(appDataPath)) Directory.CreateDirectory(appDataPath);
+
+					using (WebClient webClient = new WebClient())
+					{
+						webClient.Headers.Add("User-Agent: Spark");
+						string zipFile = Path.Combine(Path.GetTempPath(), "vosk_model.zip");
+						await webClient.DownloadFileTaskAsync(new Uri("https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"), zipFile);
+						ZipFile.ExtractToDirectory(zipFile, appDataPath);
+						
+						if (File.Exists(zipFile)) File.Delete(zipFile);
+					}
+
+					if (Directory.Exists(path))
+					{
+						AfterDownload(path);
+					}
+					else
+					{
+						Logger.LogRow(Logger.LogType.Error, "Vosk model failed to download or extract properly.");
+					}
 				}
-				else
+				catch (Exception ex)
 				{
-					Logger.LogRow(Logger.LogType.Error, "Vosk model failed to download.");
+					Logger.LogRow(Logger.LogType.Error, $"Download failed: {ex.Message}");
 				}
 			}
 		}
 
 		private void AfterDownload(string path)
 		{
-			Model model = new Model(path);
+			try 
+			{
+				Model model = new Model(path);
 
-			voskRecMic = new VoskRecognizer(model, 16000f);
-			voskRecMic.SetMaxAlternatives(10);
-			voskRecMic.SetWords(true);
+				voskRecMic = new VoskRecognizer(model, 16000f);
+				voskRecMic.SetMaxAlternatives(10);
+				voskRecMic.SetWords(true);
 
-			micCapture = new WaveInEvent();
-			micCapture.WaveFormat = new WaveFormat(16000, 1);
-			micCapture.DeviceNumber = GetMicByName(SparkSettings.instance.microphone);
-			micCapture.DataAvailable += MicDataAvailable;
-			micCapture.StartRecording();
+				micCapture = new WaveInEvent();
+				micCapture.WaveFormat = new WaveFormat(16000, 1);
+				micCapture.DeviceNumber = GetMicByName(SparkSettings.instance.microphone);
+				micCapture.DataAvailable += MicDataAvailable;
 
-			// voskRecSpeaker = new VoskRecognizer(model, 16000f);
-			// voskRecSpeaker.SetMaxAlternatives(10);
-			// voskRecSpeaker.SetWords(true);
+				// Note: Speaker capture was commented out in original file, but we can init it safely if needed
+				// To enable speaker capture, uncomment the lines below:
+				// voskRecSpeaker = new VoskRecognizer(model, 16000f);
+				// voskRecSpeaker.SetMaxAlternatives(10);
+				// voskRecSpeaker.SetWords(true);
+				// speakerCapture = new WasapiLoopbackCapture(GetSpeakerByName(SparkSettings.instance.speaker));
+				// speakerCapture.DataAvailable += SpeakerDataAvailable;
 
-			// speakerCapture = new WasapiLoopbackCapture(GetSpeakerByName(SparkSettings.instance.speaker));
-			// speakerCapture.DataAvailable += SpeakerDataAvailable;
-			// speakerCapture.StartRecording();
+				// Only start recording if the setting is actually enabled
+				if (SparkSettings.instance.enableVoiceRecognition)
+				{
+					Enabled = true; // This triggers the StartRecording logic in the setter
+				}
+			}
+			catch (Exception e)
+			{
+				Logger.LogRow(Logger.LogType.Error, "Error initializing microphone: " + e.Message);
+			}
 		}
 
 		private void SpeakerDataAvailable(object sender, WaveInEventArgs e)
@@ -121,26 +160,25 @@ namespace Spark
 			if (!SparkSettings.instance.enableVoiceRecognition) return;
 
 			speakerLevel = 0;
-
-			float[] floats = new float[e.BytesRecorded / 4];
-
-			MemoryStream mem = new MemoryStream(e.Buffer);
-			BinaryReader reader = new BinaryReader(mem);
-			for (int index = 0; index < e.BytesRecorded / 4; index++)
+			float maxSample = 0;
+			for (int index = 0; index < e.BytesRecorded; index += 4)
 			{
-				float sample = reader.ReadSingle();
-
-				// absolute value 
+				float sample = BitConverter.ToSingle(e.Buffer, index);
 				if (sample < 0) sample = -sample;
-				// is this the max value?
-				if (sample > speakerLevel) speakerLevel = sample;
-
-				floats[index / 4] = sample;
+				if (sample > maxSample) maxSample = sample;
 			}
+			speakerLevel = maxSample;
 
-			if (voskRecSpeaker.AcceptWaveform(floats, floats.Length))
+			// Optimization: Avoid allocation if speaker rec isn't active
+			if (voskRecSpeaker != null)
 			{
-				HandleResult(voskRecSpeaker.Result());
+				float[] floats = new float[e.BytesRecorded / 4];
+				Buffer.BlockCopy(e.Buffer, 0, floats, 0, e.BytesRecorded);
+
+				if (voskRecSpeaker.AcceptWaveform(floats, floats.Length))
+				{
+					HandleResult(voskRecSpeaker.Result());
+				}
 			}
 		}
 
@@ -148,20 +186,16 @@ namespace Spark
 		{
 			if (!SparkSettings.instance.enableVoiceRecognition) return;
 
-			micLevel = 0;
-			// interpret as 16 bit audio
+			float maxSample = 0;
 			for (int index = 0; index < e.BytesRecorded; index += 2)
 			{
 				short sample = (short)((e.Buffer[index + 1] << 8) | e.Buffer[index + 0]);
-				// to floating point
-				float sample32 = sample / 32768f;
-				// absolute value 
-				if (sample32 < 0) sample32 = -sample32;
-				// is this the max value?
-				if (sample32 > micLevel) micLevel = sample32;
+				float sample32 = Math.Abs(sample / 32768f);
+				if (sample32 > maxSample) maxSample = sample32;
 			}
+			micLevel = maxSample;
 
-			if (voskRecMic.AcceptWaveform(e.Buffer, e.BytesRecorded))
+			if (voskRecMic != null && voskRecMic.AcceptWaveform(e.Buffer, e.BytesRecorded))
 			{
 				HandleResult(voskRecMic.Result());
 			}
@@ -169,113 +203,155 @@ namespace Spark
 
 		private static void HandleResult(string result)
 		{
-			try
+			if (string.IsNullOrEmpty(result)) return;
+
+			Task.Run(() => 
 			{
-				List<string> clipTerms = new List<string>();
-
-				if (SparkSettings.instance.clipThatDetectionNVHighlights || SparkSettings.instance.clipThatDetectionMedal)
+				try
 				{
-					clipTerms.AddRange(new string[] {
-						"clip that",
-						"quebec",
-						"hope that",
-						"could that",
-						"cop that",
-						"say cheese",
-					});
-				}
-				if (SparkSettings.instance.badWordDetectionNVHighlights || SparkSettings.instance.badWordDetectionMedal)
-				{
-					clipTerms.AddRange(new string[] {
-						// downloaded bad words 
-					});
-				}
+					if (!result.Contains("text")) return;
 
-				Dictionary<string, List<Dictionary<string, object>>> r = JsonConvert.DeserializeObject<Dictionary<string, List<Dictionary<string, object>>>>(result);
-				if (r == null) return;
-				foreach (Dictionary<string, object> alt in r["alternatives"])
-				{
-					if (string.IsNullOrWhiteSpace(alt["text"].ToString())) continue;
+					List<string> clipTerms = new List<string>();
 
-					Debug.WriteLine(alt["text"].ToString());
+					bool checkHighlights = SparkSettings.instance.clipThatDetectionNVHighlights;
+					bool checkMedal = SparkSettings.instance.clipThatDetectionMedal;
 
-
-					foreach (string clipTerm in clipTerms)
+					if (checkHighlights || checkMedal)
 					{
-						if (alt["text"].ToString()?.Contains(clipTerm) ?? false)
+						clipTerms.Add("clip that");
+						clipTerms.Add("quebec");
+						clipTerms.Add("hope that");
+						clipTerms.Add("could that");
+						clipTerms.Add("cop that");
+						clipTerms.Add("say cheese");
+					}
+					
+					if (clipTerms.Count == 0) return;
+
+					Dictionary<string, List<Dictionary<string, object>>> r = JsonConvert.DeserializeObject<Dictionary<string, List<Dictionary<string, object>>>>(result);
+					if (r == null || !r.ContainsKey("alternatives")) return;
+
+					foreach (Dictionary<string, object> alt in r["alternatives"])
+					{
+						if (!alt.ContainsKey("text")) continue;
+						string text = alt["text"].ToString();
+						
+						if (string.IsNullOrWhiteSpace(text)) continue;
+
+						Debug.WriteLine(text);
+
+						foreach (string clipTerm in clipTerms)
 						{
-							Program.ManualClip?.Invoke();
-
-							if (SparkSettings.instance.clipThatDetectionMedal)
+							if (text.Contains(clipTerm))
 							{
-								Medal.ClipNow();
-							}
-							if (SparkSettings.instance.clipThatDetectionNVHighlights)
-							{
-								HighlightsHelper.SaveHighlight("PERSONAL_HIGHLIGHT_GROUP", "MANUAL", true);
-							}
+								Program.ManualClip?.Invoke();
 
-							Program.synth.SpeakAsync("Clip Saved!");
-							return;
+								if (checkMedal)
+								{
+									Medal.ClipNow();
+								}
+								if (checkHighlights)
+								{
+									HighlightsHelper.SaveHighlight("PERSONAL_HIGHLIGHT_GROUP", "MANUAL", true);
+								}
+
+								Program.synth.SpeakAsync("Clip Saved!");
+								return;
+							}
 						}
 					}
 				}
-			}
-			catch (Exception e)
-			{
-				Logger.LogRow(Logger.LogType.Error, "Error handling voice result: " + e);
-			}
+				catch (Exception e)
+				{
+					Logger.LogRow(Logger.LogType.Error, "Error handling voice result: " + e);
+				}
+			});
 		}
 
 		private static int GetMicByName(string name)
 		{
-			for (int deviceId = 0; deviceId < WaveIn.DeviceCount; deviceId++)
+			int count = WaveIn.DeviceCount;
+			for (int deviceId = 0; deviceId < count; deviceId++)
 			{
 				WaveInCapabilities deviceInfo = WaveIn.GetCapabilities(deviceId);
-				if (deviceInfo.ProductName == name)
+				if (deviceInfo.ProductName.StartsWith(name))
 				{
 					return deviceId;
 				}
 			}
-
 			return 0;
 		}
 
 		private static MMDevice GetSpeakerByName(string name)
 		{
 			MMDeviceEnumerator enumerator = new MMDeviceEnumerator();
-			List<MMDevice> devices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active).ToList();
-			int index = devices.Select(d => d.FriendlyName).ToList().IndexOf(name);
-			if (index == -1) index = 0;
-			return devices[index];
+			var devices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active);
+			foreach(var device in devices)
+			{
+				if (device.FriendlyName == name) return device;
+			}
+			return enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
 		}
 
-
-		public float GetMicLevel()
-		{
-			return micLevel;
-		}
-
-		public float GetSpeakerLevel()
-		{
-			return speakerLevel;
-		}
+		public float GetMicLevel() => micLevel;
+		public float GetSpeakerLevel() => speakerLevel;
 
 		public async Task ReloadMic()
 		{
-			micCapture.StopRecording();
-			micCapture.DeviceNumber = GetMicByName(SparkSettings.instance.microphone);
-			await Task.Delay(100);
-			micCapture.StartRecording();
+			if (micCapture != null)
+			{
+				micCapture.StopRecording();
+				micCapture.Dispose();
+				micCapture = null;
+			}
+			
+			await Task.Delay(200);
+
+			try {
+				micCapture = new WaveInEvent();
+				micCapture.WaveFormat = new WaveFormat(16000, 1);
+				micCapture.DeviceNumber = GetMicByName(SparkSettings.instance.microphone);
+				micCapture.DataAvailable += MicDataAvailable;
+				
+				if (Enabled) micCapture.StartRecording();
+			} catch (Exception e) {
+				Logger.LogRow(Logger.LogType.Error, "Error reloading mic: " + e.Message);
+			}
 		}
 
 		public async Task ReloadSpeaker()
 		{
-			speakerCapture.StopRecording();
-			await Task.Delay(100);
-			speakerCapture = new WasapiLoopbackCapture(GetSpeakerByName(SparkSettings.instance.speaker));
-			speakerCapture.DataAvailable += SpeakerDataAvailable;
-			speakerCapture.StartRecording();
+			if (speakerCapture != null)
+			{
+				try {
+					speakerCapture.StopRecording();
+					speakerCapture.Dispose();
+				} catch {}
+				speakerCapture = null;
+			}
+
+			await Task.Delay(200);
+
+			try {
+				// We only initialize if the setting calls for it, or we can just initialize it but not start it
+				// For now, mirroring ReloadMic logic but respecting the fact that speaker capture might be disabled in code
+				speakerCapture = new WasapiLoopbackCapture(GetSpeakerByName(SparkSettings.instance.speaker));
+				speakerCapture.DataAvailable += SpeakerDataAvailable;
+				if (Enabled) speakerCapture.StartRecording();
+			} catch (Exception e) {
+				// Logging as warning since speaker capture is often disabled/optional
+				Logger.LogRow(Logger.LogType.Error, "Error reloading speaker (this is normal if speaker capture is disabled): " + e.Message);
+			}
+		}
+
+		public void Dispose()
+		{
+			micCapture?.StopRecording();
+			micCapture?.Dispose();
+			speakerCapture?.StopRecording();
+			speakerCapture?.Dispose();
+			voskRecMic?.Dispose();
+			voskRecSpeaker?.Dispose();
 		}
 	}
 }

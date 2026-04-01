@@ -9,238 +9,238 @@
              mc:Ignorable="d"
              d:DesignHeight="600"
              d:DesignWidth="900"
-             Background="{DynamicResource BackgroundColour}"
+             Background="{DynamicResource ControlDarkerBackground}"
              FontSize="16"
              DataContext="{Binding RelativeSource={RelativeSource Self}}"
              Loaded="OnControlLoaded">
-    <Grid>
+    <Grid Background="{DynamicResource ControlDarkerBackground}">
 
-        <ScrollViewer>
+        <ScrollViewer Background="{DynamicResource ControlDarkerBackground}">
 
-            <WrapPanel>
-                <GroupBox Header="Choose Preset" Width="270">
-                    <StackPanel>
-                        <ListBox x:Name="PresetSelector" SelectedIndex="0" Height="145" SelectionChanged="PresetChanged">
+            <WrapPanel Background="{DynamicResource ControlDarkerBackground}">
+                <GroupBox Header="Choose Preset" Width="270" Background="{DynamicResource ControlDefaultBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                    <StackPanel Background="{DynamicResource ControlDefaultBackground}">
+                        <ListBox x:Name="PresetSelector" SelectedIndex="0" Height="145" SelectionChanged="PresetChanged" Background="{DynamicResource ControlDarkerBackground}">
                             <ListBoxItem>Custom</ListBoxItem>
                         </ListBox>
-                        <Grid>
+                        <Grid Background="{DynamicResource ControlDefaultBackground}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Button Click="LoadCustom" Padding="2,2,2,2">Load Custom</Button>
-                            <Button Grid.Column="1" Click="SaveCurrentRules" Padding="2,2,2,2">Save Current</Button>
+                            <Button Click="LoadCustom" Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">Load Custom</Button>
+                            <Button Grid.Column="1" Click="SaveCurrentRules" Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">Save Current</Button>
                         </Grid>
                     </StackPanel>
                 </GroupBox>
 
-                <GroupBox Width="270" Header="Page 1">
-                    <StackPanel Margin="0,0,0,10">
-                        <StackPanel x:Name="MinutesBlock" Orientation="Horizontal" Margin="10,10,0,0">
+                <GroupBox Width="270" Header="Page 1" Background="{DynamicResource ControlDefaultBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                    <StackPanel Margin="0,0,0,10" Background="{DynamicResource ControlDefaultBackground}">
+                        <StackPanel x:Name="MinutesBlock" Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Minutes: " Width="140" HorizontalContentAlignment="Right" />
-                            <Button Padding="2,2,2,2">
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-left-bold.png" Height="25"></Image>
                             </Button>
                             <TextBox Text="{Binding Minutes, UpdateSourceTrigger=PropertyChanged}" FontSize="20" Width="40" TextAlignment="Center"
-                                     VerticalContentAlignment="Center" />
-                            <Button Padding="2,2,2,2">
+                                     VerticalContentAlignment="Center" Background="{DynamicResource ControlDarkerBackground}"/>
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-right-bold.png" Height="25"></Image>
                             </Button>
                         </StackPanel>
-                        <StackPanel x:Name="SecondsBlock" Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel x:Name="SecondsBlock" Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Seconds: " Width="140" HorizontalContentAlignment="Right" />
-                            <Button Padding="2,2,2,2">
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-left-bold.png" Height="25"></Image>
                             </Button>
                             <TextBox Text="{Binding Seconds}" FontSize="20" Width="40" TextAlignment="Center"
-                                     VerticalContentAlignment="Center" />
-                            <Button Padding="2,2,2,2">
+                                     VerticalContentAlignment="Center" Background="{DynamicResource ControlDarkerBackground}"/>
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-right-bold.png" Height="25"></Image>
                             </Button>
                         </StackPanel>
-                        <StackPanel x:Name="BlueScoreBlock" Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel x:Name="BlueScoreBlock" Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Blue Score: " Width="140" HorizontalContentAlignment="Right" />
-                            <Button Padding="2,2,2,2">
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-left-bold.png" Height="25"></Image>
                             </Button>
                             <TextBox Text="{Binding BlueScore}" FontSize="20" Width="40" TextAlignment="Center"
-                                     VerticalContentAlignment="Center" />
-                            <Button Padding="2,2,2,2">
+                                     VerticalContentAlignment="Center" Background="{DynamicResource ControlDarkerBackground}"/>
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-right-bold.png" Height="25"></Image>
                             </Button>
                         </StackPanel>
-                        <StackPanel x:Name="OrangeScoreBlock" Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel x:Name="OrangeScoreBlock" Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Orange Score: " Width="140" HorizontalContentAlignment="Right" />
-                            <Button Padding="2,2,2,2">
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-left-bold.png" Height="25"></Image>
                             </Button>
                             <TextBox Text="{Binding OrangeScore}" FontSize="20" Width="40" TextAlignment="Center"
-                                     VerticalContentAlignment="Center" />
-                            <Button Padding="2,2,2,2">
+                                     VerticalContentAlignment="Center" Background="{DynamicResource ControlDarkerBackground}"/>
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-right-bold.png" Height="25"></Image>
                             </Button>
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>
 
-                <GroupBox Width="270" Header="Page 2">
-                    <StackPanel Margin="0,0,0,10">
-                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+                <GroupBox Width="270" Header="Page 2" Background="{DynamicResource ControlDefaultBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                    <StackPanel Margin="0,0,0,10" Background="{DynamicResource ControlDefaultBackground}">
+                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Disc Location: " Width="140" HorizontalContentAlignment="Right" />
-                            <ComboBox SelectedIndex="{Binding DiscLocation}" Width="100">
+                            <ComboBox SelectedIndex="{Binding DiscLocation}" Width="100" Background="{DynamicResource ControlDarkerBackground}">
                                 <ComboBoxItem>Blue</ComboBoxItem>
                                 <ComboBoxItem>Mid</ComboBoxItem>
                                 <ComboBoxItem>Orange</ComboBoxItem>
                             </ComboBox>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Goal Stops Time: " Width="140" HorizontalContentAlignment="Right" />
-                            <CheckBox IsChecked="{Binding GoalStopsTime}" Margin="10,0,0,0"></CheckBox>
+                            <CheckBox IsChecked="{Binding GoalStopsTime}" Margin="10,0,0,0" Background="{DynamicResource ControlDefaultBackground}"></CheckBox>
                         </StackPanel>
-                        <StackPanel x:Name="RespawnTimeBlock" Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel x:Name="RespawnTimeBlock" Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Respawn Time: " Width="140" HorizontalContentAlignment="Right" />
-                            <Button Padding="2,2,2,2">
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-left-bold.png" Height="25"></Image>
                             </Button>
                             <TextBox Text="{Binding RespawnTime}" FontSize="20" Width="40" TextAlignment="Center"
-                                     VerticalContentAlignment="Center" />
-                            <Button Padding="2,2,2,2">
+                                     VerticalContentAlignment="Center" Background="{DynamicResource ControlDarkerBackground}"/>
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-right-bold.png" Height="25"></Image>
                             </Button>
                         </StackPanel>
-                        <StackPanel x:Name="CatapultTimeBlock" Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel x:Name="CatapultTimeBlock" Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Catapult Time: " Width="140" HorizontalContentAlignment="Right" />
-                            <Button Padding="2,2,2,2">
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-left-bold.png" Height="25"></Image>
                             </Button>
                             <TextBox Text="{Binding CatapultTime}" FontSize="20" Width="40" TextAlignment="Center"
-                                     VerticalContentAlignment="Center" />
-                            <Button Padding="2,2,2,2">
+                                     VerticalContentAlignment="Center" Background="{DynamicResource ControlDarkerBackground}"/>
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-right-bold.png" Height="25"></Image>
                             </Button>
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>
 
-                <GroupBox Width="270" Header="Page 3">
-                    <StackPanel Margin="0,0,0,10">
-                        <StackPanel x:Name="RoundCountBlock" Orientation="Horizontal" Margin="10,10,0,0">
+                <GroupBox Width="270" Header="Page 3" Background="{DynamicResource ControlDefaultBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                    <StackPanel Margin="0,0,0,10" Background="{DynamicResource ControlDefaultBackground}">
+                        <StackPanel x:Name="RoundCountBlock" Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Round Count: " Width="140" HorizontalContentAlignment="Right" />
-                            <Button Padding="2,2,2,2">
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-left-bold.png" Height="25"></Image>
                             </Button>
                             <TextBox Text="{Binding RoundCount}" FontSize="20" Width="40" TextAlignment="Center"
-                                     VerticalContentAlignment="Center" />
-                            <Button Padding="2,2,2,2">
+                                     VerticalContentAlignment="Center" Background="{DynamicResource ControlDarkerBackground}"/>
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-right-bold.png" Height="25"></Image>
                             </Button>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Rounds Played: " Width="140" HorizontalContentAlignment="Right" />
-                            <ComboBox SelectedIndex="{Binding RoundsPlayed}" Width="100">
+                            <ComboBox SelectedIndex="{Binding RoundsPlayed}" Width="100" Background="{DynamicResource ControlDarkerBackground}">
                                 <ComboBoxItem>All</ComboBoxItem>
                                 <ComboBoxItem>Best Of</ComboBoxItem>
                             </ComboBox>
                         </StackPanel>
-                        <StackPanel x:Name="RoundWaitTimeBlock" Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel x:Name="RoundWaitTimeBlock" Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Round Wait Time: " Width="140" HorizontalContentAlignment="Right" />
-                            <Button Padding="2,2,2,2">
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-left-bold.png" Height="25"></Image>
                             </Button>
                             <TextBox Text="{Binding RoundWaitTime}" FontSize="20" Width="40" TextAlignment="Center"
-                                     VerticalContentAlignment="Center" />
-                            <Button Padding="2,2,2,2">
+                                     VerticalContentAlignment="Center" Background="{DynamicResource ControlDarkerBackground}"/>
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-right-bold.png" Height="25"></Image>
                             </Button>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Carry Points Over: " Width="140" HorizontalContentAlignment="Right" />
-                            <CheckBox IsChecked="{Binding CarryPointsOver}" Margin="10,0,0,0"></CheckBox>
+                            <CheckBox IsChecked="{Binding CarryPointsOver}" Margin="10,0,0,0" Background="{DynamicResource ControlDefaultBackground}"></CheckBox>
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>
 
-                <GroupBox Width="270" Header="Page 4">
-                    <StackPanel Margin="0,0,0,10">
-                        <StackPanel x:Name="BlueRoundsWonBlock" Orientation="Horizontal" Margin="10,10,0,0">
+                <GroupBox Width="270" Header="Page 4" Background="{DynamicResource ControlDefaultBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                    <StackPanel Margin="0,0,0,10" Background="{DynamicResource ControlDefaultBackground}">
+                        <StackPanel x:Name="BlueRoundsWonBlock" Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Blue Rounds Won: " Width="140" HorizontalContentAlignment="Right" />
-                            <Button Padding="2,2,2,2">
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-left-bold.png" Height="25"></Image>
                             </Button>
                             <TextBox Text="{Binding BlueRoundsWon}" FontSize="20" Width="40" TextAlignment="Center"
-                                     VerticalContentAlignment="Center" />
-                            <Button Padding="2,2,2,2">
+                                     VerticalContentAlignment="Center" Background="{DynamicResource ControlDarkerBackground}"/>
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-right-bold.png" Height="25"></Image>
                             </Button>
                         </StackPanel>
-                        <StackPanel x:Name="OrangeRoundsWonBlock" Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel x:Name="OrangeRoundsWonBlock" Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Orange Rounds Won: " Width="140" HorizontalContentAlignment="Right" />
-                            <Button Padding="2,2,2,2">
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-left-bold.png" Height="25"></Image>
                             </Button>
                             <TextBox Text="{Binding OrangeRoundsWon}" FontSize="20" Width="40" TextAlignment="Center"
-                                     VerticalContentAlignment="Center" />
-                            <Button Padding="2,2,2,2">
+                                     VerticalContentAlignment="Center" Background="{DynamicResource ControlDarkerBackground}"/>
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-right-bold.png" Height="25"></Image>
                             </Button>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Overtime: " Width="140" HorizontalContentAlignment="Right" />
-                            <ComboBox SelectedIndex="{Binding Overtime}" Width="100">
+                            <ComboBox SelectedIndex="{Binding Overtime}" Width="100" Background="{DynamicResource ControlDarkerBackground}">
                                 <ComboBoxItem>Round End</ComboBoxItem>
                                 <ComboBoxItem>Match End</ComboBoxItem>
                                 <ComboBoxItem>None</ComboBoxItem>
                             </ComboBox>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Standard Chassis: " Width="140" HorizontalContentAlignment="Right" />
-                            <CheckBox IsChecked="{Binding StandardChassis}" Margin="10,0,0,0"></CheckBox>
+                            <CheckBox IsChecked="{Binding StandardChassis}" Margin="10,0,0,0" Background="{DynamicResource ControlDefaultBackground}"></CheckBox>
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>
 
-                <GroupBox Width="270" Header="Page 5">
-                    <StackPanel Margin="0,0,0,10">
-                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+                <GroupBox Width="270" Header="Page 5" Background="{DynamicResource ControlDefaultBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                    <StackPanel Margin="0,0,0,10" Background="{DynamicResource ControlDefaultBackground}">
+                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Mercy Enabled: " Width="140" HorizontalContentAlignment="Right" />
-                            <CheckBox IsChecked="{Binding MercyEnabled}" Margin="10,0,0,0"></CheckBox>
+                            <CheckBox IsChecked="{Binding MercyEnabled}" Margin="10,0,0,0" Background="{DynamicResource ControlDefaultBackground}"></CheckBox>
                         </StackPanel>
-                        <StackPanel x:Name="MercyScoreDiffBlock" Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel x:Name="MercyScoreDiffBlock" Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Mercy Score Diff: " Width="140" HorizontalContentAlignment="Right" />
-                            <Button Padding="2,2,2,2">
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-left-bold.png" Height="25"></Image>
                             </Button>
                             <TextBox Text="{Binding MercyScoreDiff}" FontSize="20" Width="40" TextAlignment="Center"
-                                     VerticalContentAlignment="Center" />
-                            <Button Padding="2,2,2,2">
+                                     VerticalContentAlignment="Center" Background="{DynamicResource ControlDarkerBackground}"/>
+                            <Button Padding="2,2,2,2" Background="{DynamicResource ControlBrightDefaultBackground}">
                                 <Image Source="/img/arrow-right-bold.png" Height="25"></Image>
                             </Button>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Team Only Voice: " Width="140" HorizontalContentAlignment="Right" />
-                            <CheckBox IsChecked="{Binding TeamOnlyVoice}" Margin="10,0,0,0"></CheckBox>
+                            <CheckBox IsChecked="{Binding TeamOnlyVoice}" Margin="10,0,0,0" Background="{DynamicResource ControlDefaultBackground}"></CheckBox>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Disc Curve: " Width="140" HorizontalContentAlignment="Right" />
-                            <CheckBox IsChecked="{Binding DiscCurve}" Margin="10,0,0,0"></CheckBox>
+                            <CheckBox IsChecked="{Binding DiscCurve}" Margin="10,0,0,0" Background="{DynamicResource ControlDefaultBackground}"></CheckBox>
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>
 
-                <GroupBox Width="270" Header="Page 6">
-                    <StackPanel Margin="0,0,0,10">
-                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+                <GroupBox Width="270" Header="Page 6" Background="{DynamicResource ControlDefaultBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                    <StackPanel Margin="0,0,0,10" Background="{DynamicResource ControlDefaultBackground}">
+                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Self Goaling: " Width="140" HorizontalContentAlignment="Right" />
-                            <CheckBox IsChecked="{Binding SelfGoaling}" Margin="10,0,0,0"></CheckBox>
+                            <CheckBox IsChecked="{Binding SelfGoaling}" Margin="10,0,0,0" Background="{DynamicResource ControlDefaultBackground}"></CheckBox>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="10,10,0,0" Background="{DynamicResource ControlDefaultBackground}">
                             <Label Content="Goalie Ping Adv: " Width="140" HorizontalContentAlignment="Right" />
-                            <CheckBox IsChecked="{Binding GoaliePingAdv}" Margin="10,0,0,0"></CheckBox>
+                            <CheckBox IsChecked="{Binding GoaliePingAdv}" Margin="10,0,0,0" Background="{DynamicResource ControlDefaultBackground}"></CheckBox>
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>
                 
-                <TextBlock x:Name="LastChangedBy" Foreground="Gray" Margin="20,20,20,20">Last changed by: ---</TextBlock>
+                <TextBlock x:Name="LastChangedBy" Foreground="Gray" Margin="20,20,20,20" Background="{DynamicResource ControlDarkerBackground}">Last changed by: ---</TextBlock>
 
                 <!--Grid>
                 <Grid.ColumnDefinitions>
@@ -249,8 +249,8 @@
                     <ColumnDefinition Width="40"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <Label Grid.Column="0"  Content="Seconds: " Margin="10,0,0,0"/>
-                <Slider Grid.Column="1" x:Name="SecondsSlider" Value="{Binding Seconds}" Minimum="0" Maximum="60" Margin="4,0,4,0" Height="20" TickFrequency="1"/>
-                <TextBox Grid.Column="2" Text="{Binding ElementName=SecondsSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+                <Slider Grid.Column="1" x:Name="SecondsSlider" Value="{Binding Seconds}" Minimum="0" Maximum="60" Margin="4,0,4,0" Height="20" TickFrequency="1" Background="{DynamicResource ControlBrightDefaultBackground}"/>
+                <TextBox Grid.Column="2" Text="{Binding ElementName=SecondsSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDarkerBackground}"/>
             </Grid -->
             </WrapPanel>
 

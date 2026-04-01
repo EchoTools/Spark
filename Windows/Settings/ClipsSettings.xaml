@@ -9,7 +9,7 @@
              mc:Ignorable="d"
              d:DesignHeight="900"
              d:DesignWidth="900"
-             Background="{DynamicResource BackgroundColour}"
+             Background="{DynamicResource ControlDarkerBackground}"
              FontSize="14"
              DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -34,8 +34,8 @@
                                   Margin="5,5,5,5" IsChecked="{Binding NVHighlightsEnabled}"
                                   IsEnabled="{Binding HighlightsSupported}" />
                         <GroupBox x:Name="nvHighlightsBox" Header="{x:Static p:Resources.NVIDIA_Highlights}"
-                                  Margin="5,5,5,5">
-                            <StackPanel>
+                                  Margin="5,5,5,5" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                            <StackPanel Background="{DynamicResource ControlDarkerBackground}">
                                 <TextBlock x:Name="textBlock"
                                            Text="{x:Static p:Resources.Clear_unsaved_highlight_clips_on_Spark_exit__If_disabled__highlights_will_be_retained_forever_unless_manually_deleted_from_temp_folder}"
                                            TextWrapping="Wrap" Margin="5,10,5,0" />
@@ -83,10 +83,10 @@
                         <!-- </TextBlock> -->
                         <StackPanel Orientation="Horizontal">
                             <Label Content="{x:Static p:Resources.IP_Address_}" Margin="4,4,0,4" Padding="4,4,4,4" />
-                            <TextBox Text="{l:SettingBinding obsIP}" Width="160" Margin="4,4,4,4" Padding="4,4,4,4" />
+                            <TextBox Text="{l:SettingBinding obsIP}" Width="160" Margin="4,4,4,4" Padding="4,4,4,4" Background="{DynamicResource ControlDefaultBackground}"/>
                             <Label Content="{x:Static p:Resources.Password_}" Margin="4,4,0,4" Padding="4,4,4,4" />
                             <PasswordBox x:Name="obsPasswordBox" Password="" Width="140" Margin="4,4,4,4"
-                                         Padding="4,4,4,4" PasswordChanged="OBSPasswordChanged" />
+                                         Padding="4,4,4,4" PasswordChanged="OBSPasswordChanged" Background="{DynamicResource ControlDefaultBackground}"/>
                             <Button x:Name="obsConnectButton" Content="{x:Static p:Resources.Connect}"
                                     Click="OBSConnect" Margin="4,4,4,4" Padding="4,4,4,4" />
                         </StackPanel>
@@ -105,8 +105,8 @@
                         </StackPanel>
                         <CheckBox Content="Pause recording with game clock" IsChecked="{l:SettingBinding obsPauseRecordingWithGameClock}" Margin="5,5,5,5" />
                         <!-- <Button Content="Add Spark Sources to Current Scene" Margin="5,5,5,5" Click="AddSparkSourcesOBS" IsEnabled="{Binding IsOBSConnected}"/> -->
-                        <GroupBox Header="{x:Static p:Resources.Automatic_Scene_Switching}" Margin="0,0,0,5">
-                            <StackPanel Margin="5,5,5,5">
+                        <GroupBox Header="{x:Static p:Resources.Automatic_Scene_Switching}" Margin="0,0,0,5" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                            <StackPanel Margin="5,5,5,5" Background="{DynamicResource ControlDarkerBackground}">
                                 <Label Content="{x:Static p:Resources.In_game_Scene_}" />
                                 <ComboBox x:Name="inGameScene" Width="300" HorizontalAlignment="Left" SelectedIndex="0">
                                     <ComboBoxItem Content="--- Do Not Switch ---" />
@@ -160,8 +160,8 @@
                                   IsChecked="{l:SettingBinding enableVoiceRecognition}"
                                   Checked="VoiceRecognitionChecked"
                                   Unchecked="VoiceRecognitionUnchecked" />
-                        <GroupBox Header="{x:Static p:Resources.Settings}" Margin="5,5,5,5">
-                            <StackPanel>
+                        <GroupBox Header="{x:Static p:Resources.Settings}" Margin="5,5,5,5" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                            <StackPanel Background="{DynamicResource ControlDarkerBackground}">
                                 <Label Content="{x:Static p:Resources.Audio_Source}"></Label>
                                 <CheckBox IsChecked="{l:SettingBinding enableVoiceRecognitionMic}" Margin="10,10,10,5">Microphone</CheckBox>
                                 <ComboBox x:Name="MicSelection" SelectionChanged="MicrophoneSelectionChanged"
@@ -194,8 +194,8 @@
             </TabControl>
 
 
-            <GroupBox x:Name="clipsEventsBox" Header="{x:Static p:Resources.Clip_Settings}">
-                <StackPanel>
+            <GroupBox x:Name="clipsEventsBox" Header="{x:Static p:Resources.Clip_Settings}" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                <StackPanel Background="{DynamicResource ControlDarkerBackground}">
 
                     <Label Content="{x:Static p:Resources.Highlight_Scope}" Margin="5,5,5,0" />
                     <ComboBox x:Name="highlightScope" Width="197" HorizontalAlignment="Left" Margin="5,5,5,5"
@@ -213,13 +213,13 @@
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <Label x:Name="labelBefore" Content="{x:Static p:Resources.Seconds_Before_}" />
                         <TextBox x:Name="secondsBefore" Text="{Binding SecondsBefore}" TextWrapping="Wrap" Width="64"
-                                 FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" />
+                                 FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" Background="{DynamicResource ControlDefaultBackground}"/>
                         <Label x:Name="labelAfter" Content="{x:Static p:Resources.Seconds_After_}" />
                         <TextBox x:Name="secondsAfter" Text="{Binding SecondsAfter}" TextWrapping="Wrap" Width="64"
-                                 FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" />
+                                 FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" Background="{DynamicResource ControlDefaultBackground}"/>
                         <Label x:Name="labelTotal" Content="{x:Static p:Resources.Length_}" Margin="8,0,0,0" />
                         <TextBox x:Name="totalSeconds" Text="0" TextWrapping="Wrap" Width="40"
-                                 FontSize="16" Height="25" IsReadOnly="True" IsEnabled="False" />
+                                 FontSize="16" Height="25" IsReadOnly="True" IsEnabled="False" Background="{DynamicResource ControlDefaultBackground}"/>
                     </StackPanel>
 
                     <TextBlock x:Name="nvHighlightsChooseEventsInOverlayLabel"
@@ -244,11 +244,11 @@
                                 <Label x:Name="labelGoalAfter" Content="{x:Static p:Resources.Replay_Delay}" />
                                 <TextBox x:Name="secondsAfterGoal" Text="{Binding GoalSecondsAfter}"
                                          TextWrapping="Wrap" Width="64"
-                                         FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" />
+                                         FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" Background="{DynamicResource ControlDefaultBackground}"/>
                                 <Label x:Name="labelGoalLength" Content="{x:Static p:Resources.Replay_Length}" />
                                 <TextBox x:Name="replayGoalLength" Text="{Binding GoalReplayLength}"
                                          TextWrapping="Wrap" Width="64"
-                                         FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" />
+                                         FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" Background="{DynamicResource ControlDefaultBackground}"/>
                             </StackPanel>
                         </StackPanel>
                         <CheckBox Content="{x:Static p:Resources.Score_Assist}" Margin="5,5,5,5"
@@ -267,11 +267,11 @@
                                 <Label x:Name="labelSaveAfter" Content="{x:Static p:Resources.Replay_Delay}" />
                                 <TextBox x:Name="secondsAfterSave" Text="{Binding SaveSecondsAfter}"
                                          TextWrapping="Wrap" Width="64"
-                                         FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" />
+                                         FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" Background="{DynamicResource ControlDefaultBackground}"/>
                                 <Label x:Name="labelSaveLength" Content="{x:Static p:Resources.Replay_Length}" />
                                 <TextBox x:Name="replaySaveLength" Text="{Binding SaveReplayLength}"
                                          TextWrapping="Wrap" Width="64"
-                                         FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" />
+                                         FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" Background="{DynamicResource ControlDefaultBackground}"/>
                             </StackPanel>
                         </StackPanel>
                         <CheckBox Content="{x:Static p:Resources.Interception}" Margin="5,5,5,5"

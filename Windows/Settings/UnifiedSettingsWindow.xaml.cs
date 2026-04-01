@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Windows.Navigation;
 using System.Windows.Data;
@@ -16,6 +17,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Net;
 using EchoVRAPI;
+
 
 
 namespace Spark
@@ -33,10 +35,22 @@ namespace Spark
 		/// </summary>
 		private bool optInFound;
 
+		/// <summary>
+		/// Throttles theme updates during slider dragging to prevent UI lag.
+		/// </summary>
+		private readonly System.Windows.Threading.DispatcherTimer _themeDebounceTimer;
+
 
 		public UnifiedSettingsWindow()
 		{
 			InitializeComponent();
+
+			_themeDebounceTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+			_themeDebounceTimer.Tick += (s, ev) =>
+			{
+				_themeDebounceTimer.Stop();
+				ThemesController.ApplyCustomTheme(_themeDark, _themeMid, _themeLight);
+			};
 		}
 
 		private void WindowLoad(object sender, RoutedEventArgs e)
@@ -992,6 +1006,27 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 			TTSController.ClearCacheFolder();
 		}
 
+		private void ChangeTTSCacheFolderButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (!initialized) return;
+			string selectedPath = "";
+			CommonOpenFileDialog folderBrowserDialog = new CommonOpenFileDialog
+			{
+				InitialDirectory = TTSController.CacheFolder,
+				IsFolderPicker = true
+			};
+			if (folderBrowserDialog.ShowDialog() == CommonFileDialogResult.Ok)
+			{
+				selectedPath = folderBrowserDialog.FileName;
+			}
+
+			if (selectedPath != "")
+			{
+				SparkSettings.instance.ttsCacheFolder = selectedPath;
+				RefreshAllSettings(sender, null);
+			}
+		}
+
 		private void OpenTTSCacheButton(object sender, RoutedEventArgs e)
 		{
 			string folder = TTSController.CacheFolder;
@@ -1117,7 +1152,237 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 		{
 			Program.synth.SpeakAsync("THIS IS A TEST SOUND!");
 		}
+
+		#region Change Theme
+
+		// Tracks whether we're currently programmatically updating sliders/hex boxes
+		// (to avoid feedback loops between TextChanged and Slider.ValueChanged)
+		private bool _themeUpdating;
+
+		// The 3 working colours
+		private Color _themeDark;
+		private Color _themeMid;
+		private Color _themeLight;
+
+		private void ChangeThemeTab_Loaded(object sender, RoutedEventArgs e)
+		{
+			LoadThemeFromSettings();
+		}
+
+		private void LoadThemeFromSettings()
+		{
+			_themeDark  = ThemesController.ParseHex(SparkSettings.instance?.customThemeDark  ?? "#c32b61");
+			_themeMid   = ThemesController.ParseHex(SparkSettings.instance?.customThemeMid   ?? "#ea6192");
+			_themeLight = ThemesController.ParseHex(SparkSettings.instance?.customThemeLight ?? "#ffaac9");
+			SyncUIFromColors();
+		}
+
+		private void SyncUIFromColors()
+		{
+			// Crash Fix: Check if UI controls are ready before syncing.
+			// This happens if the settings window is loaded but the theme tab hasn't been visited yet.
+			if (DarkPreviewRect == null || DarkHexBox == null || DarkHueSlider == null) return;
+
+			_themeUpdating = true;
+			SyncColorToUI(DarkPreviewRect,  DarkHexBox,  DarkHueSlider,  DarkSatSlider,  DarkValSlider,  _themeDark);
+			SyncColorToUI(MidPreviewRect,   MidHexBox,   MidHueSlider,   MidSatSlider,   MidValSlider,   _themeMid);
+			SyncColorToUI(LightPreviewRect, LightHexBox, LightHueSlider, LightSatSlider, LightValSlider, _themeLight);
+			_themeUpdating = false;
+		}
+
+		private static void SyncColorToUI(System.Windows.Shapes.Rectangle preview,
+			                               TextBox hexBox,
+			                               Slider hue, Slider sat, Slider val,
+			                               Color color)
+		{
+			if (preview == null || hexBox == null || hue == null || sat == null || val == null) return;
+			preview.Fill = new SolidColorBrush(color);
+			hexBox.Text = ThemesController.ColorToHex(color);
+			ColorToHsv(color, out double h, out double s, out double v);
+			hue.Value = h;
+			sat.Value = s;
+			val.Value = v;
+		}
+
+		// ─── Dark sliders ───────────────────────────────────────────────────────
+		private void DarkSlider_Changed(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)
+		{
+			if (_themeUpdating || DarkHueSlider == null) return;
+			_themeDark = HsvToColor(DarkHueSlider.Value, DarkSatSlider.Value, DarkValSlider.Value);
+			_themeUpdating = true;
+			DarkPreviewRect.Fill = new SolidColorBrush(_themeDark);
+			DarkHexBox.Text = ThemesController.ColorToHex(_themeDark);
+			_themeUpdating = false;
+			_themeDebounceTimer.Stop();
+			_themeDebounceTimer.Start();
+		}
+
+		private void DarkHexBox_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			if (_themeUpdating || DarkHexBox == null) return;
+			if (!TryParseHexBox(DarkHexBox.Text, out Color c)) return;
+			_themeDark = c;
+			_themeUpdating = true;
+			DarkPreviewRect.Fill = new SolidColorBrush(c);
+			ColorToHsv(c, out double h, out double s, out double v);
+			DarkHueSlider.Value = h; DarkSatSlider.Value = s; DarkValSlider.Value = v;
+			_themeUpdating = false;
+			ThemesController.ApplyCustomTheme(_themeDark, _themeMid, _themeLight);
+		}
+
+		// ─── Mid sliders ────────────────────────────────────────────────────────
+		private void MidSlider_Changed(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)
+		{
+			if (_themeUpdating || MidHueSlider == null) return;
+			_themeMid = HsvToColor(MidHueSlider.Value, MidSatSlider.Value, MidValSlider.Value);
+			_themeUpdating = true;
+			MidPreviewRect.Fill = new SolidColorBrush(_themeMid);
+			MidHexBox.Text = ThemesController.ColorToHex(_themeMid);
+			_themeUpdating = false;
+			_themeDebounceTimer.Stop();
+			_themeDebounceTimer.Start();
+		}
+
+		private void MidHexBox_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			if (_themeUpdating || MidHexBox == null) return;
+			if (!TryParseHexBox(MidHexBox.Text, out Color c)) return;
+			_themeMid = c;
+			_themeUpdating = true;
+			MidPreviewRect.Fill = new SolidColorBrush(c);
+			ColorToHsv(c, out double h, out double s, out double v);
+			MidHueSlider.Value = h; MidSatSlider.Value = s; MidValSlider.Value = v;
+			_themeUpdating = false;
+			ThemesController.ApplyCustomTheme(_themeDark, _themeMid, _themeLight);
+		}
+
+		// ─── Light sliders ──────────────────────────────────────────────────────
+		private void LightSlider_Changed(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)
+		{
+			if (_themeUpdating || LightHueSlider == null) return;
+			_themeLight = HsvToColor(LightHueSlider.Value, LightSatSlider.Value, LightValSlider.Value);
+			_themeUpdating = true;
+			LightPreviewRect.Fill = new SolidColorBrush(_themeLight);
+			LightHexBox.Text = ThemesController.ColorToHex(_themeLight);
+			_themeUpdating = false;
+			_themeDebounceTimer.Stop();
+			_themeDebounceTimer.Start();
+		}
+
+		private void LightHexBox_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			if (_themeUpdating || LightHexBox == null) return;
+			if (!TryParseHexBox(LightHexBox.Text, out Color c)) return;
+			_themeLight = c;
+			_themeUpdating = true;
+			LightPreviewRect.Fill = new SolidColorBrush(c);
+			ColorToHsv(c, out double h, out double s, out double v);
+			LightHueSlider.Value = h; LightSatSlider.Value = s; LightValSlider.Value = v;
+			_themeUpdating = false;
+			ThemesController.ApplyCustomTheme(_themeDark, _themeMid, _themeLight);
+		}
+
+		// ─── Presets ────────────────────────────────────────────────────────────
+		private void ApplyPreset(string dark, string mid, string light)
+		{
+			_themeDark  = ThemesController.ParseHex(dark);
+			_themeMid   = ThemesController.ParseHex(mid);
+			_themeLight = ThemesController.ParseHex(light);
+			SyncUIFromColors();
+			ThemesController.ApplyCustomTheme(_themeDark, _themeMid, _themeLight);
+		}
+
+		private void PresetBlack_Click     (object s, RoutedEventArgs e) => ApplyPreset("#000000", "#141414", "#363636");
+		private void PresetBlue_Click      (object s, RoutedEventArgs e) => ApplyPreset("#4040ff", "#5b5bff", "#9d9dff");
+		private void PresetCoolPurple_Click(object s, RoutedEventArgs e) => ApplyPreset("#c76fdd", "#ce82e1", "#e3b9ee");
+		private void PresetDarkRed_Click   (object s, RoutedEventArgs e) => ApplyPreset("#4a0002", "#820003", "#ff0d13");
+		private void PresetGreen_Click     (object s, RoutedEventArgs e) => ApplyPreset("#006400", "#008000", "#00e800");
+		private void PresetHotPink_Click   (object s, RoutedEventArgs e) => ApplyPreset("#fe63d8", "#fe81df", "#ffbfef");
+		private void PresetPurple_Click    (object s, RoutedEventArgs e) => ApplyPreset("#690f96", "#8a14c2", "#d213bb");
+		private void PresetRed_Click       (object s, RoutedEventArgs e) => ApplyPreset("#b70004", "#df0005", "#ff7174");
+		private void PresetYellow_Click    (object s, RoutedEventArgs e) => ApplyPreset("#fab011", "#fcc520", "#fcde64");
+
+		// ─── Apply / Reset ──────────────────────────────────────────────────────
+		private void ApplyTheme_Click(object sender, RoutedEventArgs e)
+		{
+			ThemesController.SaveAndApply(_themeDark, _themeMid, _themeLight);
+		}
+
+		private void ResetTheme_Click(object sender, RoutedEventArgs e)
+		{
+			// Reset to Spark Original Pink
+			ApplyPreset("#c32b61", "#ea6192", "#ffaac9");
+			ThemesController.SaveAndApply(_themeDark, _themeMid, _themeLight);
+		}
+
+		// ─── Helpers ────────────────────────────────────────────────────────────
+		private static bool TryParseHexBox(string text, out Color color)
+		{
+			color = default;
+			string t = text?.TrimStart('#') ?? "";
+			if (t.Length != 6) return false;
+			try { color = ThemesController.ParseHex("#" + t); return true; }
+			catch { return false; }
+		}
+
+		private static Color HsvToColor(double hue, double sat, double val)
+		{
+			hue = hue % 360.0;
+			if (hue < 0) hue += 360.0;
+			if (sat < 0) sat = 0; if (sat > 1) sat = 1;
+			if (val < 0) val = 0; if (val > 1) val = 1;
+
+			if (sat == 0)
+			{
+				byte c = (byte)(val * 255);
+				return Color.FromRgb(c, c, c);
+			}
+
+			double h = hue / 60.0;
+			int i = (int)Math.Floor(h);
+			double f = h - i;
+			double p = val * (1 - sat);
+			double q = val * (1 - sat * f);
+			double t2 = val * (1 - sat * (1 - f));
+
+			double r, g, b;
+			switch (i % 6)
+			{
+				case 0: r = val; g = t2;  b = p;   break;
+				case 1: r = q;   g = val; b = p;   break;
+				case 2: r = p;   g = val; b = t2;  break;
+				case 3: r = p;   g = q;   b = val; break;
+				case 4: r = t2;  g = p;   b = val; break;
+				default: r = val; g = p;  b = q;   break;
+			}
+
+			return Color.FromRgb((byte)(r * 255), (byte)(g * 255), (byte)(b * 255));
+		}
+
+		private static void ColorToHsv(Color color, out double hue, out double sat, out double val)
+		{
+			double r = color.R / 255.0;
+			double g = color.G / 255.0;
+			double b = color.B / 255.0;
+			double max = Math.Max(r, Math.Max(g, b));
+			double min = Math.Min(r, Math.Min(g, b));
+			double delta = max - min;
+
+			val = max;
+			sat = max == 0 ? 0 : delta / max;
+
+			if (delta == 0) { hue = 0; return; }
+
+			if (max == r)      hue = 60 * (((g - b) / delta) % 6);
+			else if (max == g) hue = 60 * (((b - r) / delta) + 2);
+			else               hue = 60 * (((r - g) / delta) + 4);
+
+			if (hue < 0) hue += 360;
+		}
+
+		#endregion
 	}
+
 	
 	public class SettingBindingExtension : Binding
 	{

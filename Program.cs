@@ -524,10 +524,9 @@ namespace Spark
 
 				DiscordOAuth.Authenticated += () =>
 				{
-					synth = new TTSController();
 					// Configure the audio output.
 					synth.SetOutputToDefaultAudioDevice();
-					synth.SetRate(SparkSettings.instance.TTSSpeed);
+					synth.LoadTtsSpeed();
 				};
 
 
@@ -3538,7 +3537,7 @@ namespace Spark
 			catch (Exception e)
 			{
 				LogRow(LogType.Error, e.ToString());
-				new MessageBox($"Failed to open window: {type}.\nPlease report this to NtsFranz.").Show();
+				new MessageBox($"Failed to open window: {type}.\nPlease try again.").Show();
 				return false;
 			}
 		}

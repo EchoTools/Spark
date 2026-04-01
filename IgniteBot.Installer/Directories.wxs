@@ -1,21 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
 
-	<Fragment>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="InstallProgramMenuFolder" Name="!(loc.ProductNameFolder)" />
+    </StandardDirectory>
 
-		<Directory Id="TARGETDIR" Name="SourceDir">
+    <StandardDirectory Id="TARGETDIR">
+        <Directory Id="INSTALLFOLDER" Name="!(loc.ProductNameFolder)" />
+    </StandardDirectory>
 
-			<!-- Start Menu -->
-			<Directory Id="ProgramMenuFolder">
-				<Directory Id="InstallProgramMenuFolder" Name="!(loc.ProductNameFolder)" />
-			</Directory>
-
-			<Directory Id="ProgramFiles64Folder">
-				<Directory Id="INSTALLFOLDER" Name="!(loc.ProductNameFolder)" />
-			</Directory>
-
-		</Directory>
-
-	</Fragment>
-
+  </Fragment>
 </Wix>

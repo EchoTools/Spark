@@ -7,13 +7,13 @@
 		mc:Ignorable="d"
 		d:DesignHeight="950" d:DesignWidth="600"
 		FontSize="14" 
-		Background="{DynamicResource BackgroundColour}" 
+		Background="{DynamicResource ControlDarkerBackground}" 
 		DataContext="{Binding RelativeSource={RelativeSource Self}}"
 		>
 	<ScrollViewer  VerticalScrollBarVisibility="Auto">
 		<StackPanel Margin="10,0,10,10">
 			<Label Content="Spark Overlays" FontSize="16" Margin="5,5,5,5" />
-			<TextBlock TextWrapping="Wrap" Background="{DynamicResource ControlBrightDefaultBackground}" Padding="10,10,10,10" Margin="10,0,10,0">
+			<TextBlock TextWrapping="Wrap" Background="{DynamicResource ControlDarkerBackground}" Padding="10,10,10,10" Margin="10,0,10,0">
 							<Run Text="Spark includes a modular set of overlays for things like team names, joust times, and complete stats. These overlays are free for non-commercial use with attribution. To use the overlays, add a browser source in OBS."/>
 			</TextBlock>
 
@@ -24,8 +24,8 @@
 				</StackPanel>
 			</Button>
 
-			<GroupBox Header="Settings">
-				<StackPanel>
+			<GroupBox Header="Settings" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+				<StackPanel Background="{DynamicResource ControlDarkerBackground}">
 					<Label Content="Team Name/Logo Source" Margin="20,0,0,0"/>
 					<ComboBox Margin="20,0,20,10" SelectionChanged="TeamsDataSourceChanged" SelectedIndex="{local:SettingBinding overlaysTeamSource}">
 						<ComboBoxItem>Manual Team Entry</ComboBoxItem>
@@ -43,24 +43,24 @@
 							<RowDefinition Height="*" />
 						</Grid.RowDefinitions>
 
-						<Label Content="Orange Team" Grid.Column="0" HorizontalContentAlignment="Center" Background="{DynamicResource ContainerBackground}"/>
+						<Label Content="Orange Team" Grid.Column="0" HorizontalContentAlignment="Center" Background="{DynamicResource ControlDefaultBackground}"/>
 						<Button Click="SwapTeamSettings" Grid.Column="1">
 							<Image Source="/img/swap-horizontal-bold.png" Width="20"/>
 						</Button>
-						<Label Content="Blue Team"  Grid.Column="2" HorizontalContentAlignment="Center" Background="{DynamicResource ContainerBackground}"/>
+						<Label Content="Blue Team"  Grid.Column="2" HorizontalContentAlignment="Center" Background="{DynamicResource ControlDefaultBackground}"/>
 
 						<StackPanel Grid.Row="1" Grid.Column="0">
 							<Label Content="Team Name"/>
-							<TextBox x:Name="ManualTeamNameOrange" Text="{local:SettingBinding overlaysManualTeamNameOrange}" TextChanged="TeamNameChanged"/>
+							<TextBox x:Name="ManualTeamNameOrange" Text="{local:SettingBinding overlaysManualTeamNameOrange}" TextChanged="TeamNameChanged" Background="{DynamicResource ControlDefaultBackground}"/>
 							<Label Content="Team Logo (URL)"/>
-							<TextBox x:Name="ManualTeamLogoOrange" Text="{local:SettingBinding overlaysManualTeamLogoOrange}" TextChanged="TeamNameChanged"/>
+							<TextBox x:Name="ManualTeamLogoOrange" Text="{local:SettingBinding overlaysManualTeamLogoOrange}" TextChanged="TeamNameChanged" Background="{DynamicResource ControlDefaultBackground}"/>
 						</StackPanel>
 
 						<StackPanel Grid.Row="1" Grid.Column="2">
 							<Label Content="Team Name"/>
-							<TextBox x:Name="ManualTeamNameBlue" Text="{local:SettingBinding overlaysManualTeamNameBlue}" TextChanged="TeamNameChanged"/>
+							<TextBox x:Name="ManualTeamNameBlue" Text="{local:SettingBinding overlaysManualTeamNameBlue}" TextChanged="TeamNameChanged" Background="{DynamicResource ControlDefaultBackground}"/>
 							<Label  Content="Team Logo (URL)"/>
-							<TextBox x:Name="ManualTeamLogoBlue" Text="{local:SettingBinding overlaysManualTeamLogoBlue}" TextChanged="TeamNameChanged"/>
+							<TextBox x:Name="ManualTeamLogoBlue" Text="{local:SettingBinding overlaysManualTeamLogoBlue}" TextChanged="TeamNameChanged" Background="{DynamicResource ControlDefaultBackground}"/>
 						</StackPanel>
 					</Grid>
 				</StackPanel>

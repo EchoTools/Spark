@@ -227,6 +227,8 @@ namespace Spark
             public string PlayerCountText => $"👥 {players?.Count ?? 0} players";
             public int BlueScore => game_state?.blue_score ?? 0;
             public int OrangeScore => game_state?.orange_score ?? 0;
+            
+            public string LobbyId => id?.Split('.')[0] ?? "";
         }
 
         public class PlayerData
@@ -436,7 +438,36 @@ namespace Spark
             };
             spectateButton.Click += (s, e) => JoinServer(server);
             
+            var joinAsPlayerButton = new Button
+            {
+                Content = "🎮 JOIN AS PLAYER",
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(59, 130, 246)),
+                Foreground = System.Windows.Media.Brushes.White,
+                FontSize = 12,
+                FontWeight = FontWeights.Bold,
+                Height = 40,
+                Cursor = Cursors.Hand,
+                BorderThickness = new Thickness(0),
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+            joinAsPlayerButton.Click += (s, e) => ShowJoinAsPlayerPopup(server);
+            
+            var copyButton = new Button
+            {
+                Content = "📋 COPY LOBBY ID",
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100, 116, 139)),
+                Foreground = System.Windows.Media.Brushes.White,
+                FontSize = 12,
+                FontWeight = FontWeights.Bold,
+                Height = 40,
+                Cursor = Cursors.Hand,
+                BorderThickness = new Thickness(0)
+            };
+            copyButton.Click += (s, e) => CopyLobbyId(server.LobbyId);
+            
             buttonFrame.Children.Add(spectateButton);
+            buttonFrame.Children.Add(joinAsPlayerButton);
+            buttonFrame.Children.Add(copyButton);
             ServerDetailsPanel.Children.Add(buttonFrame);
             
             var playerHeader = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
@@ -566,6 +597,298 @@ namespace Spark
             
             spectateButton.MouseEnter += (s, e) => spectateButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(50, 50, 50));
             spectateButton.MouseLeave += (s, e) => spectateButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(35, 35, 35));
+            
+            joinAsPlayerButton.MouseEnter += (s, e) => joinAsPlayerButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(37, 99, 235));
+            joinAsPlayerButton.MouseLeave += (s, e) => joinAsPlayerButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(59, 130, 246));
+            
+            copyButton.MouseEnter += (s, e) => copyButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(71, 85, 105));
+            copyButton.MouseLeave += (s, e) => copyButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100, 116, 139));
+        }
+
+        private void ShowJoinAsPlayerPopup(ServerData server)
+        {
+            // Create a custom popup that matches your existing dialog style
+            var popup = new Window
+            {
+                Title = $"Join {server.DisplayName}",
+                Width = 530,
+                Height = 340, // Increased height to accommodate the copy button
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = Window.GetWindow(this),
+                ResizeMode = ResizeMode.NoResize,
+                WindowStyle = WindowStyle.ToolWindow,
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(35, 35, 35)),
+                FontSize = 16
+            };
+            
+            var mainStackPanel = new StackPanel();
+            
+            var grid = new Grid { Height = 150 };
+            
+            var buttonPanel = new StackPanel 
+            { 
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                Margin = new Thickness(10, 0, 0, 10)
+            };
+            
+            var orangeButton = new Button
+            {
+                Content = "ORANGE",
+                Width = 100,
+                Height = 74,
+                Margin = new Thickness(0, 0, 5, 0),
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(108, 83, 57)),
+                Foreground = System.Windows.Media.Brushes.White,
+                FontWeight = FontWeights.Bold,
+                Cursor = Cursors.Hand
+            };
+            orangeButton.Click += (s, e) => 
+            {
+                popup.Close();
+                JoinAsPlayer(server, "orange");
+            };
+            
+            var randomButton = new Button
+            {
+                Width = 100,
+                Height = 74,
+                Margin = new Thickness(0, 0, 5, 0),
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100, 116, 139)),
+                Foreground = System.Windows.Media.Brushes.White,
+                FontWeight = FontWeights.Bold,
+                Cursor = Cursors.Hand
+            };
+            
+            var randomTextBlock = new TextBlock
+            {
+                Text = "Random\nTeam",
+                TextAlignment = TextAlignment.Center,
+                Foreground = System.Windows.Media.Brushes.White
+            };
+            randomButton.Content = randomTextBlock;
+            randomButton.Click += (s, e) => 
+            {
+                popup.Close();
+                string randomTeam = new Random().Next(2) == 0 ? "blue" : "orange";
+                JoinAsPlayer(server, randomTeam);
+            };
+            
+            var blueButton = new Button
+            {
+                Content = "BLUE",
+                Width = 100,
+                Height = 74,
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(42, 56, 75)),
+                Foreground = System.Windows.Media.Brushes.White,
+                FontWeight = FontWeights.Bold,
+                Cursor = Cursors.Hand
+            };
+            blueButton.Click += (s, e) => 
+            {
+                popup.Close();
+                JoinAsPlayer(server, "blue");
+            };
+            
+            buttonPanel.Children.Add(orangeButton);
+            buttonPanel.Children.Add(randomButton);
+            buttonPanel.Children.Add(blueButton);
+            
+            var spectatorButton = new Button
+            {
+                Content = "JOIN AS SPECTATOR",
+                Width = 180,
+                Height = 50,
+                Margin = new Thickness(0, 0, 10, 10),
+                VerticalAlignment = VerticalAlignment.Bottom,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(59, 130, 246)),
+                Foreground = System.Windows.Media.Brushes.White,
+                FontWeight = FontWeights.Bold,
+                Cursor = Cursors.Hand
+            };
+            spectatorButton.Click += (s, e) => 
+            {
+                popup.Close();
+                JoinAsSpectator(server);
+            };
+            
+            var noovrCheckbox = new CheckBox
+            {
+                Content = "Use anonymous account",
+                Width = 180,
+                IsChecked = SparkSettings.instance.sparkLinkNoOVR,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Margin = new Thickness(0, 0, 10, 65),
+                FontSize = 13,
+                Foreground = System.Windows.Media.Brushes.White
+            };
+            noovrCheckbox.Checked += (s, e) => SparkSettings.instance.sparkLinkNoOVR = true;
+            noovrCheckbox.Unchecked += (s, e) => SparkSettings.instance.sparkLinkNoOVR = false;
+            
+            var titleLabel = new Label
+            {
+                Content = $"Join {server.DisplayName} as:",
+                Margin = new Thickness(0, 19, 0, 0),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Top,
+                Height = 32,
+                Foreground = System.Windows.Media.Brushes.White
+            };
+            
+            grid.Children.Add(buttonPanel);
+            grid.Children.Add(spectatorButton);
+            grid.Children.Add(noovrCheckbox);
+            grid.Children.Add(titleLabel);
+            
+            mainStackPanel.Children.Add(grid);
+            
+            var bottomPanel = new StackPanel { Margin = new Thickness(40, 0, 40, 20) };
+            
+            var copyButton = new Button
+            {
+                Content = "📋 COPY LOBBY ID",
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100, 116, 139)),
+                Foreground = System.Windows.Media.Brushes.White,
+                FontSize = 13,
+                FontWeight = FontWeights.Bold,
+                Height = 40,
+                Margin = new Thickness(0, 0, 0, 15),
+                Cursor = Cursors.Hand,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            copyButton.Click += (s, e) => 
+            {
+                CopyLobbyId(server.LobbyId);
+                new MessageBox($"Lobby ID copied: {server.LobbyId}", "Success").Show();
+            };
+            
+            bottomPanel.Children.Add(copyButton);
+            
+            var separator = new Separator();
+            bottomPanel.Children.Add(separator);
+            
+            var echoVRLabel = new TextBlock
+            {
+                Text = "Click a team button to join the match",
+                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(196, 186, 77)),
+                TextWrapping = TextWrapping.Wrap,
+                Height = 35,
+                FontSize = 13,
+                Margin = new Thickness(0, 10, 0, 4)
+            };
+            bottomPanel.Children.Add(echoVRLabel);
+            
+            var forceLaunchPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            
+            var forceLaunchCheckbox = new CheckBox
+            {
+                Content = "Force launch new instance",
+                IsChecked = SparkSettings.instance.sparkLinkForceLaunchNewInstance,
+                Margin = new Thickness(0, 0, 0, 10),
+                FontSize = 13,
+                Foreground = System.Windows.Media.Brushes.White
+            };
+            forceLaunchCheckbox.Checked += (s, e) => SparkSettings.instance.sparkLinkForceLaunchNewInstance = true;
+            forceLaunchCheckbox.Unchecked += (s, e) => SparkSettings.instance.sparkLinkForceLaunchNewInstance = false;
+            
+            forceLaunchPanel.Children.Add(forceLaunchCheckbox);
+            
+            bottomPanel.Children.Add(forceLaunchPanel);
+            
+            mainStackPanel.Children.Add(bottomPanel);
+            
+            popup.Content = mainStackPanel;
+            popup.ShowDialog();
+        }
+        
+                private void JoinAsSpectator(ServerData server)
+        {
+            if (string.IsNullOrEmpty(SparkSettings.instance.echoVRPath))
+            {
+                new MessageBox("EchoVR path not set. Please set it in settings.", "Error").Show();
+                return;
+            }
+            
+            if (!File.Exists(SparkSettings.instance.echoVRPath))
+            {
+                new MessageBox("EchoVR executable not found at the specified path.", "Error").Show();
+                return;
+            }
+            
+            try
+            {
+                string lobbyId = server.LobbyId;
+                
+                if (string.IsNullOrEmpty(lobbyId))
+                {
+                    new MessageBox("Invalid lobby ID.", "Error").Show();
+                    return;
+                }
+                
+                string echoPath = SparkSettings.instance.echoVRPath;
+                string arguments = $"-lobbyid {lobbyId} -spectatorstream";
+                
+                System.Diagnostics.Process.Start(echoPath, arguments);
+                
+                new MessageBox($"Spectating {server.DisplayName}...", "Joining Server").Show();
+            }
+            catch (Exception ex)
+            {
+                new MessageBox($"Error spectating server: {ex.Message}", "Error").Show();
+            }
+        }
+
+        private void CopyLobbyId(string lobbyId)
+        {
+            try
+            {
+                Clipboard.SetText(lobbyId);
+                new MessageBox($"Lobby ID copied to clipboard: {lobbyId}", "Success").Show();
+            }
+            catch (Exception ex)
+            {
+                new MessageBox($"Failed to copy to clipboard: {ex.Message}", "Error").Show();
+            }
+        }
+
+        private void JoinAsPlayer(ServerData server, string team)
+        {
+            if (string.IsNullOrEmpty(SparkSettings.instance.echoVRPath))
+            {
+                new MessageBox("EchoVR path not set. Please set it in settings.", "Error").Show();
+                return;
+            }
+            
+            if (!File.Exists(SparkSettings.instance.echoVRPath))
+            {
+                new MessageBox("EchoVR executable not found at the specified path.", "Error").Show();
+                return;
+            }
+            
+            try
+            {
+                string lobbyId = server.LobbyId;
+                
+                if (string.IsNullOrEmpty(lobbyId))
+                {
+                    new MessageBox("Invalid lobby ID.", "Error").Show();
+                    return;
+                }
+                
+                string echoPath = SparkSettings.instance.echoVRPath;
+                string arguments = $"-lobbyid {lobbyId} -lobbyteam \"{team}\"";
+                
+                System.Diagnostics.Process.Start(echoPath, arguments);
+                
+                new MessageBox($"Joining {server.DisplayName} as {team} team...", "Joining Server").Show();
+            }
+            catch (Exception ex)
+            {
+                new MessageBox($"Error joining server: {ex.Message}", "Error").Show();
+            }
         }
 
         private void JoinServer(ServerData server)

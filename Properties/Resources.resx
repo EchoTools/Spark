@@ -184,6 +184,9 @@
   <data name="EchoVR IP (for Quest)" xml:space="preserve">
     <value>EchoVR IP (for Quest)</value>
   </data>
+  <data name="Moderator_Panel" xml:space="preserve">
+    <value>Moderator Panel</value>
+  </data>
   <data name="Enable -capturevp2 when launching spectator" xml:space="preserve">
     <value>Enable -capturevp2 when launching spectator</value>
   </data>

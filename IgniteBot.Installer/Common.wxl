@@ -1,17 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?>
-<WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+﻿<WixLocalization Culture="en-us" xmlns="http://wixtoolset.org/schemas/v4/wxl">
 
-	<String Id="Company">IgniteVR</String>
-	<String Id="Description">A tool to record and process EchoVR API data.</String>
-	<String Id="Comments">Very cool</String>
-	<String Id="Keywords">echovr,api,ignite,vr</String>
+	<String Id="Company" Value="IgniteVR" />
+	<String Id="Description" Value="A tool to record and process EchoVR API data." />
+	<String Id="Comments" Value="Very cool" />
+	<String Id="Keywords" Value="echovr,api,ignite,vr" />
 
-	<String Id="DowngradeErrorMessage">A newer version of Spark is already installed.</String>
+	<String Id="DowngradeErrorMessage" Value="A newer version of Spark is already installed." />
 
-	<String Id="ProductName">Spark</String>
-	<String Id="ProductNameFolder">Spark</String>
+	<String Id="ProductName" Value="Spark" />
+	<String Id="ProductNameFolder" Value="Spark" />
 
-	<String Id="Language">1033</String>
+	<String Id="Language" Value="1033" />
 
-	<String Id="WelcomeDlgDescription">This Setup Wizard will install Spark on your computer.</String>
+	<String Id="WelcomeDlgDescription" Value="This Setup Wizard will install Spark on your computer." />
 </WixLocalization>

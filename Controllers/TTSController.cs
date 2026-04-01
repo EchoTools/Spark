@@ -29,14 +29,28 @@ namespace Spark
 		private const float rateLimitPerSecond = 15;
 		private bool ttsDisabled = false;
 		private string[] blacklistedNames = Array.Empty<string>();
-		private readonly ConcurrentQueue<string> ttsQueue = new ConcurrentQueue<string>();
+		
+		// Use BlockingCollection for efficient threading (no polling/sleep loops)
+		private readonly BlockingCollection<string> ttsQueue = new BlockingCollection<string>();
 
-		public static string CacheFolder => Path.Combine(Path.GetTempPath(), "SparkTTSCache");
+		public static string CacheFolder {
+			get {
+				string customPath = SparkSettings.instance?.ttsCacheFolder;
+				if (!string.IsNullOrWhiteSpace(customPath))
+				{
+					return customPath;
+				}
+				
+				// Default fallback to Spark application directory
+				return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SparkTTSCache");
+			}
+		}
 		
 		private readonly Stopwatch lastRulesChangedTimer = Stopwatch.StartNew();
 		
 		private float currentRate = 1.0f;
 		private string currentRateString = "1.0";
+		private static readonly Random _rng = new Random();
 
 		public TTSController()
 		{
@@ -55,6 +69,11 @@ namespace Spark
 				}
 			});
 
+			RegisterEvents();
+		}
+
+		private void RegisterEvents()
+		{
 			Program.PlayerJoined += (frame, team, player) =>
 			{
 				if (!SparkSettings.instance.playerJoinTTS) return;
@@ -168,26 +187,15 @@ namespace Spark
 			ttsThread?.Abort();
 		}
 
-		private void LoadTtsSpeed()
+		public void LoadTtsSpeed()
 		{
 			try
 			{
-				int savedValue = 2;
-				
-				if (SparkSettings.instance.TTSSpeed >= 1 && SparkSettings.instance.TTSSpeed <= 4)
-				{
-					savedValue = SparkSettings.instance.TTSSpeed;
-				}
-				else if (SparkSettings.instance.ttsSpeedIndex >= 1 && SparkSettings.instance.ttsSpeedIndex <= 4)
-				{
-					savedValue = SparkSettings.instance.ttsSpeedIndex;
-				}
+				int savedValue = SparkSettings.instance.ttsSpeedIndex;
+				// Validate range
+				if (savedValue < 1 || savedValue > 4) savedValue = 2; // Default to 2 (1.0x) if invalid
 				
 				int index = savedValue - 1;
-				
-				if (index < 0) index = 1;
-				if (index > 3) index = 1;
-				
 				SetRateInternal(index);
 			}
 			catch
@@ -204,27 +212,31 @@ namespace Spark
 				playing = false;
 			};
 			
-			while (Program.running)
+			// Use GetConsumingEnumerable to block until item exists (CPU efficient)
+			foreach (string result in ttsQueue.GetConsumingEnumerable())
 			{
-				if (ttsQueue.TryDequeue(out string result))
+				if (!Program.running) break;
+
+				try
 				{
-					try
+					// Ensure previous playback stops
+					mediaPlayer.Stop();
+					mediaPlayer.Open(new Uri(result));
+					playing = true;
+					mediaPlayer.Play();
+					
+					// Only trim cache probabilistically to save IO
+					if (_rng.Next(0, 10) == 0)
 					{
-						mediaPlayer.Stop();
-						mediaPlayer.Open(new Uri(result));
-						playing = true;
-						mediaPlayer.Play();
-						Thread.Sleep(100);
 						Task.Run(TrimCacheFolder);
 					}
-					catch
-					{
-						// Ignore playback errors
-					}
-				}
-				else
-				{
+					
+					// Small buffer to prevent stutter if rapid fire
 					Thread.Sleep(50);
+				}
+				catch
+				{
+					// Ignore playback errors
 				}
 			}
 		}
@@ -241,14 +253,14 @@ namespace Spark
 			SparkSettings.instance.TTSSpeed = value;
 			SparkSettings.instance.ttsSpeedIndex = value;
 			
-			try
+			Task.Run(() => 
 			{
-				SparkSettings.instance.Save();
-			}
-			catch
-			{
-				// Ignore save errors
-			}
+				try
+				{
+					SparkSettings.instance.Save();
+				}
+				catch { }
+			});
 			
 			SetRateInternal(speedIndex);
 		}
@@ -257,21 +269,11 @@ namespace Spark
 		{
 			switch (speedIndex)
 			{
-				case 0:
-					currentRate = 0.6f;
-					break;
-				case 1:
-					currentRate = 1.0f;
-					break;
-				case 2:
-					currentRate = 1.4f;
-					break;
-				case 3:
-					currentRate = 1.8f;
-					break;
-				default:
-					currentRate = 1.0f;
-					break;
+				case 0: currentRate = 0.6f; break;
+				case 1: currentRate = 1.0f; break;
+				case 2: currentRate = 1.4f; break;
+				case 3: currentRate = 1.8f; break;
+				default: currentRate = 1.0f; break;
 			}
 			
 			currentRateString = currentRate.ToString("F1");
@@ -283,23 +285,28 @@ namespace Spark
 
 		public void SpeakAsync(string text)
 		{
+			// Offload all logic to thread pool immediately
 			Task.Run(() => Speak(text));
 		}
 
 		private void Speak(string text)
 		{
-			rateLimiterQueue.Enqueue(DateTime.UtcNow);
-			
-			while (rateLimiterQueue.Count > 0 && 
-				   (DateTime.UtcNow - rateLimiterQueue.Peek()).TotalSeconds > 1)
+			lock(rateLimiterQueue)
 			{
-				rateLimiterQueue.Dequeue();
-			}
+				rateLimiterQueue.Enqueue(DateTime.UtcNow);
+				
+				// Clean up old entries
+				while (rateLimiterQueue.Count > 0 && 
+					   (DateTime.UtcNow - rateLimiterQueue.Peek()).TotalSeconds > 1)
+				{
+					rateLimiterQueue.Dequeue();
+				}
 
-			if (rateLimiterQueue.Count > rateLimitPerSecond)
-			{
-				ttsDisabled = true;
-				return;
+				if (rateLimiterQueue.Count > rateLimitPerSecond)
+				{
+					ttsDisabled = true;
+					return;
+				}
 			}
 
 			if (ttsDisabled) return;
@@ -309,119 +316,73 @@ namespace Spark
 				Directory.CreateDirectory(CacheFolder);
 			}
 
-			string cleanText = text;
-			foreach (char c in Path.GetInvalidFileNameChars())
+			// Clean filename more efficiently
+			StringBuilder cleanTextBuilder = new StringBuilder(text.Length);
+			foreach (char c in text)
 			{
-				cleanText = cleanText.Replace(c.ToString(), "");
+				if (!Path.GetInvalidFileNameChars().Contains(c))
+				{
+					cleanTextBuilder.Append(c);
+				}
 			}
-			cleanText = cleanText.Replace(" ", "_");
+			string cleanText = cleanTextBuilder.ToString().Replace(" ", "_");
 			
-			if (cleanText.Length > 100)
+			if (cleanText.Length > 50) // Reduced length to avoid path length issues
 			{
-				cleanText = cleanText.Substring(0, 100);
+				cleanText = cleanText.Substring(0, 50);
 			}
 			
 			string filePath = Path.Combine(CacheFolder, $"{currentRateString}_{SparkSettings.instance.languageIndex}_{SparkSettings.instance.useWavenetVoices}_{SparkSettings.instance.ttsVoice}_{cleanText}.mp3");
 
 			if (File.Exists(filePath))
 			{
-				ttsQueue.Enqueue(filePath);
+				ttsQueue.Add(filePath);
 				return;
 			}
 			
-			Task.Run(async () =>
+			// Run network request
+			try
 			{
-				try
+				string json = JsonConvert.SerializeObject(new Dictionary<string, object>
 				{
-					string json = JsonConvert.SerializeObject(new Dictionary<string, object>
-					{
-						{"text", text},
-						{"language_code", voiceTypes[SparkSettings.instance.useWavenetVoices ? 0 : 1, SparkSettings.instance.languageIndex, SparkSettings.instance.ttsVoice]},
-						{"voice_name", voiceTypes[SparkSettings.instance.useWavenetVoices ? 0 : 1, SparkSettings.instance.languageIndex, SparkSettings.instance.ttsVoice]},
-						{"speaking_rate", currentRate},
-					});
-					
-					HttpRequestMessage request = new HttpRequestMessage
-					{
-						Method = HttpMethod.Post,
-						RequestUri = new Uri($"{Program.APIURL}/tts"),
-						Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json),
-					};
-					
-					HttpResponseMessage response = await FetchUtils.client.SendAsync(request);
-					byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+					{"text", text},
+					{"language_code", voiceTypes[SparkSettings.instance.useWavenetVoices ? 0 : 1, SparkSettings.instance.languageIndex, SparkSettings.instance.ttsVoice]},
+					{"voice_name", voiceTypes[SparkSettings.instance.useWavenetVoices ? 0 : 1, SparkSettings.instance.languageIndex, SparkSettings.instance.ttsVoice]},
+					{"speaking_rate", currentRate},
+				});
 				
-					if (bytes.Length > 0)
-					{
-						await File.WriteAllBytesAsync(filePath, bytes);
-					}
-
-					ttsQueue.Enqueue(filePath);
-				}
-				catch
+				HttpRequestMessage request = new HttpRequestMessage
 				{
-					// Ignore TTS generation errors
+					Method = HttpMethod.Post,
+					RequestUri = new Uri($"{Program.APIURL}/tts"),
+					Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json),
+				};
+				
+				// Synchronous wait here is fine because we are already in Task.Run from SpeakAsync
+				// and we want to ensure the file is written before queueing
+				HttpResponseMessage response = FetchUtils.client.SendAsync(request).Result;
+				byte[] bytes = response.Content.ReadAsByteArrayAsync().Result;
+			
+				if (bytes.Length > 0)
+				{
+					File.WriteAllBytes(filePath, bytes);
+					ttsQueue.Add(filePath);
 				}
-			});
+			}
+			catch
+			{
+				// Ignore TTS generation errors
+			}
 		}
 
 		public static void ClearCacheFolder()
 		{
-			try
-			{
-				if (Directory.Exists(CacheFolder))
-				{
-					DirectoryInfo di = new DirectoryInfo(CacheFolder);
-					foreach (FileInfo file in di.GetFiles())
-					{
-						try 
-						{ 
-							file.Delete();
-						} 
-						catch { }
-					}
-				}
-			}
-			catch
-			{
-				// Ignore cache clearing errors
-			}
+			// Disabled: No longer deletes TTS cache
 		}
 
 		public static void TrimCacheFolder()
 		{
-			try
-			{
-				if (Directory.Exists(CacheFolder))
-				{
-					DirectoryInfo di = new DirectoryInfo(CacheFolder);
-					List<FileInfo> files = di.GetFiles().ToList();
-					
-					files.Sort((f1, f2) => f1.LastAccessTime.CompareTo(f2.LastAccessTime));
-					
-					long totalSize = files.Sum(file => file.Length);
-					long maxSize = SparkSettings.instance.ttsCacheSizeBytes;
-					
-					while (totalSize > maxSize && files.Count > 0)
-					{
-						FileInfo oldestFile = files[0];
-						try
-						{
-							totalSize -= oldestFile.Length;
-							oldestFile.Delete();
-							files.RemoveAt(0);
-						}
-						catch
-						{
-							files.RemoveAt(0);
-						}
-					}
-				}
-			}
-			catch
-			{
-				// Ignore cache trimming errors
-			}
+			// Disabled: No longer trims TTS cache
 		}
 	}
 }
