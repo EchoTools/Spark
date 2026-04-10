@@ -582,12 +582,7 @@
                         </Button>
                     </StackPanel>
                     <ProgressBar x:Name="ReplayViewerProgressBar" Height="15" Visibility="Collapsed" Margin="4,4,4,4" IsIndeterminate="True"/>
-                    <Button Height="40" Margin="4,4,4,4" Click="TabletStatsUploadClick" Visibility="Visible" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{x:Static p:Resources.Upload_Tablet_Stats}" VerticalAlignment="Center"></TextBlock>
-                            <Image Source="/img/text-box-outline.png" Margin="8,8,0,8"></Image>
-                        </StackPanel>
-                    </Button>
+
                     <Button x:Name="SpeedometerButton" Content="{x:Static p:Resources.Speedometer}" Height="40" Margin="4,4,4,4" Click="OpenSpeedometer" Visibility="Collapsed" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}" />
                     <StackPanel Orientation="Horizontal">
                         <Button x:Name="OverlaysButton" Content="{x:Static p:Resources.Overlays}" Height="40" Width="137" Margin="4,4,1,4" HorizontalAlignment="Stretch" Click="OpenOverlays" Visibility="Visible" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"/>

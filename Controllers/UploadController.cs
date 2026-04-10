@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -86,8 +86,7 @@ namespace Spark
 				_ = DoUploadMatchBatchIgniteDB(dataString, hash, round.frame.client_name);
 			}
 			
-			// upload tablet stats as well
-			if (round.frame?.private_match == false && final) Program.AutoUploadTabletStats();
+
 		}
 
 		static async Task DoUploadMatchBatchIgniteDB(string data, string hash, string client_name)

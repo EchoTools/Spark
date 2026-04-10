@@ -169,9 +169,8 @@
 								<CheckBox x:Name="uploadToIgniteDBCheckBox" Content="{x:Static p:Resources.Upload_to_IgniteVR_Database}"
 											  IsChecked="{l:SettingBinding uploadToIgniteDB}"
 											  Margin="4,4,4,4" Visibility="Visible" />
-								<CheckBox x:Name="optInCheckbox" Content="{x:Static p:Resources.optInCheckbox_Content}" Margin="4,4,4,4" Unchecked="OptIn" Checked="OptIn" ToolTip="{x:Static p:Resources.optInCheckbox_ToolTip}"/>
-								<Label x:Name="optInStatusLabel" Content="{x:Static p:Resources.Fetching_opt_in_status___}" Margin="30,-6,0,0" FontSize="10"/>
-								<Button Click="UploadTabletStats" Height="30" Margin="10,10,10,10" Content="{x:Static p:Resources.Upload_Tablet_Stats}"></Button>
+
+
 								<CheckBox Content="Save Events to Local CSV"
 								          IsChecked="{l:SettingBinding saveEventsToCSV}"
 								          Margin="4,4,4,4" Visibility="Collapsed" />

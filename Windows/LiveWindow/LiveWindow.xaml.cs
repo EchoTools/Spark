@@ -260,7 +260,7 @@ namespace Spark
                     "IgniteVR", "Spark", "WebView");
                 CoreWebView2Environment webView2Environment = await CoreWebView2Environment.CreateAsync(null, path);
                 //await PlayercardWebView.EnsureCoreWebView2Async(webView2Environment);
-                //PlayercardWebView.Source = new UriBuilder("https://metrics.ignitevr.gg/playercard_embed").Uri;
+
             }
             catch (FileNotFoundException ex)
             {
@@ -951,7 +951,7 @@ namespace Spark
 
         private void ClickedOnPlayer(string playerName)
         {
-            Process.Start(new ProcessStartInfo("https://metrics.ignitevr.gg/stats/" + playerName)
+            Process.Start(new ProcessStartInfo("https://echovrce.com")
             {
                 UseShellExecute = true
             });
@@ -2228,15 +2228,7 @@ namespace Spark
             tabControl.SelectedItem = ServerInfoTab;
         }
 
-        private void TabletStatsUploadClick(object sender, RoutedEventArgs e)
-        {
-            List<TabletStats> stats = Program.FindTabletStats();
 
-            if (stats != null)
-            {
-                new UploadTabletStatsMenu(stats) { Owner = this }.Show();
-            }
-        }
 
         private void ACIIECHO_Click(object sender, RoutedEventArgs e)
         {

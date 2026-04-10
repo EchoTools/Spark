@@ -30,10 +30,7 @@ namespace Spark
 		// set to false initially so that loading the settings from disk doesn't activate the events
 		private bool initialized;
 
-		/// <summary>
-		/// Set to true once the opt in status fetched.
-		/// </summary>
-		private bool optInFound;
+
 
 		/// <summary>
 		/// Throttles theme updates during slider dragging to prevent UI lag.
@@ -59,9 +56,7 @@ namespace Spark
 			{
 				//Initialize();
 
-				optInCheckbox.IsEnabled = false;
-				optInStatusLabel.Content = "Fetching opt-in status...";
-				_ = GetOptInStatus();
+
 
 
 #if WINDOWS_STORE_RELEASE
@@ -459,75 +454,7 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 			}
 		}
 
-		private async Task GetOptInStatus()
-		{
-			if (string.IsNullOrEmpty(SparkSettings.instance.client_name))
-			{
-				optInFound = true;
-				optInCheckbox.IsEnabled = false;
-				optInStatusLabel.Content = "Run the game once to find your Oculus name.";
-				return;
-			}
 
-			if (DiscordOAuth.oauthToken == string.Empty)
-			{
-				optInFound = true;
-				optInCheckbox.IsEnabled = false;
-				optInStatusLabel.Content = "Log into Discord to be able to opt in.";
-				return;
-			}
-
-			try
-			{
-				string resp = await FetchUtils.GetRequestAsync(
-					$"{Program.APIURL}/optin/get/{SparkSettings.instance.client_name}",
-					new Dictionary<string, string> { { "x-api-key", DiscordOAuth.igniteUploadKey } });
-
-				JToken objResp = JsonConvert.DeserializeObject<JToken>(resp);
-				if (objResp?["opted_in"] != null)
-				{
-					optInCheckbox.IsChecked = (bool)objResp["opted_in"];
-				}
-				else
-				{
-					Logger.LogRow(Logger.LogType.Error, $"Couldn't get opt-in status.");
-					optInStatusLabel.Content = "Failed to get opt-in status. Response invalid.";
-				}
-			}
-			catch (Exception e)
-			{
-				Logger.LogRow(Logger.LogType.Error, $"Couldn't get opt-in status.\n{e}");
-				optInStatusLabel.Content = "Failed to get opt-in status.";
-			}
-
-			optInFound = true;
-			optInCheckbox.IsEnabled = true;
-			optInStatusLabel.Content = $"Oculus Username: {SparkSettings.instance.client_name}";
-		}
-
-		private void OptIn(object sender, RoutedEventArgs e)
-		{
-			if (!optInFound) return;
-
-			FetchUtils.PostRequestCallback(
-				$"{Program.APIURL}/optin/set/{SparkSettings.instance.client_name}/{((CheckBox)sender).IsChecked}",
-				new Dictionary<string, string>
-				{
-					{ "x-api-key", DiscordOAuth.igniteUploadKey }, { "token", DiscordOAuth.oauthToken }
-				},
-				string.Empty,
-				(resp) =>
-				{
-					if (resp.Contains("opted in"))
-					{
-						optInCheckbox.IsChecked = true;
-					}
-					else if (resp.Contains("opted normal"))
-					{
-						optInCheckbox.IsChecked = false;
-					}
-				});
-		}
 
 		#endregion
 
@@ -965,15 +892,7 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 			CameraWriteController.SetNameplatesVisibility(HideNameplatesCheckbox.IsChecked != true);
 		}
 
-		private void UploadTabletStats(object sender, RoutedEventArgs e)
-		{
-			List<TabletStats> stats = Program.FindTabletStats();
 
-			if (stats != null)
-			{
-				new UploadTabletStatsMenu(stats) { Owner = this }.Show();
-			}
-		}
 
 		private void ResetAllSettings(object sender, RoutedEventArgs e)
 		{
