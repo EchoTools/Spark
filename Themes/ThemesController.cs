@@ -100,7 +100,7 @@ namespace Spark
 			{
 				// Step 1: Load the base theme XAML so all WPF control templates are present.
 				// This is what the original ThemesController.SetTheme() did.
-				ChangeTheme(new Uri("Themes/ColourfulDarkTheme_Orange.xaml", UriKind.Relative));
+				ChangeTheme(new Uri("/Themes/ColourfulDarkTheme_Orange.xaml", UriKind.Relative));
 			}
 			catch (Exception e)
 			{

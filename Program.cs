@@ -3537,6 +3537,10 @@ namespace Spark
 			catch (Exception e)
 			{
 				LogRow(LogType.Error, e.ToString());
+				if (windowName != null && popupWindows.ContainsKey(windowName))
+				{
+					popupWindows[windowName] = null;
+				}
 				new MessageBox($"Failed to open window: {type}.\nPlease try again.").Show();
 				return false;
 			}

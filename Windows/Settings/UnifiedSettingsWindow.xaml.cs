@@ -55,36 +55,43 @@ namespace Spark
 
 		private void WindowLoad(object sender, RoutedEventArgs e)
 		{
-			//Initialize();
+			try
+			{
+				//Initialize();
 
-			optInCheckbox.IsEnabled = false;
-			optInStatusLabel.Content = "Fetching opt-in status...";
-			_ = GetOptInStatus();
+				optInCheckbox.IsEnabled = false;
+				optInStatusLabel.Content = "Fetching opt-in status...";
+				_ = GetOptInStatus();
 
 
 #if WINDOWS_STORE_RELEASE
-			enableBetasCheckbox.Visibility = Visibility.Collapsed;
+				enableBetasCheckbox.Visibility = Visibility.Collapsed;
 #endif
 
 
-			ThisPCLocalIP.Text = $"This PC's Local IP: {QuestIPFetching.GetLocalIP()} (for PC-PC Spectate Me)";
+				ThisPCLocalIP.Text = $"This PC's Local IP: {QuestIPFetching.GetLocalIP()} (for PC-PC Spectate Me)";
 
-			CameraModeDropdownChanged(SparkSettings.instance.spectatorCamera);
+				CameraModeDropdownChanged(SparkSettings.instance.spectatorCamera);
 
-			if (SparkSettings.instance.mutePlayerComms)
-			{
-				MutePlayerCommsDropdown.SelectedIndex = 2;
-			}
-			else if (SparkSettings.instance.muteEnemyTeam)
-			{
-				MutePlayerCommsDropdown.SelectedIndex = 1;
-			}
-			else
-			{
-				MutePlayerCommsDropdown.SelectedIndex = 0;
-			}
+				if (SparkSettings.instance.mutePlayerComms)
+				{
+					MutePlayerCommsDropdown.SelectedIndex = 2;
+				}
+				else if (SparkSettings.instance.muteEnemyTeam)
+				{
+					MutePlayerCommsDropdown.SelectedIndex = 1;
+				}
+				else
+				{
+					MutePlayerCommsDropdown.SelectedIndex = 0;
+				}
 
-			initialized = true;
+				initialized = true;
+			}
+			catch (Exception ex)
+			{
+				Logger.LogRow(Logger.LogType.Error, $"Error during settings window load: {ex}");
+			}
 		}
 
 
