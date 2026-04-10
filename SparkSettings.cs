@@ -154,7 +154,7 @@ namespace Spark
 		public bool useAnonymousSpectateMe { get; set; } = true;
 		public bool spectateMeOnByDefault { get; set; } = false;
 
-		public Dictionary<string, bool> autoUploadProfiles { get; } = new Dictionary<string, bool>();
+
 
 		#region TTS
 

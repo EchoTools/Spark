@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.ComponentModel;
@@ -20,6 +20,7 @@ namespace Spark
 
 		public EchoVRSettingsManager()
 		{
+			instance ??= this;
 			PropertyChanged += (o, e) =>
 			{
 				//RefreshProperties();
@@ -31,7 +32,7 @@ namespace Spark
 		{
 			if (PropertyChanged != null)
 			{
-				//PropertyChanged(this, new PropertyChangedEventArgs(string.Empty));
+				PropertyChanged(this, new PropertyChangedEventArgs(string.Empty));
 			}
 		}
 
@@ -128,6 +129,7 @@ namespace Spark
 		{
 			if (settings == null) Reload();
 			JToken localSettings = settings;
+			if (localSettings == null) return false;
 
 			foreach (string path in settingsPath)
 			{
@@ -147,6 +149,7 @@ namespace Spark
 		{
 			if (settings == null) Reload();
 			JToken localSettings = settings;
+			if (localSettings == null) return 0.1f;
 
 			foreach (string path in settingsPath)
 			{
@@ -157,7 +160,7 @@ namespace Spark
 				else
 				{
 					Error("Error finding game setting");
-					return 0;
+					return 0.1f;
 				}
 			}
 			return (float)localSettings;
@@ -166,6 +169,7 @@ namespace Spark
 		{
 			if (settings == null) Reload();
 			JToken localSettings = settings;
+			if (localSettings == null) return 0;
 
 			foreach (string path in settingsPath)
 			{
@@ -185,6 +189,7 @@ namespace Spark
 		{
 			if (settings == null) Reload();
 			JToken localSettings = settings;
+			if (localSettings == null) return;
 
 			for (int i = 0; i < settingsPath.Length; i++)
 			{
@@ -210,6 +215,7 @@ namespace Spark
 		{
 			if (settings == null) Reload();
 			JToken localSettings = settings;
+			if (localSettings == null) return;
 
 			for (int i = 0; i < settingsPath.Length; i++)
 			{
@@ -235,6 +241,7 @@ namespace Spark
 		{
 			if (settings == null) Reload();
 			JToken localSettings = settings;
+			if (localSettings == null) return;
 
 			for (int i = 0; i < settingsPath.Length; i++)
 			{
@@ -274,9 +281,14 @@ namespace Spark
 					using StreamReader reader = new StreamReader(stream);
 					jsonData = reader.ReadToEnd();
 				}
-				else
+				else if (!string.IsNullOrEmpty(SparkSettings.instance.echoVRPath))
 				{
-					string file = Path.Combine(Path.GetDirectoryName(SparkSettings.instance.echoVRPath), "..", "..", "sourcedb", "rad15", "json", "r14", "config", "mp_spectator_settings.json");
+					string exeDir = Path.GetDirectoryName(SparkSettings.instance.echoVRPath);
+					if (exeDir == null)
+					{
+						return null;
+					}
+					string file = Path.Combine(exeDir, "..", "..", "sourcedb", "rad15", "json", "r14", "config", "mp_spectator_settings.json");
 
 					if (!File.Exists(file))
 					{
@@ -285,6 +297,10 @@ namespace Spark
 					}
 
 					jsonData = File.ReadAllText(file);
+				}
+				else
+				{
+					return null;
 				}
 
 				return JsonConvert.DeserializeObject<JToken>(jsonData);
@@ -300,7 +316,11 @@ namespace Spark
 		{
 			try
 			{
-				string file = Path.Combine(Path.GetDirectoryName(SparkSettings.instance.echoVRPath), "..", "..", "sourcedb", "rad15", "json", "r14", "config", "mp_spectator_settings.json");
+				if (string.IsNullOrEmpty(SparkSettings.instance.echoVRPath)) return;
+				string exeDir = Path.GetDirectoryName(SparkSettings.instance.echoVRPath);
+				if (exeDir == null) return;
+				
+				string file = Path.Combine(exeDir, "..", "..", "sourcedb", "rad15", "json", "r14", "config", "mp_spectator_settings.json");
 				if (!File.Exists(file))
 				{
 					throw new NullReferenceException("Can't find the EchoVR settings file");
@@ -319,6 +339,7 @@ namespace Spark
 		{
 			if (settingsSpec == null) ReloadSpec();
 			JToken localSettings = settingsSpec;
+			if (localSettings == null) return false;
 
 			foreach (string path in settingsPath)
 			{
@@ -338,6 +359,7 @@ namespace Spark
 		{
 			if (settingsSpec == null) ReloadSpec();
 			JToken localSettings = settingsSpec;
+			if (localSettings == null) return 40; // Default FOV
 
 			foreach (string path in settingsPath)
 			{
@@ -348,7 +370,7 @@ namespace Spark
 				else
 				{
 					Error("Error finding game setting");
-					return 0;
+					return 40;
 				}
 			}
 			return (float)localSettings;
@@ -357,6 +379,7 @@ namespace Spark
 		{
 			if (settingsSpec == null) ReloadSpec();
 			JToken localSettings = settingsSpec;
+			if (localSettings == null) return 0;
 
 			foreach (string path in settingsPath)
 			{
@@ -376,6 +399,7 @@ namespace Spark
 		{
 			if (settingsSpec == null) ReloadSpec();
 			JToken localSettings = settingsSpec;
+			if (localSettings == null) return;
 
 			for (int i = 0; i < settingsPath.Length; i++)
 			{
@@ -401,6 +425,7 @@ namespace Spark
 		{
 			if (settingsSpec == null) ReloadSpec();
 			JToken localSettings = settingsSpec;
+			if (localSettings == null) return;
 
 			for (int i = 0; i < settingsPath.Length; i++)
 			{
@@ -426,6 +451,7 @@ namespace Spark
 		{
 			if (settingsSpec == null) ReloadSpec();
 			JToken localSettings = settingsSpec;
+			if (localSettings == null) return;
 
 			for (int i = 0; i < settingsPath.Length; i++)
 			{
@@ -501,7 +527,12 @@ namespace Spark
 		{
 			try
 			{
-				string file = Path.Combine(Path.GetDirectoryName(SparkSettings.instance.echoVRPath), "..", "..", "sourcedb", "rad15", "json", "r14", "loading_tips.json");
+				if (settings == null) return;
+				if (string.IsNullOrEmpty(SparkSettings.instance.echoVRPath)) return;
+				string exeDir = Path.GetDirectoryName(SparkSettings.instance.echoVRPath);
+				if (exeDir == null) return;
+
+				string file = Path.Combine(exeDir, "..", "..", "sourcedb", "rad15", "json", "r14", "loading_tips.json");
 				if (!File.Exists(file))
 				{
 					throw new NullReferenceException("Can't find the EchoVR settings file");
@@ -708,7 +739,7 @@ namespace Spark
 		public static int CaptureVP2 {
 			get => capturevp2;
 			set {
-				capturevp2 = value; instance.RefreshProperties();
+				capturevp2 = value; instance?.RefreshProperties();
 			}
 		}
 		private static string CaptureVP2String {

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -918,12 +918,6 @@ CLOSE ECHOVR BEFORE PRESSING OK!</value>
   <data name="Clips" xml:space="preserve">
     <value>Clips</value>
   </data>
-  <data name="optInCheckbox.Content" xml:space="preserve">
-    <value>Opt-in to detailed website stats.</value>
-  </data>
-  <data name="optInCheckbox.ToolTip" xml:space="preserve">
-    <value>Shows more detailed stats on metrics.ignitevr.gg, including estimated height, play times, and hand dominance.</value>
-  </data>
   <data name="ClipsTitle.Content" xml:space="preserve">
     <value>Clips Settings</value>
   </data>
@@ -1237,18 +1231,12 @@ CLOSE ECHOVR BEFORE PRESSING OK!</value>
   <data name="Discord" xml:space="preserve">
     <value>Discord</value>
   </data>
-  <data name="Upload Tablet Stats" xml:space="preserve">
-    <value>Upload Tablet Stats</value>
-  </data>
+
   <data name="Only the selected profiles will be uploaded. Your alternate accounts will not be linked to each other publicly." xml:space="preserve">
     <value>Only the selected profiles will be uploaded. Your alternate accounts will not be linked to each other publicly.</value>
   </data>
-  <data name="You can view tablet stats using the '/tablet_stats PlayerName' command in Discord or on metrics.ignitevr.gg" xml:space="preserve">
-    <value>You can view tablet stats using the '/tablet_stats PlayerName' command in Discord or on metrics.ignitevr.gg</value>
-  </data>
-  <data name="Profiles:" xml:space="preserve">
-    <value>Profiles:</value>
-  </data>
+
+
   <data name="Upload" xml:space="preserve">
     <value>Upload</value>
   </data>
@@ -1623,9 +1611,7 @@ CLOSE ECHOVR BEFORE PRESSING OK!</value>
   <data name="Something broke while trying to launch update installer" xml:space="preserve">
     <value>Something broke while trying to launch update installer</value>
   </data>
-  <data name="Fetching opt-in status..." xml:space="preserve">
-    <value>Fetching opt-in status...</value>
-  </data>
+
   <data name="Found Quest on network!" xml:space="preserve">
     <value>Found Quest on network!</value>
   </data>

@@ -1,5 +1,4 @@
-﻿<Project>
-	<Import Project="Sdk.props" Sdk="WixToolset.Sdk" Version="6.0.2" />
+<Project Sdk="WixToolset.Sdk/6.0.2">
 	<PropertyGroup>
 		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
 	</PropertyGroup>
@@ -12,9 +11,18 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<Compile Include="Components.wxs" />
-		<Compile Include="ComponentsGenerated.wxs" />
 		<Compile Include="Directories.wxs" />
 		<Compile Include="Product.wxs" />
+	</ItemGroup>
+	<ItemGroup>
+		<HarvestDirectory Include="..\bin\$(Configuration)\net6.0-windows10.0.17763.0">
+			<ComponentGroupName>PublishedComponents</ComponentGroupName>
+			<DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+			<SuppressCom>true</SuppressCom>
+			<SuppressFragments>true</SuppressFragments>
+			<SuppressRegistry>true</SuppressRegistry>
+			<SuppressRootDirectory>true</SuppressRootDirectory>
+		</HarvestDirectory>
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="WixToolset.Util.wixext" Version="6.0.2" />
@@ -22,7 +30,7 @@
 		<PackageReference Include="WixToolset.Heat" Version="6.0.2" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\Spark\Spark.csproj">
+		<ProjectReference Include="..\Spark.csproj">
 			<Name>Spark</Name>
 			<Project>{f2ea4914-2372-49d5-83cc-a11302747291}</Project>
 			<Private>True</Private>
@@ -38,30 +46,19 @@
 	<PropertyGroup>
 		<RunWixToolsOutOfProc Condition=" '$(PROCESSOR_ARCHITECTURE)'!='x86' ">true</RunWixToolsOutOfProc>
 	</PropertyGroup>
-	<Import Project="Sdk.targets" Sdk="WixToolset.Sdk" Version="6.0.2" />
-	<Target Name="BeforeBuild">
-		<!-- Get assembly version -->
-		<GetAssemblyIdentity AssemblyFiles="..\bin\publish_files\Spark.dll">
+	<Target Name="SetBuildVersion" BeforeTargets="BeforeBuild">
+		<GetAssemblyIdentity AssemblyFiles="..\bin\$(Configuration)\net6.0-windows10.0.17763.0\Spark.dll">
 			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
 		</GetAssemblyIdentity>
-		<!-- Define some variables we need -->
 		<PropertyGroup>
-			<DefineConstants>
-				BuildVersion=%(AssemblyVersion.Version);
-				BasePath=..\bin\publish_files
-			</DefineConstants>
+			<DefineConstants>$(DefineConstants);BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
 		</PropertyGroup>
-		<!-- Harvest file components from publish folder -->
-		<HeatDirectory Directory="..\bin\publish_files" OutputFile="ComponentsGenerated.wxs" DirectoryRefId="INSTALLFOLDER" ComponentGroupName="PublishedComponents" SuppressCom="true" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" AutoGenerateGuids="false" GenerateGuidsNow="true" ToolPath="$(WixToolPath)" PreprocessorVariable="var.BasePath" />
-		<!--<Exec Command='"$(WIX)bin\heat.exe" dir "..\bin\publish_files" -cg PublishedComponents -dr INSTALLFOLDER -sreg -srd -var var.HarvestPath -ag -sfrag -suid -out "ComponentsGenerated.wxs"'/>-->
-		<!--<HeatDirectory Directory="$(MSBuildThisFileDirectory)lib\" PreprocessorVariable="var.HarvestPath" OutputFile=".\clients\sftp\OmsFileServer\SFTPFileServerInstaller\SFTPFileServerInstaller\HeatGeneratedFileList.wxs" ComponentGroupName="HeatGenerated" DirectoryRefId="INSTALLFOLDER" AutogenerateGuids="true" ToolPath="$(WixToolPath)" SuppressUniqueIds="true" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true"/>-->
 	</Target>
 	<Target Name="AfterBuild">
-		<!-- Get assembly version -->
-		<GetAssemblyIdentity AssemblyFiles="..\bin\publish_files\Spark.dll">
+		<GetAssemblyIdentity AssemblyFiles="..\bin\$(Configuration)\net6.0-windows10.0.17763.0\Spark.dll">
 			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
 		</GetAssemblyIdentity>
-		<!-- Rename and move final MSI -->
 		<Exec Command="if not exist Installs mkdir Installs" />
+		<Exec Command="move bin\$(Platform)\$(Configuration)\en-us\$(OutputName).msi Installs\SparkInstaller_v%(AssemblyVersion.Version).msi" />
 	</Target>
 </Project>

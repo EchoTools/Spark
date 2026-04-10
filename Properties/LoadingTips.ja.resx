@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -147,15 +147,13 @@
   <data name="League casters love it when you send them a spark:// link instead of an invite." xml:space="preserve">
     <value>League casters love it when you send them a spark:// link instead of an invite.</value>
   </data>
-  <data name="Log into Spark with Discord to enable features like uploading stats to metrics.ignitevr.gg and TTS." xml:space="preserve">
-    <value>Log into Spark with Discord to enable features like uploading stats to metrics.ignitevr.gg and TTS.</value>
+  <data name="Log into Spark with Discord to enable features like TTS." xml:space="preserve">
+    <value>Log into Spark with Discord to enable features like TTS.</value>
   </data>
   <data name="Lone Echo 2 releases tomorrow!" xml:space="preserve">
     <value>Lone Echo 2 releases tomorrow!</value>
   </data>
-  <data name="metrics.ignitevr.gg" xml:space="preserve">
-    <value>metrics.ignitevr.gg</value>
-  </data>
+
   <data name="No one knew if backboards were possible until qlyoung made them real in 2018." xml:space="preserve">
     <value>No one knew if backboards were possible until qlyoung made them real in 2018.</value>
   </data>
@@ -201,9 +199,7 @@
   <data name="Use the server score provided by Spark to choose a server that is fair for both teams." xml:space="preserve">
     <value>Use the server score provided by Spark to choose a server that is fair for both teams.</value>
   </data>
-  <data name="You can automatically upload your tablet stats and view them on metrics.ignitevr.gg." xml:space="preserve">
-    <value>You can automatically upload your tablet stats and view them on metrics.ignitevr.gg.</value>
-  </data>
+
   <data name="You can change many of Echo VR's ingame settings from within Spark's settings." xml:space="preserve">
     <value>You can change many of Echo VR's ingame settings from within Spark's settings.</value>
   </data>
