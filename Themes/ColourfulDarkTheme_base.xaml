@@ -1956,7 +1956,7 @@
 
     <!-- Password Box -->
     <Style TargetType="{x:Type PasswordBox}">
-        <Setter Property="PasswordChar" Value="â—"/>
+        <Setter Property="PasswordChar" Value="&#x25CF;"/>
         <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource ControlDefaultBorderBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource ControlDefaultForeground}"/>

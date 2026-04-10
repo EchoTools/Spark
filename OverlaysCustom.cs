@@ -1,4 +1,4 @@
-﻿using NAudio.SoundFont;
+using NAudio.SoundFont;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -147,6 +147,7 @@ namespace Spark
 			string sceneCollectionDestPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "obs-studio", "basic", "scenes", route + ".json");
 			if (File.Exists(sceneCollectionFile))
 			{
+				Directory.CreateDirectory(Path.GetDirectoryName(sceneCollectionDestPath) ?? string.Empty);
 				File.Copy(sceneCollectionFile, sceneCollectionDestPath, true);
 			}
 		}
