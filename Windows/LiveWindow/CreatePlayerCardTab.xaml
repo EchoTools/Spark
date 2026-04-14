@@ -1,0 +1,592 @@
+<UserControl x:Class="Spark.CreatePlayerCardTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="720" d:DesignWidth="1100"
+             Background="{DynamicResource ControlDarkerBackground}"
+             Loaded="UserControl_Loaded">
+
+    <UserControl.Resources>
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource ControlDisabledGlythColour}"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Background" Value="#cc9900"/>
+            <Setter Property="Foreground" Value="#111111"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="22,10"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#ffbb00"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#444"/>
+                    <Setter Property="Foreground" Value="#777"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="OutlineButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#ccaa00"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="22,10"/>
+            <Setter Property="BorderBrush" Value="#ccaa00"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#18ffcc00"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="BorderBrush" Value="#444"/>
+                    <Setter Property="Foreground" Value="#444"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>       <!-- card preview -->
+            <ColumnDefinition Width="520"/>     <!-- sidebar -->
+        </Grid.ColumnDefinitions>
+
+        <!-- ════════════════════  LEFT: card preview  ════════════════════ -->
+        <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="30">
+
+                <!-- CardRoot – the entire Border is rendered to PNG on save -->
+                <Border x:Name="CardRoot"
+                        Width="420" Height="580"
+                        CornerRadius="18"
+                        ClipToBounds="True"
+                        SnapsToDevicePixels="True">
+                    <Border.Effect>
+                        <DropShadowEffect x:Name="CardGlowEffect" Color="#FFD700" BlurRadius="30" ShadowDepth="0" Opacity="0.5"/>
+                    </Border.Effect>
+
+                    <Grid>
+                        <!-- Layer 1: dynamic background (fills entire card) -->
+                        <Border x:Name="CardBackground" CornerRadius="18">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#b8860b" Offset="0"/>
+                                    <GradientStop Color="#5a4000" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+
+                        <!-- Layer 2: card content -->
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="235"/>  <!-- avatar + configurable stats -->
+                                <RowDefinition Height="70"/>   <!-- name band -->
+                                <RowDefinition Height="*"/>    <!-- bar charts -->
+                            </Grid.RowDefinitions>
+
+                            <!-- ── ROW 0: avatar + 4 configurable stat slots ── -->
+                            <Border Grid.Row="0" Background="#BB161616" CornerRadius="18,18,0,0">
+                                <Grid Margin="18,18,18,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>  <!-- avatar -->
+                                        <ColumnDefinition Width="*"/>     <!-- stats -->
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Avatar -->
+                                    <Border x:Name="AvatarBorder"
+                                            Width="128" Height="128"
+                                            CornerRadius="16" BorderThickness="3"
+                                            VerticalAlignment="Center"
+                                            ClipToBounds="True">
+                                        <Border.BorderBrush>
+                                            <SolidColorBrush Color="#FFD700"/>
+                                        </Border.BorderBrush>
+                                        <Border.Effect>
+                                            <DropShadowEffect x:Name="AvatarGlowEffect" Color="#FFD700" BlurRadius="14" ShadowDepth="0" Opacity="0.65"/>
+                                        </Border.Effect>
+                                        <Image x:Name="AvatarImage" Stretch="UniformToFill"
+                                               RenderOptions.BitmapScalingMode="HighQuality">
+                                            <Image.Clip>
+                                                <RectangleGeometry RadiusX="13" RadiusY="13" Rect="0,0,122,122"/>
+                                            </Image.Clip>
+                                        </Image>
+                                    </Border>
+
+                                    <!-- 4 configurable stat slots -->
+                                    <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+
+                                        <Rectangle Height="1" Fill="#44FFFFFF" Margin="0,0,0,10"/>
+
+                                        <!-- Slot 1 -->
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="Row1Label" Text="WIN STREAK"
+                                                       FontFamily="Consolas" FontSize="16" FontWeight="SemiBold"
+                                                       Foreground="#FFD700" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="Row1Value" Grid.Column="1" Text="—"
+                                                       FontFamily="Consolas" FontSize="22" FontWeight="Bold"
+                                                       Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                        </Grid>
+
+                                        <!-- Slot 2 -->
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="Row2Label" Text="ARENA MVP %"
+                                                       FontFamily="Consolas" FontSize="16" FontWeight="SemiBold"
+                                                       Foreground="#FFD700" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="Row2Value" Grid.Column="1" Text="—"
+                                                       FontFamily="Consolas" FontSize="22" FontWeight="Bold"
+                                                       Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                        </Grid>
+
+                                        <!-- Slot 3 -->
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="Row3Label" Text="GOALS"
+                                                       FontFamily="Consolas" FontSize="16" FontWeight="SemiBold"
+                                                       Foreground="#FFD700" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="Row3Value" Grid.Column="1" Text="—"
+                                                       FontFamily="Consolas" FontSize="22" FontWeight="Bold"
+                                                       Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                        </Grid>
+
+                                        <!-- Slot 4 -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="Row4Label" Text="GAMES PLAYED"
+                                                       FontFamily="Consolas" FontSize="16" FontWeight="SemiBold"
+                                                       Foreground="#FFD700" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="Row4Value" Grid.Column="1" Text="—"
+                                                       FontFamily="Consolas" FontSize="22" FontWeight="Bold"
+                                                       Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                        </Grid>
+
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- ── ROW 1: name band ── -->
+                            <Border Grid.Row="1" Background="#E0080808">
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <TextBlock x:Name="PlayerNameText" Text="USERNAME"
+                                               FontFamily="Consolas" FontSize="26" FontWeight="Bold" HorizontalAlignment="Center"
+                                               Foreground="#FFFFFF"/>
+                                    <TextBlock x:Name="PlayerSubtitleText" Text="Echo VR Lounge"
+                                               FontFamily="Consolas" FontSize="12" HorizontalAlignment="Center"
+                                               Foreground="#FFD700"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- ── ROW 2: bar charts (semi-dark, bg bleeds through) ── -->
+                            <Border x:Name="BarSection" Grid.Row="2" Background="#BB080808"
+                                    CornerRadius="0,0,18,18">
+                                <StackPanel Margin="16,8,16,10" VerticalAlignment="Center">
+
+                                    <!-- Games -->
+                                    <Grid Margin="0,7,0,7">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="92"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Games....."
+                                                   FontFamily="Consolas" FontSize="15"
+                                                   Foreground="#CCF0F0F0" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="1" Height="19" CornerRadius="3" Background="#55000000">
+                                            <Border x:Name="GamesBar" HorizontalAlignment="Left" Height="19"
+                                                    CornerRadius="3" Width="0">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                                        <GradientStop Color="#FFD700" Offset="0"/>
+                                                        <GradientStop Color="#FFA500" Offset="1"/>
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
+                                            </Border>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Points -->
+                                    <Grid Margin="0,7,0,7">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="92"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Points...."
+                                                   FontFamily="Consolas" FontSize="15"
+                                                   Foreground="#CCF0F0F0" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="1" Height="19" CornerRadius="3" Background="#55000000">
+                                            <Border x:Name="PointsBar" HorizontalAlignment="Left" Height="19"
+                                                    CornerRadius="3" Width="0">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                                        <GradientStop Color="#FFD700" Offset="0"/>
+                                                        <GradientStop Color="#FFA500" Offset="1"/>
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
+                                            </Border>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Assists -->
+                                    <Grid Margin="0,7,0,7">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="92"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Assists..."
+                                                   FontFamily="Consolas" FontSize="15"
+                                                   Foreground="#CCF0F0F0" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="1" Height="19" CornerRadius="3" Background="#55000000">
+                                            <Border x:Name="AssistsBar" HorizontalAlignment="Left" Height="19"
+                                                    CornerRadius="3" Width="0">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                                        <GradientStop Color="#FFD700" Offset="0"/>
+                                                        <GradientStop Color="#FFA500" Offset="1"/>
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
+                                            </Border>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Stuns -->
+                                    <Grid Margin="0,7,0,7">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="92"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Stuns....."
+                                                   FontFamily="Consolas" FontSize="15"
+                                                   Foreground="#CCF0F0F0" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="1" Height="19" CornerRadius="3" Background="#55000000">
+                                            <Border x:Name="StunsBar" HorizontalAlignment="Left" Height="19"
+                                                    CornerRadius="3" Width="0">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                                        <GradientStop Color="#FFD700" Offset="0"/>
+                                                        <GradientStop Color="#FFA500" Offset="1"/>
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
+                                            </Border>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Possession -->
+                                    <Grid Margin="0,7,0,7">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="92"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Possession."
+                                                   FontFamily="Consolas" FontSize="15"
+                                                   Foreground="#CCF0F0F0" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="1" Height="19" CornerRadius="3" Background="#55000000">
+                                            <Border x:Name="PossessionBar" HorizontalAlignment="Left" Height="19"
+                                                    CornerRadius="3" Width="0">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                                        <GradientStop Color="#FFD700" Offset="0"/>
+                                                        <GradientStop Color="#FFA500" Offset="1"/>
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
+                                            </Border>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Saves -->
+                                    <Grid Margin="0,7,0,7">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="92"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Saves....."
+                                                   FontFamily="Consolas" FontSize="15"
+                                                   Foreground="#CCF0F0F0" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="1" Height="19" CornerRadius="3" Background="#55000000">
+                                            <Border x:Name="SavesBar" HorizontalAlignment="Left" Height="19"
+                                                    CornerRadius="3" Width="0">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                                        <GradientStop Color="#FFD700" Offset="0"/>
+                                                        <GradientStop Color="#FFA500" Offset="1"/>
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
+                                            </Border>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- Steals -->
+                                    <Grid Margin="0,7,0,7">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="92"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Steals...."
+                                                   FontFamily="Consolas" FontSize="15"
+                                                   Foreground="#CCF0F0F0" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="1" Height="19" CornerRadius="3" Background="#55000000">
+                                            <Border x:Name="StealsBar" HorizontalAlignment="Left" Height="19"
+                                                    CornerRadius="3" Width="0">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                                        <GradientStop Color="#FFD700" Offset="0"/>
+                                                        <GradientStop Color="#FFA500" Offset="1"/>
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
+                                            </Border>
+                                        </Border>
+                                    </Grid>
+
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- Layer 3: border ring (topmost, no hit-test) -->
+                        <Border x:Name="CardBorderRing" CornerRadius="18" BorderThickness="2.5"
+                                IsHitTestVisible="False">
+                            <Border.BorderBrush>
+                                <SolidColorBrush Color="#FFD700"/>
+                            </Border.BorderBrush>
+                        </Border>
+
+                    </Grid>
+                </Border>
+
+            </Grid>
+        </ScrollViewer>
+
+        <!-- ════════════════════  RIGHT: sidebar  ════════════════════ -->
+        <Border Grid.Column="1"
+                Background="{DynamicResource ControlDarkerBackground}"
+                BorderBrush="{DynamicResource ControlDefaultBorderBrush}"
+                BorderThickness="1,0,0,0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="18,20,18,24">
+
+                    <TextBlock Text="Create PlayerCard"
+                               FontSize="24" FontWeight="Bold"
+                               Foreground="{DynamicResource ControlDefaultForeground}"
+                               Margin="0,0,0,4"/>
+                    <TextBlock Text="Generates a shareable card from your local EchoVR stats."
+                               FontSize="14" Foreground="{DynamicResource ControlDisabledGlythColour}"
+                               TextWrapping="Wrap" Margin="0,0,0,14"/>
+
+                    <!-- GUILD SELECTION -->
+                    <Border Background="{DynamicResource ControlDefaultBackground}"
+                            CornerRadius="8" Padding="16,14" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="GUILD THEME"
+                                       Style="{StaticResource SectionHeader}"/>
+                            <TextBlock Text="Select a guild to display on your player card under your name."
+                                       FontSize="12" Foreground="{DynamicResource ControlDisabledGlythColour}"
+                                       TextWrapping="Wrap" Margin="0,0,0,10"/>
+                            
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="48"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Guild:" FontSize="14"
+                                           Foreground="{DynamicResource ControlDisabledGlythColour}"
+                                           VerticalAlignment="Center"/>
+                                <ComboBox x:Name="GuildCombo" Grid.Column="1" FontSize="14"
+                                          SelectionChanged="GuildCombo_Changed"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ── CARD STATS – 4 configurable slots ── -->
+                    <Border Background="{DynamicResource ControlDefaultBackground}"
+                            CornerRadius="8" Padding="16,14" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="CARD STATS — 4 CONFIGURABLE SLOTS"
+                                       Style="{StaticResource SectionHeader}"/>
+                            <TextBlock Text="Pick which stat shows in each labelled slot on the card."
+                                       FontSize="12" Foreground="{DynamicResource ControlDisabledGlythColour}"
+                                       TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                            <!-- Slot 1 -->
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="48"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Slot 1:" FontSize="14"
+                                           Foreground="{DynamicResource ControlDisabledGlythColour}"
+                                           VerticalAlignment="Center"/>
+                                <ComboBox x:Name="Slot1Combo" Grid.Column="1" FontSize="14"
+                                          SelectionChanged="SlotCombo_Changed"/>
+                            </Grid>
+
+                            <!-- Slot 2 -->
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="48"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Slot 2:" FontSize="14"
+                                           Foreground="{DynamicResource ControlDisabledGlythColour}"
+                                           VerticalAlignment="Center"/>
+                                <ComboBox x:Name="Slot2Combo" Grid.Column="1" FontSize="14"
+                                          SelectionChanged="SlotCombo_Changed"/>
+                            </Grid>
+
+                            <!-- Slot 3 -->
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="48"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Slot 3:" FontSize="14"
+                                           Foreground="{DynamicResource ControlDisabledGlythColour}"
+                                           VerticalAlignment="Center"/>
+                                <ComboBox x:Name="Slot3Combo" Grid.Column="1" FontSize="14"
+                                          SelectionChanged="SlotCombo_Changed"/>
+                            </Grid>
+
+                            <!-- Slot 4 -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="48"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Slot 4:" FontSize="14"
+                                           Foreground="{DynamicResource ControlDisabledGlythColour}"
+                                           VerticalAlignment="Center"/>
+                                <ComboBox x:Name="Slot4Combo" Grid.Column="1" FontSize="14"
+                                          SelectionChanged="SlotCombo_Changed"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ── CARD BACKGROUND ── -->
+                    <Border Background="{DynamicResource ControlDefaultBackground}"
+                            CornerRadius="8" Padding="16,14" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="CARD BACKGROUND"
+                                       Style="{StaticResource SectionHeader}"/>
+
+                            <!-- Style -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="48"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Style:" FontSize="14"
+                                           Foreground="{DynamicResource ControlDisabledGlythColour}"
+                                           VerticalAlignment="Center"/>
+                                <ComboBox x:Name="StyleCombo" Grid.Column="1" FontSize="14"
+                                          SelectionChanged="StyleCombo_Changed"/>
+                            </Grid>
+
+                            <!-- Colour -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="48"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Color:" FontSize="14"
+                                           Foreground="{DynamicResource ControlDisabledGlythColour}"
+                                           VerticalAlignment="Center"/>
+                                <ComboBox x:Name="ColorCombo" Grid.Column="1" FontSize="14"
+                                          SelectionChanged="ColorCombo_Changed"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ── LOADED STATS (read-only) ── -->
+                    <Border Background="{DynamicResource ControlDefaultBackground}"
+                            CornerRadius="8" Padding="16,14" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="LOADED STATS" Style="{StaticResource SectionHeader}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                    <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="Username" Grid.Row="0" FontSize="14" Foreground="{DynamicResource ControlDisabledGlythColour}"/>
+                                <TextBlock x:Name="InfoUsername" Grid.Row="0" Grid.Column="1" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ControlDefaultForeground}" Text="—" HorizontalAlignment="Right"/>
+
+                                <TextBlock Text="Games Played" Grid.Row="1" FontSize="14" Foreground="{DynamicResource ControlDisabledGlythColour}" Margin="0,4,0,0"/>
+                                <TextBlock x:Name="InfoGamesPlayed" Grid.Row="1" Grid.Column="1" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ControlDefaultForeground}" Text="—" HorizontalAlignment="Right" Margin="0,4,0,0"/>
+
+                                <TextBlock Text="Points" Grid.Row="2" FontSize="14" Foreground="{DynamicResource ControlDisabledGlythColour}" Margin="0,4,0,0"/>
+                                <TextBlock x:Name="InfoPoints" Grid.Row="2" Grid.Column="1" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ControlDefaultForeground}" Text="—" HorizontalAlignment="Right" Margin="0,4,0,0"/>
+
+                                <TextBlock Text="Assists" Grid.Row="3" FontSize="14" Foreground="{DynamicResource ControlDisabledGlythColour}" Margin="0,4,0,0"/>
+                                <TextBlock x:Name="InfoAssists" Grid.Row="3" Grid.Column="1" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ControlDefaultForeground}" Text="—" HorizontalAlignment="Right" Margin="0,4,0,0"/>
+
+                                <TextBlock Text="Stuns" Grid.Row="4" FontSize="14" Foreground="{DynamicResource ControlDisabledGlythColour}" Margin="0,4,0,0"/>
+                                <TextBlock x:Name="InfoStuns" Grid.Row="4" Grid.Column="1" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ControlDefaultForeground}" Text="—" HorizontalAlignment="Right" Margin="0,4,0,0"/>
+
+                                <TextBlock Text="Saves" Grid.Row="5" FontSize="14" Foreground="{DynamicResource ControlDisabledGlythColour}" Margin="0,4,0,0"/>
+                                <TextBlock x:Name="InfoSaves" Grid.Row="5" Grid.Column="1" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ControlDefaultForeground}" Text="—" HorizontalAlignment="Right" Margin="0,4,0,0"/>
+
+                                <TextBlock Text="Steals" Grid.Row="6" FontSize="14" Foreground="{DynamicResource ControlDisabledGlythColour}" Margin="0,4,0,0"/>
+                                <TextBlock x:Name="InfoSteals" Grid.Row="6" Grid.Column="1" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ControlDefaultForeground}" Text="—" HorizontalAlignment="Right" Margin="0,4,0,0"/>
+
+                                <TextBlock Text="Goals" Grid.Row="7" FontSize="14" Foreground="{DynamicResource ControlDisabledGlythColour}" Margin="0,4,0,0"/>
+                                <TextBlock x:Name="InfoGoals" Grid.Row="7" Grid.Column="1" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ControlDefaultForeground}" Text="—" HorizontalAlignment="Right" Margin="0,4,0,0"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ── DISCORD AVATAR ── -->
+                    <Border Background="{DynamicResource ControlDefaultBackground}"
+                            CornerRadius="6" Padding="12,10" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="DISCORD AVATAR" Style="{StaticResource SectionHeader}"/>
+                            <TextBlock x:Name="DiscordStatusLabel"
+                                       Text="Not logged in — placeholder icon will be used."
+                                       FontSize="14" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource ControlDefaultForeground}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Buttons -->
+                    <Button x:Name="RefreshButton"
+                            Content="🔄  Refresh Stats"
+                            Margin="0,0,0,10" Padding="0,10"
+                            Foreground="#FFFFFF" FontWeight="Bold"
+                            Click="RefreshButton_Click"/>
+
+                    <Button x:Name="SaveCardButton"
+                            Content="💾  Save Card as PNG"
+                            Style="{StaticResource OutlineButton}"
+                            IsEnabled="False"
+                            Click="SaveCardButton_Click"/>
+
+                    <TextBlock Text="Saved PNG renders at 2× resolution (840 × 1160 px) for crisp sharing."
+                               FontSize="10" Foreground="{DynamicResource ControlDisabledGlythColour}"
+                               TextWrapping="Wrap" Margin="0,10,0,0"/>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

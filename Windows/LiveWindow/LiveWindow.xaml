@@ -527,6 +527,17 @@
                     <l:CreateServerControls/>
                 </TabItem>
 
+
+                <TabItem x:Name="PlayerCardTab" FontSize="14" Padding="10,0,10,0">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Create PlayerCard"/>
+                            <Image Source="/img/cards-outline.png" Height="16"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <l:CreatePlayerCardTab/>
+                </TabItem>
+
             </TabControl>
             <StackPanel Height="48" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,4" Grid.Row="1">
                 <Button x:Name="rejoinButton" Content="{x:Static p:Resources.Rejoin}" Width="110" Background="#FF6E2F2F" VerticalAlignment="Stretch" Margin="4,4,4,5" Click="RejoinClicked" ToolTip="{x:Static p:Resources.rejoin_tooltip}" Visibility="Collapsed"/>
