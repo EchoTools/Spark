@@ -1,0 +1,35 @@
+<ResourceDictionary x:Class="TheRThemes.ColourfulDarkTheme_Neutral"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Neutral Stealth Theme - Default Colours -->
+    <SolidColorBrush x:Key="ControlPrimaryDarkerBackground" Color="#FF151515" />
+    <SolidColorBrush x:Key="ControlPrimaryDarkerBorderBrush" Color="#FF151515" />
+    <SolidColorBrush x:Key="ControlPrimaryDefaultBackground" Color="#FF363636" />
+    <SolidColorBrush x:Key="ControlPrimaryDefaultBorderBrush" Color="#FF363636" />
+    <SolidColorBrush x:Key="ControlPrimaryBrightDefaultBackground" Color="#FF3E3E3E" />
+    <SolidColorBrush x:Key="ControlPrimaryBrightDefaultBorderBrush" Color="#FF3E3E3E" />
+    
+    <!-- Secondary/Misc colours (mostly grays to match stealth look) -->
+    <SolidColorBrush x:Key="ControlPrimaryDisabledBackground" Color="#FF2A2A2A" />
+    <SolidColorBrush x:Key="ControlPrimaryDisabledBorderBrush" Color="#FF2A2A2A" />
+    <SolidColorBrush x:Key="ControlPrimaryMouseOverBackground" Color="#FF444444" />
+    <SolidColorBrush x:Key="ControlPrimaryMouseOverBorderBrush" Color="#FF3E3E3E" />
+    <SolidColorBrush x:Key="ControlPrimarySelectedBackground" Color="#FF363636" />
+    <SolidColorBrush x:Key="ControlPrimarySelectedBorderBrush" Color="#FF151515" />
+    <SolidColorBrush x:Key="ControlPrimarySelectedMouseOverBackground" Color="#FF3E3E3E" />
+    <SolidColorBrush x:Key="ControlPrimarySelectedMouseOverBorderBrush" Color="#FF444444" />
+    
+    <SolidColorBrush x:Key="ControlPrimaryCaretSelectionBackground" Color="#FF444444" />
+    <SolidColorBrush x:Key="ControlPrimaryCaretBackground" Color="#FF3E3E3E" />
+    <SolidColorBrush x:Key="ControlPrimaryGlythColour" Color="#FFCCCCCC" />
+    <SolidColorBrush x:Key="ControlPrimaryMouseOverGlythColour" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="ControlPrimarySelectedGlythColour" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="ControlPrimarySelectedMouseOverGlythColour" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="ControlPrimaryDisabledGlythColour" Color="#FF666666" />
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="ColourfulDarkTheme_base.xaml"></ResourceDictionary>
+    </ResourceDictionary.MergedDictionaries>
+
+</ResourceDictionary>

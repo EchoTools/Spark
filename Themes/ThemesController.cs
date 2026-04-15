@@ -100,7 +100,7 @@ namespace Spark
 			{
 				// Step 1: Load the base theme XAML so all WPF control templates are present.
 				// This is what the original ThemesController.SetTheme() did.
-				ChangeTheme(new Uri("/Themes/ColourfulDarkTheme_Orange.xaml", UriKind.Relative));
+				ChangeTheme(new Uri("/Themes/ColourfulDarkTheme_Neutral.xaml", UriKind.Relative));
 			}
 			catch (Exception e)
 			{
@@ -110,9 +110,9 @@ namespace Spark
 			try
 			{
 				// Step 2: Override colour resources with user's saved colours.
-				Color dark  = ParseHex(SparkSettings.instance?.customThemeDark  ?? "#c32b61");
-				Color mid   = ParseHex(SparkSettings.instance?.customThemeMid   ?? "#ea6192");
-				Color light = ParseHex(SparkSettings.instance?.customThemeLight ?? "#ffaac9");
+				Color dark  = ParseHex(SparkSettings.instance?.customThemeDark  ?? "#151515");
+				Color mid   = ParseHex(SparkSettings.instance?.customThemeMid   ?? "#363636");
+				Color light = ParseHex(SparkSettings.instance?.customThemeLight ?? "#3E3E3E");
 				ApplyCustomTheme(dark, mid, light);
 			}
 			catch (Exception e)

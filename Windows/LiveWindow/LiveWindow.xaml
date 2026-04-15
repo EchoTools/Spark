@@ -21,7 +21,16 @@
         Top="{l:SettingBinding liveWindowTop}"
         Left="{l:SettingBinding liveWindowLeft}"
         Icon="/img/ignite_logo.ico"
-        >
+        Opacity="0">
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Window.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="{StaticResource FluidDuration}"/>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="220"/>
@@ -52,10 +61,15 @@
                 <GroupBox x:Name="statusBox" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
                     <GroupBox.Header>
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse x:Name="statusCircle" Width="10" Height="10" Fill="Red" Stroke="Black" StrokeThickness="1"
-                                     Margin="10,10,10,10" />
-                            <Label x:Name="statusLabel" Content="{x:Static p:Resources.Not_Connected}" />
-                            <TextBlock x:Name="NotConnectedHelp" HorizontalAlignment="Center" Margin="5,5,5,5" TextWrapping="Wrap">
+                            <Grid Margin="10,10,10,10">
+                                <Ellipse x:Name="statusCircle" Width="10" Height="10" Fill="Red" Stroke="Black" StrokeThickness="0.5">
+                                    <Ellipse.Effect>
+                                        <DropShadowEffect x:Name="statusGlow" BlurRadius="10" Color="Red" ShadowDepth="0" Opacity="0.8"/>
+                                    </Ellipse.Effect>
+                                </Ellipse>
+                            </Grid>
+                            <Label x:Name="statusLabel" Content="{x:Static p:Resources.Not_Connected}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="NotConnectedHelp" HorizontalAlignment="Center" Margin="5,5,5,5" TextWrapping="Wrap" VerticalAlignment="Center">
                                 <Hyperlink NavigateUri="https://echopedia.gg/wiki/Spark#Spark_says_Not_Connected_in_the_top_left_corner"
                                            RequestNavigate="Hyperlink_RequestNavigate">
                                     <Run Text="Help" />
@@ -83,10 +97,13 @@
                     </StackPanel>
                 </GroupBox>
                 <GroupBox x:Name="blueTeamBox" Width="Auto" VerticalAlignment="Top" BorderBrush="#FF4A689F" Background="{DynamicResource ControlDarkerBackground}">
+                    <GroupBox.Effect>
+                        <DropShadowEffect BlurRadius="15" Color="#FF4A689F" ShadowDepth="0" Opacity="0.3"/>
+                    </GroupBox.Effect>
                     <GroupBox.Header>
                         <StackPanel Orientation="Horizontal">
-                            <!-- <Label Content="{x:Static p:Resources.blue_caps}" Width="50" /> -->
                             <Image x:Name="blueTeamLogo" Height="26" Width="26" DockPanel.Dock="Right" Margin="0,0,0,0" />
+                            <TextBlock Text="BLUE TEAM" VerticalAlignment="Center" Margin="8,0" FontWeight="Bold" Foreground="#FF4A689F" FontSize="12"/>
                             <Button x:Name="BlueTeamPause" Height="26" Visibility="Collapsed" DockPanel.Dock="Right" Padding="4,0,4,0" Margin="4,2,0,4" Background="#ff1f334f" Click="BlueTeamPauseClick">Pause</Button>
                             <Button x:Name="BlueTeamReadyUp" Height="26" Visibility="Collapsed" DockPanel.Dock="Right" Padding="4,0,4,0"  Margin="4,2,0,4" Background="#ff1f334f" Click="BlueTeamReadyClick">Ready</Button>
                             <Button x:Name="BlueTeamRestart" Height="26" Visibility="Collapsed" DockPanel.Dock="Right" Padding="4,0,4,0"  Margin="4,2,-2,4" Background="#ff1f334f" Click="BlueTeamRestartClick">Restart</Button>
@@ -96,10 +113,13 @@
                     </StackPanel>
                 </GroupBox>
                 <GroupBox x:Name="orangeTeamBox" Width="Auto" VerticalAlignment="Top" BorderBrush="#FFB57837" Background="{DynamicResource ControlDarkerBackground}">
+                    <GroupBox.Effect>
+                        <DropShadowEffect BlurRadius="15" Color="#FFB57837" ShadowDepth="0" Opacity="0.3"/>
+                    </GroupBox.Effect>
                     <GroupBox.Header>
                         <StackPanel Orientation="Horizontal">
-                            <!-- <Label Content="{x:Static p:Resources.orange_caps}"  Width="50" /> -->
                             <Image x:Name="orangeTeamLogo" Height="26" Width="26" DockPanel.Dock="Right" Margin="0,0,0,0" />
+                            <TextBlock Text="ORANGE TEAM" VerticalAlignment="Center" Margin="8,0" FontWeight="Bold" Foreground="#FFB57837" FontSize="12"/>
                             <Button x:Name="OrangeTeamPause" Height="26" Visibility="Collapsed" DockPanel.Dock="Right" Padding="4,0,4,0" Margin="4,2,0,4" Background="#ff5e3e1c" Click="OrangeTeamPauseClick">Pause</Button>
                             <Button x:Name="OrangeTeamReadyUp" Height="26" Visibility="Collapsed" DockPanel.Dock="Right" Padding="4,0,4,0"  Margin="4,2,0,4" Background="#ff5e3e1c" Click="OrangeTeamReadyClick">Ready</Button>
                             <Button x:Name="OrangeTeamRestart" Height="26" Visibility="Collapsed" DockPanel.Dock="Right" Padding="4,0,4,0"  Margin="4,2,-2,4" Background="#ff5e3e1c" Click="OrangeTeamRestartClick">Restart</Button>
@@ -115,16 +135,34 @@
             </StackPanel>
             
             <Border Grid.Row="1" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}" BorderThickness="0,1,0,0">
-            <Grid >
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock x:Name="OrangePoints" Grid.Column="0" Background="#FF8c5c2a" TextAlignment="Center" VerticalAlignment="Stretch" Padding="0,10,0,0" FontSize="26" FontFamily="Consolas" FontWeight="Black">0</TextBlock>
-                <TextBlock x:Name="GameClock" Grid.Column="1" Background="{DynamicResource ControlDefaultBackground}" TextAlignment="Center" VerticalAlignment="Stretch" Padding="0,14,0,0" FontSize="20" FontFamily="Consolas">00:00.00</TextBlock>
-                <TextBlock x:Name="BluePoints" Grid.Column="2" Background="#FF31507a" TextAlignment="Center" VerticalAlignment="Stretch" Padding="0,10,0,0" FontSize="26" FontFamily="Consolas" FontWeight="Black">0</TextBlock>
-            </Grid>
+                <Grid >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0">
+                        <Border.Background>
+                            <LinearGradientBrush EndPoint="1,1" StartPoint="0,0">
+                                <GradientStop Color="#FFB57837" Offset="0"/>
+                                <GradientStop Color="#FF8c5c2a" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <TextBlock x:Name="OrangePoints" TextAlignment="Center" VerticalAlignment="Stretch" Padding="0,10,0,0" FontSize="26" FontFamily="Consolas" FontWeight="Black" Foreground="White">0</TextBlock>
+                    </Border>
+                    <Border Grid.Column="1" Background="{DynamicResource ControlDefaultBackground}">
+                        <TextBlock x:Name="GameClock" TextAlignment="Center" VerticalAlignment="Stretch" Padding="0,14,0,0" FontSize="20" FontFamily="Consolas">00:00.00</TextBlock>
+                    </Border>
+                    <Border Grid.Column="2">
+                        <Border.Background>
+                            <LinearGradientBrush EndPoint="1,1" StartPoint="0,0">
+                                <GradientStop Color="#FF4A689F" Offset="0"/>
+                                <GradientStop Color="#FF31507a" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <TextBlock x:Name="BluePoints" TextAlignment="Center" VerticalAlignment="Stretch" Padding="0,10,0,0" FontSize="26" FontFamily="Consolas" FontWeight="Black" Foreground="White">0</TextBlock>
+                    </Border>
+                </Grid>
                 </Border>
         </Grid>
         
@@ -622,7 +660,7 @@
                 <TextBlock HorizontalAlignment="Center" Margin="5,5,5,5" TextWrapping="Wrap"><Hyperlink NavigateUri="https://discord.gg/HDC2kvwup6" RequestNavigate="Hyperlink_RequestNavigate"><Run Text="{x:Static p:Resources.Discord}"/></Hyperlink></TextBlock>
             </StackPanel>
 
-            <Image x:Name="image" Height="175" Source="/img/alternate_white.png" Opacity="0.05"/>
+            <Image x:Name="image" Height="175" Source="/img/alternate_white.png" Opacity="0.3"/>
         </StackPanel>
         <TextBlock x:Name="accessCodeLabel" Text="{x:Static p:Resources.Mode}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,29" Grid.Column="2" FontSize="12" Padding="5,5,5,3" Foreground="{DynamicResource ControlDisabledGlythColour}"/>
         <ComboBox x:Name="AccessCodesComboboxLiveWindow" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="60,0,0,26" Grid.Column="2" SelectedIndex="0" SelectionChanged="AccessCodeChangedLiveWindow"></ComboBox>

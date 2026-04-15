@@ -9,8 +9,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 using Microsoft.Win32;
-using Microsoft.WindowsAPICodePack.Dialogs;
-
 namespace Spark
 {
     public partial class DownloadEchoVRTab : UserControl
@@ -38,15 +36,14 @@ namespace Spark
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new CommonOpenFileDialog
+            var dialog = new OpenFolderDialog
             {
-                IsFolderPicker = true,
                 InitialDirectory = DownloadPathTextBox.Text
             };
 
-            if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+            if (dialog.ShowDialog() == true)
             {
-                DownloadPathTextBox.Text = dialog.FileName;
+                DownloadPathTextBox.Text = dialog.FolderName;
             }
         }
 

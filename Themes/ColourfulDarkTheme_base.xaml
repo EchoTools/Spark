@@ -4,34 +4,48 @@
                     xmlns:Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2">
     
     <!-- Window Colours. Background, Border and TitleBar colours. -->
-    <SolidColorBrush x:Key="BackgroundColour"  Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}" />
-    <SolidColorBrush x:Key="WindowBorderColour"  Color="#FF343434" />
-    <SolidColorBrush x:Key="WindowTitleColour"  Color="#FF242424" />
-    <!-- Control colour themes. dont mess with em okay unless youre good at styles -->
-    <!-- Complete DarkTheme Colours -->
+    <SolidColorBrush x:Key="BackgroundColour"  Color="#FF121212" />
+    <SolidColorBrush x:Key="WindowBorderColour"  Color="#FF2A2A2A" />
+    <SolidColorBrush x:Key="WindowTitleColour"  Color="#FF1E1E1E" />
+    
+    <!-- Design System Brushes -->
     <SolidColorBrush x:Key="TransparentBrush"                    Color="Transparent"/>
-    <SolidColorBrush x:Key="ContainerBackground"                 Color="#f5bb2961"/>
-    <SolidColorBrush x:Key="ContainerBorder"                     Color="#f5bb2961"/>
-    <SolidColorBrush x:Key="ControlDefaultForeground"            Color="#FFEBEBEB" />
+    <SolidColorBrush x:Key="ContainerBackground"                 Color="#1AFFFFFF"/> <!-- Suble translucent background -->
+    <SolidColorBrush x:Key="ContainerBorder"                     Color="#2AFFFFFF"/>
+    <SolidColorBrush x:Key="ControlDefaultForeground"            Color="#FFE8E8E8" />
+    
+    <!-- Transition Timings -->
+    <Duration x:Key="SnappyDuration">0:0:0.15</Duration>
+    <Duration x:Key="FluidDuration">0:0:0.25</Duration>
 
-    <SolidColorBrush x:Key="ControlDarkerBackground"             Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}" />
-    <SolidColorBrush x:Key="ControlDarkerBorderBrush"            Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}" />
-    <SolidColorBrush x:Key="ControlDefaultBackground"            Color="#FFea6192" />
-    <SolidColorBrush x:Key="ControlDefaultBorderBrush"           Color="#FFea6192" />
-    <SolidColorBrush x:Key="ControlBrightDefaultBackground"      Color="#FFffaac9" />
-    <SolidColorBrush x:Key="ControlBrightDefaultBorderBrush"     Color="#FFffaac9" />
-    <SolidColorBrush x:Key="ControlDisabledBackground"           Color="#FFb85a7d" />
-    <SolidColorBrush x:Key="ControlDisabledBorderBrush"          Color="#FFb85a7d" />
-    <SolidColorBrush x:Key="ControlMouseOverBackground"          Color="#FFffaac9" />
-    <SolidColorBrush x:Key="ControlMouseOverBorderBrush"         Color="#FFea6192"/>
+    <!-- Global Typography Style -->
+    <Style x:Key="ModernTypography">
+        <Setter Property="TextElement.FontFamily" Value="Segoe UI Variable Text, Segoe UI, Inter, Arial" />
+        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+    </Style>
+
+    <Style TargetType="{x:Type Control}" BasedOn="{StaticResource ModernTypography}" />
+
+
+    <SolidColorBrush x:Key="ControlDarkerBackground"             Color="#FF1A1A1A" />
+    <SolidColorBrush x:Key="ControlDarkerBorderBrush"            Color="#FF2A2A2A" />
+    <SolidColorBrush x:Key="ControlDefaultBackground"            Color="#FF2D2D2D" />
+    <SolidColorBrush x:Key="ControlDefaultBorderBrush"           Color="#FF3D3D3D" />
+    <SolidColorBrush x:Key="ControlBrightDefaultBackground"      Color="#FF4D4D4D" />
+    <SolidColorBrush x:Key="ControlBrightDefaultBorderBrush"     Color="#FF5D5D5D" />
+    <SolidColorBrush x:Key="ControlDisabledBackground"           Color="#FF252525" />
+    <SolidColorBrush x:Key="ControlDisabledBorderBrush"          Color="#FF2A2A2A" />
+    <SolidColorBrush x:Key="ControlMouseOverBackground"          Color="#FF3D3D3D" />
+    <SolidColorBrush x:Key="ControlMouseOverBorderBrush"         Color="#FF4D4D4D"/>
     <SolidColorBrush x:Key="ControlSelectedBackground"           Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}"/>
     <SolidColorBrush x:Key="ControlSelectedBorderBrush"          Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}"/>
-    <SolidColorBrush x:Key="ControlSelectedMouseOverBackground"  Color="#FFea6192"/>
-    <SolidColorBrush x:Key="ControlSelectedMouseOverBorderBrush" Color="#FFffaac9"/>
+    <SolidColorBrush x:Key="ControlSelectedMouseOverBackground"  Color="#FF4D4D4D"/>
+    <SolidColorBrush x:Key="ControlSelectedMouseOverBorderBrush" Color="#FF5D5D5D"/>
     <SolidColorBrush x:Key="ControlGlythColour"                  Color="#FFEBEBEB" />
-    <SolidColorBrush x:Key="ControlMouseOverGlythColour"         Color="#FFD7D7D7" />
-    <SolidColorBrush x:Key="ControlSelectedGlythColour"          Color="#FFC8C8C8" />
-    <SolidColorBrush x:Key="ControlDisabledGlythColour"          Color="#FFA0A0A0" />
+    <SolidColorBrush x:Key="ControlMouseOverGlythColour"         Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="ControlSelectedGlythColour"          Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="ControlDisabledGlythColour"          Color="#FF666666" />
     
     <!-- Alternating Row Backgrounds -->
     <SolidColorBrush x:Key="ControlRowBackground1"               Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}" />
@@ -104,16 +118,15 @@
     <!-- Controls all in Order in toolbox -->
 
     <!-- Button -->
-    <Style TargetType="{x:Type Button}">
+    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource ModernTypography}">
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
         <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource ControlDefaultBorderBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource ControlDefaultForeground}"/>
-        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="Padding" Value="1"/>
+        <Setter Property="Padding" Value="4,2"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -123,48 +136,57 @@
                             BorderThickness="{TemplateBinding BorderThickness}" 
                             Background="{TemplateBinding Background}" 
                             SnapsToDevicePixels="true"
-                            HorizontalAlignment="Stretch" 
-                            VerticalAlignment="Stretch">
+                            CornerRadius="4"
+                            RenderTransformOrigin="0.5,0.5">
+                        <Border.RenderTransform>
+                            <ScaleTransform ScaleX="1" ScaleY="1"/>
+                        </Border.RenderTransform>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <Storyboard>
+                                        <DoubleAnimation Duration="{StaticResource SnappyDuration}" To="1" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" />
+                                        <DoubleAnimation Duration="{StaticResource SnappyDuration}" To="1" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="MouseOver">
+                                    <Storyboard>
+                                        <ColorAnimation Duration="{StaticResource SnappyDuration}" To="#FF454545" Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)" />
+                                        <DoubleAnimation Duration="{StaticResource SnappyDuration}" To="1.02" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" />
+                                        <DoubleAnimation Duration="{StaticResource SnappyDuration}" To="1.02" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <DoubleAnimation Duration="0:0:0.05" To="0.98" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" />
+                                        <DoubleAnimation Duration="0:0:0.05" To="0.98" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <DoubleAnimation Duration="0" To="0.5" Storyboard.TargetProperty="Opacity" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
                         <ContentPresenter x:Name="contentPresenter" 
                                           Focusable="False" 
                                           Margin="{TemplateBinding Padding}" 
                                           RecognizesAccessKey="True" 
                                           SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" 
                                           VerticalAlignment="Center"
-                                          HorizontalAlignment="Center"/>
+                                          HorizontalAlignment="Center">
+                            <ContentPresenter.Effect>
+                                <DropShadowEffect BlurRadius="4" ShadowDepth="0" Opacity="0.3" Color="Black"/>
+                            </ContentPresenter.Effect>
+                        </ContentPresenter>
                     </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsDefaulted" Value="true">
-                            <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource ControlMouseOverBorderBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="true">
-                            <Setter Property="Background" TargetName="border" Value="{DynamicResource ControlPrimaryMouseOverBackground}"/>
-                            <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource ControlPrimaryMouseOverBorderBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="true">
-                            <Setter Property="Background" TargetName="border" Value="{DynamicResource ControlPrimarySelectedBackground}"/>
-                            <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource ControlPrimarySelectedBorderBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="false">
-                            <Setter Property="Background" TargetName="border" Value="{DynamicResource ControlBrightDefaultBackground}"/>
-                            <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource ControlBrightDefaultBorderBrush}"/>
-                            <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource ControlDisabledGlythColour}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
 
-    <Style x:Key="RoundedCorners" TargetType="{x:Type Button}">
-        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
-        <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource ControlDefaultBorderBrush}"/>
-        <Setter Property="Foreground" Value="{DynamicResource ControlDefaultForeground}"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-        <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="Padding" Value="1"/>
+    <Style x:Key="RoundedCorners" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
@@ -173,9 +195,34 @@
                             BorderThickness="{TemplateBinding BorderThickness}" 
                             Background="{TemplateBinding Background}" 
                             SnapsToDevicePixels="true"
-                            HorizontalAlignment="Stretch" 
-                            VerticalAlignment="Stretch"
-                            CornerRadius="2">
+                            CornerRadius="8"
+                            RenderTransformOrigin="0.5,0.5">
+                        <Border.RenderTransform>
+                            <ScaleTransform ScaleX="1" ScaleY="1"/>
+                        </Border.RenderTransform>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <Storyboard>
+                                        <DoubleAnimation Duration="{StaticResource SnappyDuration}" To="1" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" />
+                                        <DoubleAnimation Duration="{StaticResource SnappyDuration}" To="1" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="MouseOver">
+                                    <Storyboard>
+                                        <ColorAnimation Duration="{StaticResource SnappyDuration}" To="#FF454545" Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)" />
+                                        <DoubleAnimation Duration="{StaticResource SnappyDuration}" To="1.03" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" />
+                                        <DoubleAnimation Duration="{StaticResource SnappyDuration}" To="1.03" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <DoubleAnimation Duration="0:0:0.05" To="0.97" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" />
+                                        <DoubleAnimation Duration="0:0:0.05" To="0.97" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
                         <ContentPresenter x:Name="contentPresenter" 
                                           Focusable="False" 
                                           Margin="{TemplateBinding Padding}" 
@@ -184,24 +231,6 @@
                                           VerticalAlignment="Center"
                                           HorizontalAlignment="Center"/>
                     </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsDefaulted" Value="true">
-                            <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource ControlMouseOverBorderBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="true">
-                            <Setter Property="Background" TargetName="border" Value="{DynamicResource ControlPrimaryMouseOverBackground}"/>
-                            <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource ControlPrimaryMouseOverBorderBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="true">
-                            <Setter Property="Background" TargetName="border" Value="{DynamicResource ControlPrimarySelectedBackground}"/>
-                            <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource ControlPrimarySelectedBorderBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="false">
-                            <Setter Property="Background" TargetName="border" Value="{DynamicResource ControlBrightDefaultBackground}"/>
-                            <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource ControlBrightDefaultBorderBrush}"/>
-                            <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{DynamicResource ControlDisabledGlythColour}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -417,7 +446,11 @@
                                               Data="F1 M 9.97498,1.22334L 4.6983,9.09834L 4.52164,9.09834L 0,5.19331L 1.27664,3.52165L 4.255,6.08833L 8.33331,1.52588e-005L 9.97498,1.22334 Z " 
                                               Fill="{DynamicResource ControlPrimaryGlythColour}" Margin="1" Opacity="0" Stretch="None"
                                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                <Rectangle x:Name="indeterminateMark" Fill="{DynamicResource ControlPrimaryDarkerBackground}" Margin="0" Opacity="0"/>
+                                <Rectangle x:Name="indeterminateMark" Fill="{DynamicResource ControlPrimaryDarkerBackground}" Margin="0" Opacity="0">
+                                    <Rectangle.RenderTransform>
+                                        <ScaleTransform ScaleX="0.5" ScaleY="0.5"/>
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
                             </Grid>
                         </Border>
                         <ContentPresenter x:Name="contentPresenter" 
@@ -458,11 +491,22 @@
                             <Setter Property="Fill" TargetName="indeterminateMark" Value="{DynamicResource ControlPrimarySelectedMouseOverGlythColour}"/>
                         </MultiTrigger>
                         <Trigger Property="IsChecked" Value="true">
-                            <Setter Property="Opacity" TargetName="optionMark" Value="1"/>
-                            <Setter Property="Opacity" TargetName="indeterminateMark" Value="0"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="optionMark" Storyboard.TargetProperty="Opacity" To="1" Duration="{StaticResource SnappyDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="optionMark" Storyboard.TargetProperty="Opacity" To="0" Duration="{StaticResource SnappyDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="{x:Null}">
-                            <Setter Property="Opacity" TargetName="optionMark" Value="0"/>
                             <Setter Property="Opacity" TargetName="indeterminateMark" Value="1"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -497,11 +541,12 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ToggleButton}">
-                    <Border x:Name="templateRoot" 
-                            BorderBrush="{TemplateBinding BorderBrush}" 
-                            BorderThickness="{TemplateBinding BorderThickness}" 
-                            Background="{TemplateBinding Background}" 
-                            SnapsToDevicePixels="true">
+                        <Border x:Name="templateRoot" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                Background="{TemplateBinding Background}" 
+                                SnapsToDevicePixels="true"
+                                CornerRadius="4">
                         <Border x:Name="splitBorder"
                                 BorderBrush="Transparent" BorderThickness="1 0 0 0" 
                                 HorizontalAlignment="Right" Margin="0" 
@@ -608,7 +653,8 @@
                     <Border x:Name="dropDownBorder" 
                             BorderThickness="1" 
                             BorderBrush="{TemplateBinding BorderBrush}" 
-                            Background="{DynamicResource ContainerBackground}">
+                            Background="{DynamicResource ContainerBackground}"
+                            CornerRadius="4">
                         <ScrollViewer x:Name="DropDownScrollViewer">
                             <Grid x:Name="grid" RenderOptions.ClearTypeHint="Enabled">
                                 <Canvas x:Name="canvas" HorizontalAlignment="Left" Height="0" VerticalAlignment="Top" Width="0">
@@ -699,7 +745,8 @@
                     <Border x:Name="dropDownBorder" 
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="1"
-                            Background="{DynamicResource ContainerBackground}">
+                            Background="{DynamicResource ContainerBackground}"
+                            CornerRadius="4">
                         <ScrollViewer x:Name="DropDownScrollViewer">
                             <Grid x:Name="grid" RenderOptions.ClearTypeHint="Enabled">
                                 <Canvas x:Name="canvas" HorizontalAlignment="Left" Height="0" VerticalAlignment="Top" Width="0">
@@ -801,7 +848,8 @@
                             BorderThickness="{TemplateBinding BorderThickness}"
                             Background="{TemplateBinding Background}" 
                             Padding="{TemplateBinding Padding}"
-                            SnapsToDevicePixels="true">
+                            SnapsToDevicePixels="true"
+                            CornerRadius="3">
                         <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
@@ -1175,44 +1223,30 @@
     <BorderGapMaskConverter x:Key="BorderGapMaskConverter"/>
     <Style TargetType="{x:Type GroupBox}">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource ControlDefaultBackground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlDefaultBorderBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource ControlDefaultForeground}"/>
-        <Setter Property="BorderThickness" Value="3"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="10"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type GroupBox}">
                     <Grid SnapsToDevicePixels="true">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="6"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition/>
-                            <ColumnDefinition Width="6"/>
-                        </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="32" MinHeight="32"/>
-                            <RowDefinition/>
-                            <RowDefinition Height="6"/>
+                            <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" 
-                                        Grid.ColumnSpan="4" Grid.Column="0" CornerRadius="0" Grid.Row="1" Grid.RowSpan="3"/>
-                        <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Grid.ColumnSpan="4" 
-                                        CornerRadius="0" Grid.Row="1" Grid.RowSpan="3">
-                            <Border.OpacityMask>
-                                <MultiBinding ConverterParameter="7" Converter="{StaticResource BorderGapMaskConverter}">
-                                    <Binding ElementName="Header" Path="ActualWidth"/>
-                                    <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}"/>
-                                    <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}"/>
-                                </MultiBinding>
-                            </Border.OpacityMask>
-                        </Border>
-                        <Rectangle Fill="{TemplateBinding BorderBrush}" Grid.ColumnSpan="4" Grid.RowSpan="2"/>
-                        <Border x:Name="Header" Grid.Column="1" Padding="3,1,3,0" Grid.Row="0" Grid.RowSpan="2">
-                            <ContentPresenter VerticalAlignment="Center" ContentSource="Header" RecognizesAccessKey="True" 
+                        <Border x:Name="HeaderBorder" Background="{DynamicResource WindowTitleColour}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1,1,1,0"
+                                CornerRadius="8,8,0,0" Padding="8,4">
+                            <ContentPresenter x:Name="Header" ContentSource="Header" RecognizesAccessKey="True" 
+                                              TextBlock.FontWeight="SemiBold"
                                               SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
                         </Border>
-                        <ContentPresenter Grid.ColumnSpan="2" Grid.Column="1" Margin="0,3,0,0" Grid.Row="2"
-                                          SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        <Border Grid.Row="1" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1,0,1,1"
+                                CornerRadius="0,0,8,8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </Border>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
@@ -1265,8 +1299,7 @@
     <!-- -_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- -->
 
     <!-- Label -->
-
-    <Style TargetType="{x:Type Label}">
+    <Style TargetType="{x:Type Label}" BasedOn="{StaticResource ModernTypography}">
         <Setter Property="Foreground" Value="{DynamicResource ControlDefaultForeground}"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Padding" Value="5"/>
@@ -2038,7 +2071,14 @@
                         <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}"/>
                         <Rectangle x:Name="PART_Track"/>
                         <Grid x:Name="PART_Indicator" ClipToBounds="true" HorizontalAlignment="Left" Margin="1">
-                            <Rectangle x:Name="Indicator" Fill="{TemplateBinding Foreground}"/>
+                            <Rectangle x:Name="Indicator">
+                                <Rectangle.Fill>
+                                    <LinearGradientBrush EndPoint="1,0" StartPoint="0,0">
+                                        <GradientStop Color="{DynamicResource ControlPrimaryDefaultBackgroundAlpha05}" Offset="0"/>
+                                        <GradientStop Color="{DynamicResource ControlPrimaryDefaultBackgroundColour}" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Rectangle.Fill>
+                            </Rectangle>
                             <Rectangle x:Name="Animation" Fill="{TemplateBinding Foreground}" RenderTransformOrigin="0.5,0.5">
                                 <Rectangle.RenderTransform>
                                     <TransformGroup>
@@ -2840,7 +2880,7 @@
             <Rectangle x:Name="grip" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" StrokeLineJoin="Round"
                        Fill="{DynamicResource ControlBrightDefaultBackground}" SnapsToDevicePixels="True" 
                        Stroke="{DynamicResource ControlBrightDefaultBorderBrush}" StrokeThickness="1" 
-                       UseLayoutRounding="True" RadiusX="1" RadiusY="1"/>
+                       UseLayoutRounding="True" RadiusX="5" RadiusY="5"/>
         </Grid>
         <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="true">
@@ -3500,11 +3540,12 @@
                           Grid.Column="0" IsItemsHost="true" Margin="0 2 0 0"
                           Grid.Row="0" KeyboardNavigation.TabIndex="1" 
                           Panel.ZIndex="1"/>
-                <Border CornerRadius="3" Height="28"
+                <Border CornerRadius="6" Height="28"
                         VerticalAlignment="Center" Background="{DynamicResource ContainerBackground}"
                         HorizontalAlignment="Center" Width="28" Margin="8 0 0 0">
                     <Button Background="Transparent" Content="+" Command="{Binding NewTabCommand}" BorderBrush="{x:Null}"
-                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" FontFamily="Consolas" 
+                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" FontFamily="Segoe UI" 
+                            FontWeight="Bold"
                             FontSize="16" Foreground="{DynamicResource ControlDefaultForeground}"/>
                 </Border>
             </StackPanel>
@@ -3513,9 +3554,27 @@
                     BorderThickness="{TemplateBinding BorderThickness}"
                     Background="{TemplateBinding Background}" 
                     Grid.Column="0" KeyboardNavigation.DirectionalNavigation="Contained" Grid.Row="1"
-                    KeyboardNavigation.TabIndex="2" KeyboardNavigation.TabNavigation="Local">
-                <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent"
-                                  Margin="{TemplateBinding Padding}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                    KeyboardNavigation.TabIndex="2" KeyboardNavigation.TabNavigation="Local"
+                    CornerRadius="0,0,8,8">
+                <Grid>
+                    <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent"
+                                      Margin="{TemplateBinding Padding}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}">
+                        <ContentPresenter.Triggers>
+                            <EventTrigger RoutedEvent="Binding.TargetUpdated">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="{StaticResource FluidDuration}"/>
+                                        <ThicknessAnimation Storyboard.TargetProperty="Margin" From="0,10,0,-10" To="0" Duration="{StaticResource FluidDuration}">
+                                            <ThicknessAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut"/>
+                                            </ThicknessAnimation.EasingFunction>
+                                        </ThicknessAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </ContentPresenter.Triggers>
+                    </ContentPresenter>
+                </Grid>
             </Border>
         </Grid>
         <ControlTemplate.Triggers>
@@ -3557,7 +3616,7 @@
     <!-- -_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- -->
 
     <!-- Textblock -->
-    <Style TargetType="{x:Type TextBlock}">
+    <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource ModernTypography}">
         <Setter Property="TextWrapping" Value="NoWrap"/>
         <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
         <Setter Property="TextAlignment" Value="Left"/>
@@ -3567,7 +3626,7 @@
     <!-- -_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_- -->
 
     <!-- Textbox -->
-    <Style TargetType="{x:Type TextBox}">
+    <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource ModernTypography}">
         <Setter Property="Background" Value="{DynamicResource ContainerBackground}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource ControlDefaultBorderBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource ControlDefaultForeground}"/>

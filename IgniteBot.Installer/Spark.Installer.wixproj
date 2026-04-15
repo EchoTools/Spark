@@ -15,7 +15,7 @@
     <Compile Include="Product.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <HarvestDirectory Include="..\bin\$(Configuration)\net6.0-windows10.0.17763.0">
+    <HarvestDirectory Include="..\publish">
       <ComponentGroupName>PublishedComponents</ComponentGroupName>
       <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
       <SuppressCom>true</SuppressCom>
@@ -47,7 +47,7 @@
     <RunWixToolsOutOfProc Condition=" '$(PROCESSOR_ARCHITECTURE)'!='x86' ">true</RunWixToolsOutOfProc>
   </PropertyGroup>
   <Target Name="SetBuildVersion" BeforeTargets="BeforeBuild">
-    <GetAssemblyIdentity AssemblyFiles="..\bin\$(Configuration)\net6.0-windows10.0.17763.0\Spark.dll">
+    <GetAssemblyIdentity AssemblyFiles="..\publish\Spark.dll">
       <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
     </GetAssemblyIdentity>
     <PropertyGroup>
@@ -56,7 +56,7 @@
   </Target>
   <Target Name="AfterBuild">
     <!-- Get assembly version -->
-    <GetAssemblyIdentity AssemblyFiles="..\bin\$(Configuration)\net6.0-windows10.0.17763.0\Spark.dll">
+    <GetAssemblyIdentity AssemblyFiles="..\publish\Spark.dll">
       <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
     </GetAssemblyIdentity>
     <!-- Rename and move final MSI -->

@@ -122,10 +122,10 @@ namespace Spark
 		public int languageIndex { get; set; } = 0;
 		public int theme { get; set; } = 0;
 
-		// Custom theme colours (hex strings, e.g. "#c32b61")
-		public string customThemeDark  { get; set; } = "#c32b61";
-		public string customThemeMid   { get; set; } = "#ea6192";
-		public string customThemeLight { get; set; } = "#ffaac9";
+		// Custom theme colours (hex strings, e.g. "#151515")
+		public string customThemeDark  { get; set; } = "#151515";
+		public string customThemeMid   { get; set; } = "#363636";
+		public string customThemeLight { get; set; } = "#3E3E3E";
 		public bool betaUpdates { get; set; } = false;
 		public int dashboardItem1 { get; set; } = 0;
 		public int dashboardJoustTimeOrder { get; set; } = 0;

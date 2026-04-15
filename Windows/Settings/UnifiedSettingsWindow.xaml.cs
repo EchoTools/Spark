@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Windows.Navigation;
 using System.Windows.Data;
 using Newtonsoft.Json;
@@ -483,14 +482,13 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 		{
 			if (!initialized) return;
 			string selectedPath = "";
-			CommonOpenFileDialog folderBrowserDialog = new CommonOpenFileDialog
+			OpenFolderDialog folderBrowserDialog = new OpenFolderDialog
 			{
-				InitialDirectory = SparkSettings.instance.saveFolder,
-				IsFolderPicker = true
+				InitialDirectory = SparkSettings.instance.saveFolder
 			};
-			if (folderBrowserDialog.ShowDialog() == CommonFileDialogResult.Ok)
+			if (folderBrowserDialog.ShowDialog() == true)
 			{
-				selectedPath = folderBrowserDialog.FileName;
+				selectedPath = folderBrowserDialog.FolderName;
 			}
 
 			if (selectedPath != "")
@@ -936,14 +934,13 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 		{
 			if (!initialized) return;
 			string selectedPath = "";
-			CommonOpenFileDialog folderBrowserDialog = new CommonOpenFileDialog
+			OpenFolderDialog folderBrowserDialog = new OpenFolderDialog
 			{
-				InitialDirectory = TTSController.CacheFolder,
-				IsFolderPicker = true
+				InitialDirectory = TTSController.CacheFolder
 			};
-			if (folderBrowserDialog.ShowDialog() == CommonFileDialogResult.Ok)
+			if (folderBrowserDialog.ShowDialog() == true)
 			{
-				selectedPath = folderBrowserDialog.FileName;
+				selectedPath = folderBrowserDialog.FolderName;
 			}
 
 			if (selectedPath != "")
@@ -1097,9 +1094,9 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 
 		private void LoadThemeFromSettings()
 		{
-			_themeDark  = ThemesController.ParseHex(SparkSettings.instance?.customThemeDark  ?? "#c32b61");
-			_themeMid   = ThemesController.ParseHex(SparkSettings.instance?.customThemeMid   ?? "#ea6192");
-			_themeLight = ThemesController.ParseHex(SparkSettings.instance?.customThemeLight ?? "#ffaac9");
+			_themeDark  = ThemesController.ParseHex(SparkSettings.instance?.customThemeDark  ?? "#151515");
+			_themeMid   = ThemesController.ParseHex(SparkSettings.instance?.customThemeMid   ?? "#363636");
+			_themeLight = ThemesController.ParseHex(SparkSettings.instance?.customThemeLight ?? "#3E3E3E");
 			SyncUIFromColors();
 		}
 
@@ -1227,6 +1224,7 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 		private void PresetPurple_Click    (object s, RoutedEventArgs e) => ApplyPreset("#690f96", "#8a14c2", "#d213bb");
 		private void PresetRed_Click       (object s, RoutedEventArgs e) => ApplyPreset("#b70004", "#df0005", "#ff7174");
 		private void PresetYellow_Click    (object s, RoutedEventArgs e) => ApplyPreset("#fab011", "#fcc520", "#fcde64");
+		private void PresetPink_Click      (object s, RoutedEventArgs e) => ApplyPreset("#c32b61", "#ea6192", "#ffaac9");
 
 		// ─── Apply / Reset ──────────────────────────────────────────────────────
 		private void ApplyTheme_Click(object sender, RoutedEventArgs e)
@@ -1236,8 +1234,8 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 
 		private void ResetTheme_Click(object sender, RoutedEventArgs e)
 		{
-			// Reset to Spark Original Pink
-			ApplyPreset("#c32b61", "#ea6192", "#ffaac9");
+			// Reset to Spark Stealth Gray (Default)
+			ApplyPreset("#151515", "#363636", "#3E3E3E");
 			ThemesController.SaveAndApply(_themeDark, _themeMid, _themeLight);
 		}
 

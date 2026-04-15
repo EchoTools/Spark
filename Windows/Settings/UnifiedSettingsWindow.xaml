@@ -721,7 +721,7 @@
 							<LineBreak/>
 							<Run Text="{x:Static p:Resources.Japanese_Translation_}" Foreground="{DynamicResource ControlDisabledGlythColour}" />
 							<LineBreak/>
-							ãƒ«ãƒ¼ã‚¯/ lluukkeeVR
+							ルーク/ lluukkeeVR
 							<LineBreak/>
 							iKaika_Higashi
 							<LineBreak/>
@@ -867,6 +867,7 @@
 						<Button x:Name="PresetPurpleBtn"     Content="🟣 Purple"      Width="100" Margin="0,0,8,8" Click="PresetPurple_Click"/>
 						<Button x:Name="PresetRedBtn"        Content="🔴 Red"         Width="100" Margin="0,0,8,8" Click="PresetRed_Click"/>
 						<Button x:Name="PresetYellowBtn"     Content="🌞 Yellow"      Width="100" Margin="0,0,8,8" Click="PresetYellow_Click"/>
+						<Button x:Name="PresetPinkBtn"       Content="🌸 Spark Pink"  Width="105" Margin="0,0,8,8" Click="PresetPink_Click"/>
 					</WrapPanel>
 
 					<!-- Apply / Reset Row -->
