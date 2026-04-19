@@ -299,7 +299,53 @@ namespace Spark
 			public bool catches { get; set; } = true;
 		}
 
-		#region Overlays
+		#region MediaController
+
+		/// <summary>Whether the EchoVR mute-button media controller is active.</summary>
+		public bool mediaControllerEnabled { get; set; } = false;
+
+		/// <summary>Automatically attempt to reconnect when EchoVR is not found.</summary>
+		public bool mediaControllerAutoReconnect { get; set; } = true;
+
+		/// <summary>Number of clicks to trigger Previous Track.</summary>
+		public int mediaControllerPrevClicks { get; set; } = 3;
+
+		/// <summary>Number of clicks to trigger Next Track.</summary>
+		public int mediaControllerNextClicks { get; set; } = 4;
+
+		/// <summary>Seconds the button must be held to trigger Play/Pause.</summary>
+		public double mediaControllerHoldThreshold { get; set; } = 3.0;
+
+		/// <summary>Time window (seconds) in which multi-clicks are counted.</summary>
+		public double mediaControllerClickTimeout { get; set; } = 0.8;
+
+		/// <summary>Minimum press duration (seconds) to count as a click (debounce).</summary>
+		public double mediaControllerDebounceDelay { get; set; } = 0.05;
+
+		/// <summary>Minimum press duration (seconds) required to register a click at all.</summary>
+		public double mediaControllerDetectionThreshold { get; set; } = 0.1;
+
+		/// <summary>Whether a custom keyboard action is enabled.</summary>
+		public bool mediaControllerCustomEnabled { get; set; } = false;
+
+		/// <summary>Type of trigger for the custom action: 0=None, 1=Hold, 2=Clicks.</summary>
+		public int mediaControllerCustomTrigger { get; set; } = 1;
+
+		/// <summary>Number of clicks to trigger the custom action (if type is Clicks).</summary>
+		public int mediaControllerCustomClicks { get; set; } = 4;
+
+		/// <summary>Primary scancode for the custom action shortcut.</summary>
+		public int mediaControllerCustomKey1 { get; set; } = 0x38; // DIK_LMENU (Alt)
+
+		/// <summary>Secondary scancode for the custom action shortcut.</summary>
+		public int mediaControllerCustomKey2 { get; set; } = 0x44; // DIK_F10
+
+		/// <summary>Seconds the button must be held to trigger the custom action (if type is Hold).</summary>
+		public double mediaControllerCustomHoldThreshold { get; set; } = 2.0;
+
+	#endregion
+
+	#region Overlays
 
 		/// <summary>
 		/// 0 for manual, 1 for vrml api

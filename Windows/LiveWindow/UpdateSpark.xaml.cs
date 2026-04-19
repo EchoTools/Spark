@@ -328,40 +328,58 @@ private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
 
                 string batchContent = $@"
 @echo off
-echo ========================================
-echo         SPARK UPDATE - {Path.GetFileNameWithoutExtension(originalFileName)}
-echo ========================================
+setlocal enabledelayedexpansion
+title Spark Updater
+
 echo.
-echo Current Spark folder: {targetFolder}
-echo Source update files: {actualSourceFolder}
+echo ============================================================
+echo           SPARK UPDATE - {Path.GetFileNameWithoutExtension(originalFileName)}
+echo ============================================================
 echo.
-echo Step 1: Killing Spark...
+echo Current folder: {targetFolder}
+echo Source files:   {actualSourceFolder}
+echo.
+
+echo [1/4] Killing Spark...
 taskkill /f /im Spark.exe >nul 2>&1
 timeout /t 2 /nobreak >nul
 
-echo Step 2: Copying ALL files...
-echo FROM: {actualSourceFolder}
-echo TO: {targetFolder}
-echo.
+echo [2/4] Cleaning old files...
+cd /d ""{targetFolder}""
+if errorlevel 1 (
+    echo Error: Could not access target folder.
+    pause
+    exit
+)
 
-REM Copy EVERYTHING from source to target
-xcopy ""{actualSourceFolder}"" ""{targetFolder}"" /E /Y /I /H
+REM Delete all subdirectories except Temp (just in case)
+for /d %%i in (*) do (
+    if /i ""%%i"" neq ""Temp"" (
+        echo   Deleting folder: %%i
+        rmdir /s /q ""%%i"" >nul 2>&1
+    )
+)
 
-echo Step 3: Cleaning up...
-if exist ""{extractPath}"" rmdir /s /q ""{extractPath}""
-if exist ""{zipFilePath}"" del ""{zipFilePath}"" >nul 2>&1
+REM Delete all files
+echo   Deleting files...
+del /f /q /s * >nul 2>&1
 
-echo Step 4: Starting Spark...
+echo [3/4] Moving new files...
+robocopy ""{actualSourceFolder}"" ""{targetFolder}"" /E /MOVE /IS /IT /MT:8 /R:3 /W:1 >nul
+
+echo [4/4] Starting Spark...
 cd /d ""{targetFolder}""
 start """" Spark.exe
 
-echo Step 5: Deleting this script...
-timeout /t 1 /nobreak >nul
-del ""{batchFile}"" >nul 2>&1
-
 echo.
-echo UPDATE COMPLETE! Launched {Path.GetFileNameWithoutExtension(originalFileName)} theme.
+echo ============================================================
+echo UPDATE COMPLETE!
+echo ============================================================
 timeout /t 2 /nobreak >nul
+
+REM Delete this script and the temp extraction
+if exist ""{extractPath}"" rmdir /s /q ""{extractPath}""
+(goto) 2>nul & del ""%~f0""
 exit
 ";
 
@@ -410,18 +428,25 @@ exit
 
         private string FindActualSourceFolder(string extractPath)
         {
-            string[] possibleFolders = {
-                Path.Combine(extractPath, "net6.0-windows10.0.17763.0"),
-                Path.Combine(extractPath, "net6.0-windows"),
-                extractPath
-            };
-
-            foreach (string folder in possibleFolders)
+            try
             {
-                if (Directory.Exists(folder) && Directory.GetFiles(folder, "*.exe").Any())
+                // Recursively search for Spark.exe to find the root folder of the application
+                string[] files = Directory.GetFiles(extractPath, "Spark.exe", SearchOption.AllDirectories);
+                if (files.Length > 0)
                 {
-                    return folder;
+                    string folder = Path.GetDirectoryName(files[0]);
+                    if (!string.IsNullOrEmpty(folder))
+                    {
+                        return folder;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    UpdateDetailsText.Text += $"[{DateTime.Now}] Error finding source folder: {ex.Message}\n";
+                });
             }
 
             return extractPath;

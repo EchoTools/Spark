@@ -423,6 +423,10 @@
 				<l:UpdateSparkControl/>
 			</TabItem>
 
+			<TabItem Header="Media Controller" Padding="8,6,8,6">
+				<l:MediaControllerSettings/>
+			</TabItem>
+
 			<!--<TabItem Header="{x:Static p:Resources.NVIDIAHighlights}" Padding="8,6,8,6">
 				<ScrollViewer VerticalScrollBarVisibility="Auto">
 					
@@ -726,6 +730,11 @@
 							iKaika_Higashi
 							<LineBreak/>
 							Yuuking
+							<LineBreak/>
+							<LineBreak/>
+							<Run Text="Artists" Foreground="{DynamicResource ControlDisabledGlythColour}" />
+							<LineBreak/>
+							Sickmave
 							<LineBreak/>
 							</TextBlock>
 						</StackPanel>
