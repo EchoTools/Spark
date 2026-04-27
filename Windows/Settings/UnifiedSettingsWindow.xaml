@@ -64,8 +64,9 @@
 						</StackPanel>
 						<Label x:Name="FindQuestStatusLabel" Visibility="Hidden" Content="{x:Static p:Resources.Searching_for_Quest}"
 						       Margin="30,0,0,0" FontSize="10" FontStyle="Italic" />
-						
-						
+						<Button Content="Quest Spectator Mode" Margin="10,4,10,4" HorizontalAlignment="Left" Padding="4,4,4,4"
+						        Click="OpenQuestSpectatorPopup" 
+						        ToolTip="Open the Quest Spectator Launcher."/>
 						<Label x:Name="ExeLocationLabel" Content="{x:Static p:Resources.EchoVR_Executable_Location_}" Margin="10,0,10,0" />
 						
 							<TextBox Text="{l:SettingLoad echoVRPath}" TextWrapping="NoWrap"
@@ -85,7 +86,7 @@
 							<Label Content="{x:Static p:Resources.Language}" Margin="10,10,4,4" />
 							<ComboBox Margin="4,10,10,4" HorizontalAlignment="Left" Width="148" SelectedIndex="{l:SettingBinding languageIndex}" >
 								<ComboBoxItem>English</ComboBoxItem>
-								<ComboBoxItem>日本語</ComboBoxItem>
+								<ComboBoxItem>æ—¥æœ¬èªž</ComboBoxItem>
 							</ComboBox>
 							<Label Content="{x:Static p:Resources._Requires_Restart_}" Margin="10,10,4,4"/>
 						</StackPanel>
@@ -160,25 +161,24 @@
 						<CheckBox x:Name="enableStatsLoggingCheckBox" Content="Enable API Processing"
 									  IsChecked="{l:SettingBinding enableStatsLogging}" Margin="10,20,4,4"
 									  Visibility="Collapsed" />
-						<GroupBox x:Name="statsLoggingBox" Header="{x:Static p:Resources.Stats_Logging}" Margin="10,4,10,4" IsEnabled="{Binding DiscordLoggedIn}">
-							<StackPanel Margin="-1,0,0,0">
+						<GroupBox x:Name="statsLoggingBox" Header="{x:Static p:Resources.Stats_Logging}" Margin="10,4,10,4" IsEnabled="{Binding DiscordLoggedIn}" Background="{DynamicResource BackgroundColour}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+							<StackPanel Margin="-1,0,0,0" Background="{DynamicResource BackgroundColour}">
 								<TextBlock
 										Text="{x:Static p:Resources.upload_description}"
 										Margin="4,4,4,4" TextWrapping="Wrap" />
 								<CheckBox x:Name="uploadToIgniteDBCheckBox" Content="{x:Static p:Resources.Upload_to_IgniteVR_Database}"
 											  IsChecked="{l:SettingBinding uploadToIgniteDB}"
 											  Margin="4,4,4,4" Visibility="Visible" />
-								<CheckBox x:Name="optInCheckbox" Content="{x:Static p:Resources.optInCheckbox_Content}" Margin="4,4,4,4" Unchecked="OptIn" Checked="OptIn" ToolTip="{x:Static p:Resources.optInCheckbox_ToolTip}"/>
-								<Label x:Name="optInStatusLabel" Content="{x:Static p:Resources.Fetching_opt_in_status___}" Margin="30,-6,0,0" FontSize="10"/>
-								<Button Click="UploadTabletStats" Height="30" Margin="10,10,10,10" Content="{x:Static p:Resources.Upload_Tablet_Stats}"></Button>
+
+
 								<CheckBox Content="Save Events to Local CSV"
 								          IsChecked="{l:SettingBinding saveEventsToCSV}"
 								          Margin="4,4,4,4" Visibility="Collapsed" />
 							</StackPanel>
 						</GroupBox>
 
-						<GroupBox Header="{x:Static p:Resources.Spectator_Camera_Settings}" Margin="10,4,10,4" >
-							<StackPanel>
+						<GroupBox Header="{x:Static p:Resources.Spectator_Camera_Settings}" Margin="10,4,10,4" Background="{DynamicResource BackgroundColour}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+							<StackPanel Background="{DynamicResource BackgroundColour}">
 								<TextBlock Text="{x:Static p:Resources.CameraSettingsDescription}" TextWrapping="Wrap" Margin="10,10,10,10"></TextBlock>
 								<CheckBox x:Name="HideUICheckbox" Content="{x:Static p:Resources.Hide_EchoVR_UI}" IsChecked="{l:SettingBinding hideEchoVRUI}" HorizontalAlignment="Left" VerticalAlignment="Stretch" Margin="10,4,10,4" Click="HideEchoVRUINow"/>
 								<CheckBox Content="{x:Static p:Resources.Toggle_Minimap_after_Goals}" IsChecked="{l:SettingBinding toggleMinimapAfterGoals}" HorizontalAlignment="Left" VerticalAlignment="Stretch" Margin="10,4,10,4" />
@@ -202,7 +202,7 @@
 								</StackPanel>
 								<StackPanel x:Name="followSpecificPlayerPanel" Orientation="Horizontal" Margin="0,8,0,0">
 									<Label Content="{x:Static p:Resources.Follow_specific_player_name_}"/>
-									<TextBox Text="{l:SettingBinding followPlayerName}" Width="200" Margin="10,0,0,0" VerticalContentAlignment="Center"/>
+									<TextBox Text="{l:SettingBinding followPlayerName}" Width="200" Margin="10,0,0,0" VerticalContentAlignment="Center" Background="{DynamicResource ControlDefaultBackground}"/>
 								</StackPanel>
 								<Label x:Name="followCameraModeLabel" Content="{x:Static p:Resources.Follow_client_player_camera_mode_}"/>
 								<ComboBox x:Name="followCameraModeDropdown" SelectedIndex="{l:SettingBinding followPlayerCameraMode}" Margin="10,4,10,4" HorizontalAlignment="Left" Width="300">
@@ -227,7 +227,7 @@
 					<StackPanel Margin="10,0,10,10">
 						<Label Content="{x:Static p:Resources.Replay_Recording_Settings}" FontSize="16" Margin="5,5,5,5" />
 						<TextBlock TextWrapping="Wrap"
-									   Background="{DynamicResource ControlBrightDefaultBackground}"
+									   Background="{DynamicResource BackgroundColour}"
 									   Padding="10,10,10,10">
 							<Run Text="{x:Static p:Resources.replays_description_part_1}"/>
 								<LineBreak /><LineBreak />
@@ -246,8 +246,8 @@
 						<CheckBox x:Name="enableFullLoggingCheckbox" Content="{x:Static p:Resources.Save_Replays}" Margin="10,10,4,4"
 									  IsChecked="{l:SettingBinding enableFullLogging}" />
 						<GroupBox x:Name="fullLoggingBox" Header="{x:Static p:Resources.Replay_Logging}" Margin="4,4,4,4"
-									  IsEnabled="{Binding ElementName=enableFullLoggingCheckbox, Path=IsChecked}">
-							<StackPanel>
+									  IsEnabled="{Binding ElementName=enableFullLoggingCheckbox, Path=IsChecked}" Background="{DynamicResource BackgroundColour}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+							<StackPanel Background="{DynamicResource BackgroundColour}">
 								<CheckBox Content="Save to .echoreplay format" Margin="4,4,4,4" IsChecked="{l:SettingBinding saveEchoreplayFiles}" />
 								<CheckBox Content="Save to .butter format" Margin="4,4,4,4" IsChecked="{l:SettingBinding saveButterFiles}" />
 								
@@ -274,7 +274,7 @@
 									<TextBox x:Name="storageLocationTextBox" TextWrapping="NoWrap" Width="300"
 												 Margin="4,0,4,0" VerticalContentAlignment="Center" MaxLines="1"
 												 IsReadOnly="True"
-												 Text="{l:SettingLoad saveFolder}" />
+												 Text="{l:SettingLoad saveFolder}" Background="{DynamicResource ControlDefaultBackground}"/>
 									<Button x:Name="saveLocButton" Content="{x:Static p:Resources.Browse}" Margin="4,0,4,0"
 												Padding="4,4,4,4" Click="SetStorageLocation" />
 									<Button x:Name="resetReplayFolder" Content="{x:Static p:Resources.Reset}" Margin="4,0,4,0"
@@ -310,13 +310,13 @@
 						<Label Content="{x:Static p:Resources.Text_to_Speech__TTS__Settings}" FontSize="16"
 								   Margin="5,5,5,5" />
 						<TextBlock x:Name="discordLoginWarning" Margin="16,16,16,16" Padding="10,10,10,10"
-									   Background="#FF492727" TextWrapping="Wrap"
+									   Background="{DynamicResource BackgroundColour}" TextWrapping="Wrap"
 									   Visibility="{Binding DiscordNotLoggedInVisible}">
 								<Run Text="{x:Static p:Resources.TTS_works_whenever_i_want_it_too_}" />
 						</TextBlock>
 						<StackPanel>
 							<TextBlock x:Name="instructions" TextWrapping="Wrap"
-										   Background="{DynamicResource ControlBrightDefaultBackground}"
+										   Background="{DynamicResource BackgroundColour}"
 										   Padding="10,10,10,10" 
 										   Text="{x:Static p:Resources.tts_description}" />
 							<Grid Margin="5,5,5,5">
@@ -330,6 +330,7 @@
 									<RowDefinition Height="*"/>
 									<RowDefinition Height="*"/>
 								</Grid.RowDefinitions>
+								
 								<Label x:Name="label1" Content="{x:Static p:Resources.Speech_Speed}" />
 								<ComboBox Width="146" HorizontalAlignment="Left"
 										  SelectedIndex="{Binding SpeechSpeed}"
@@ -339,6 +340,7 @@
 									<ComboBoxItem Content="{x:Static p:Resources.Fast}" />
 									<ComboBoxItem Content="{x:Static p:Resources.Very_Fast}" />
 								</ComboBox>
+								
 								<Label Content="{x:Static p:Resources.Voice}" Grid.Row="0" Grid.Column="1" />
 								<ComboBox Width="146" HorizontalAlignment="Left"
 										  SelectedIndex="{l:SettingBinding ttsVoice}"
@@ -346,14 +348,8 @@
 									<ComboBoxItem Content="{x:Static p:Resources.Male}" />
 									<ComboBoxItem Content="{x:Static p:Resources.Female}" />
 								</ComboBox>
-								<CheckBox Grid.Row="1" Grid.Column="2"  Content="Use Wavenet Voices" Margin="4,-15,4,0" IsChecked="{l:SettingBinding useWavenetVoices}" />
-								<!-- <Label Content="{x:Static p:Resources.Language}" Grid.Column="2" /> -->
-								<!-- <ComboBox Width="146" HorizontalAlignment="Left" -->
-								<!--                                   SelectedIndex="{l:SettingBinding ttsLanguage}" -->
-								<!--                                   Margin="0,0,0,8" Grid.Column="2" Grid.Row="1"> -->
-								<!-- 	<ComboBoxItem Content="English" /> -->
-								<!-- 	<ComboBoxItem Content="日本語" /> -->
-								<!-- </ComboBox> -->
+								
+								<CheckBox Grid.Row="1" Grid.Column="2" Content="Use Wavenet Voices" Margin="4,-15,4,0" IsChecked="{l:SettingBinding useWavenetVoices}" />
 								
 								<Button Grid.Row="2" Grid.Column="0" Margin="0, 2" Click="ClearTTSCacheButton" Content="{x:Static p:Resources.Clear_TTS_Cache}"/>
 								<Button Grid.Row="2" Grid.Column="1" Margin="0, 2" Click="OpenTTSCacheButton" Content="{x:Static p:Resources.Open_TTS_Cache_Folder}"/>
@@ -423,6 +419,14 @@
 				<l:ClipsSettings></l:ClipsSettings>
 			</TabItem>
 
+			<TabItem Header="Update Spark" Padding="8,6,8,6">
+				<l:UpdateSparkControl/>
+			</TabItem>
+
+			<TabItem Header="Media Controller" Padding="8,6,8,6">
+				<l:MediaControllerSettings/>
+			</TabItem>
+
 			<!--<TabItem Header="{x:Static p:Resources.NVIDIAHighlights}" Padding="8,6,8,6">
 				<ScrollViewer VerticalScrollBarVisibility="Auto">
 					
@@ -442,13 +446,13 @@
 
 						
 						<TextBlock Margin="16,16,16,16" Padding="10,10,10,10"
-						           Background="#FF492727" TextWrapping="Wrap"
+						           Background="{DynamicResource BackgroundColour}" TextWrapping="Wrap"
 						           Visibility="{Binding EchoVRNotInstalled, Mode=OneWay}"
 						           Text="{x:Static p:Resources.EchoVR_not_installed_game_settings}" />
 						
 						<StackPanel Visibility="{Binding EchoVRInstalled}">
 							<TextBlock Margin="16,16,16,16" Padding="10,10,10,10"
-								   Background="#FF492727" TextWrapping="Wrap"
+								   Background="{DynamicResource BackgroundColour}" TextWrapping="Wrap"
 								   Visibility="{Binding EchoVRSettingsProgramOpenWarning, Mode=OneWay}"
 								   Text="{x:Static p:Resources.EchoVROpen_settings_warning}" />
 
@@ -456,7 +460,7 @@
 							<StackPanel>
 								<!--DataContext="{Binding Source={x:Static l:EchoVRSettingsManager}">-->
 								<TextBlock TextWrapping="Wrap"
-									   Background="{DynamicResource ControlBrightDefaultBackground}"
+									   Background="{DynamicResource BackgroundColour}"
 									   Padding="10,10,10,10" Margin="0,0,0,10" 
 									   Visibility="Collapsed"
 									   Text="{x:Static p:Resources.EchoVR_Settings_info}">
@@ -467,9 +471,9 @@
 									<Button Content="{x:Static p:Resources.Reset_All_Settings_to_Default}" Click="ResetAllSettings" HorizontalAlignment="Right" Margin="200,0,0,0" Padding="5,5,5,5"></Button>
 								</StackPanel>
 
-								<GroupBox Margin="4,8,4,4" ToolTip="{x:Static p:Resources.EchoVR_Settings_info}">
+								<GroupBox Margin="4,8,4,4" ToolTip="{x:Static p:Resources.EchoVR_Settings_info}" Background="{DynamicResource BackgroundColour}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
 									<GroupBox.Header>
-										<StackPanel Orientation="Horizontal">
+										<StackPanel Orientation="Horizontal" Background="{DynamicResource ControlDefaultBackground}">
 											<Label Content="{x:Static p:Resources.Apply_these_settings_to_}"/>
 											<ComboBox SelectedIndex="{Binding Source={StaticResource es}, Path=CaptureVP2}"  Height="24" Width="165" SelectionChanged="RefreshAllSettings">
 												<ComboBoxItem Content="{x:Static p:Resources.Default_Configuration}"/>
@@ -477,31 +481,31 @@
 											</ComboBox>
 										</StackPanel>
 									</GroupBox.Header>
-									<StackPanel>
-										<Expander Header="{x:Static p:Resources.Display}" Margin="0,4,0,4" BorderBrush="{DynamicResource ContainerBorder}" >
-											<StackPanel Margin="10,10,10,10">
+									<StackPanel Background="{DynamicResource BackgroundColour}">
+										<Expander Header="{x:Static p:Resources.Display}" Margin="0,4,0,4" BorderBrush="{DynamicResource ControlDefaultBorderBrush}" Background="{DynamicResource BackgroundColour}">
+											<StackPanel Margin="10,10,10,10" Background="{DynamicResource BackgroundColour}">
 												<CheckBox x:Name="fullscreenCheckbox" Content="{x:Static p:Resources.Fullscreen}" IsChecked="{Binding Fullscreen}" Height="28"/>
 												<StackPanel Orientation="Horizontal">
 													<Label Content="{x:Static p:Resources.Monitor}"/>
-													<TextBox x:Name="monitorField" Text="{Binding Monitor}" Height="22" Width="20"/>
+													<TextBox x:Name="monitorField" Text="{Binding Monitor}" Height="22" Width="20" Background="{DynamicResource ControlDefaultBackground}"/>
 												</StackPanel>
 												<StackPanel Orientation="Horizontal">
 													<Label Content="{x:Static p:Resources.Resolution}" Width="160"/>
 													<Slider x:Name="resolutionSlider" Value="{Binding Resolution}" Minimum="0.1" Maximum="2" Width="200" Margin="4,0,4,0" Height="20" SmallChange="0.1" TickFrequency="0.1" LargeChange="0.5" TickPlacement="None"/>
-													<TextBox Text="{Binding ElementName=resolutionSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+													<TextBox Text="{Binding ElementName=resolutionSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDefaultBackground}"/>
 												</StackPanel>
 												<CheckBox Content="{x:Static p:Resources.Multi_Resolution_Shading}" IsChecked="{Binding MultiResShading}" Height="28"/>
 												<CheckBox Content="{x:Static p:Resources.Auto_Resolution}" IsChecked="{Binding Source={StaticResource es}, Path=AutoRes}" Height="28"/>
 												<StackPanel Orientation="Horizontal">
 													<Label Content="{x:Static p:Resources.Field_of_View}" Width="160"/>
 													<Slider x:Name="mainFovSlider" Value="{Binding FoV}" Minimum="40" Maximum="140" Width="200" Margin="4,0,4,0" Height="20"/>
-													<TextBox Text="{Binding ElementName=mainFovSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+													<TextBox Text="{Binding ElementName=mainFovSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDefaultBackground}"/>
 												</StackPanel>
 												<TextBlock Text="{x:Static p:Resources.Field_of_View_only_works_in__capturevp2_mode}" Margin="10,0,10,10" FontSize="12" Foreground="{DynamicResource ControlDisabledGlythColour}"/>
 											</StackPanel>
 										</Expander>
-										<Expander Header="{x:Static p:Resources.Graphics}" Margin="0,4,0,4" BorderBrush="{DynamicResource ContainerBorder}" >
-											<StackPanel Margin="10,10,10,10">
+										<Expander Header="{x:Static p:Resources.Graphics}" Margin="0,4,0,4" BorderBrush="{DynamicResource ControlDefaultBorderBrush}" Background="{DynamicResource BackgroundColour}">
+											<StackPanel Margin="10,10,10,10" Background="{DynamicResource BackgroundColour}">
 												<StackPanel Orientation="Horizontal">
 													<Label Content="{x:Static p:Resources.Anti_aliasing}"/>
 													<ComboBox SelectedIndex="{Binding AA}" Height="24">
@@ -556,7 +560,7 @@
 												<StackPanel Orientation="Horizontal">
 													<Label Content="{x:Static p:Resources.Sharpening}"/>
 													<Slider x:Name="sharpeningSlider" Value="{Binding Sharpening}" Minimum="0" Maximum="2" Width="200" Margin="4,0,4,0" Height="20" LargeChange="0.5" SmallChange="0.1" TickFrequency="0.1" TickPlacement="None"/>
-													<TextBox Text="{Binding ElementName=sharpeningSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+													<TextBox Text="{Binding ElementName=sharpeningSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDefaultBackground}"/>
 												</StackPanel>
 											</StackPanel>
 										</Expander>
@@ -564,47 +568,47 @@
 								</GroupBox>
 
 
-								<Expander Header="{x:Static p:Resources.Sound_Settings}" Margin="0,4,0,4" BorderBrush="{DynamicResource ContainerBorder}" >
-									<StackPanel Margin="10,10,10,10">
+								<Expander Header="{x:Static p:Resources.Sound_Settings}" Margin="0,4,0,4" BorderBrush="{DynamicResource ControlDefaultBorderBrush}" Background="{DynamicResource BackgroundColour}">
+									<StackPanel Margin="10,10,10,10" Background="{DynamicResource BackgroundColour}">
 
 										<StackPanel Orientation="Horizontal">
 											<Label Content="{x:Static p:Resources.Announcer_Volume}" Width="160"/>
 											<Slider x:Name="announcerVolumeSlider" Value="{Binding Source={StaticResource es}, Path=AnnouncerVolume}" Minimum="0" Maximum="100" Width="200" Margin="4,0,4,0" Height="20" TickFrequency="10" SmallChange="10"/>
-											<TextBox Text="{Binding ElementName=announcerVolumeSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+											<TextBox Text="{Binding ElementName=announcerVolumeSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDefaultBackground}"/>
 											<Label Content="%"/>
 										</StackPanel>
 
 										<StackPanel Orientation="Horizontal">
 											<Label Content="{x:Static p:Resources.Music_Volume}" Width="160"/>
 											<Slider x:Name="musicVolumeSlider" Value="{Binding Source={StaticResource es}, Path=MusicVolume}" Minimum="0" Maximum="100" Width="200" Margin="4,0,4,0" Height="20" TickFrequency="10" SmallChange="10"/>
-											<TextBox Text="{Binding ElementName=musicVolumeSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+											<TextBox Text="{Binding ElementName=musicVolumeSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDefaultBackground}"/>
 											<Label Content="%"/>
 										</StackPanel>
 
 										<StackPanel Orientation="Horizontal">
 											<Label Content="{x:Static p:Resources.Sound_Effects_Volume}" Width="160"/>
 											<Slider x:Name="sfxVolumeSlider" Value="{Binding Source={StaticResource es}, Path=SFXVolume}" Minimum="0" Maximum="100" Width="200" Margin="4,0,4,0"  Height="20" TickFrequency="10" SmallChange="10"/>
-											<TextBox Text="{Binding ElementName=sfxVolumeSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+											<TextBox Text="{Binding ElementName=sfxVolumeSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDefaultBackground}"/>
 											<Label Content="%"/>
 										</StackPanel>
 
 										<StackPanel Orientation="Horizontal">
 											<Label Content="{x:Static p:Resources.VOIP_Volume}" Width="160"/>
 											<Slider x:Name="voipVolumeSlider" Value="{Binding Source={StaticResource es}, Path=VOIPVolume}" Minimum="0" Maximum="100" Width="200" Margin="4,0,4,0"  Height="20" TickFrequency="10" SmallChange="10"/>
-											<TextBox Text="{Binding ElementName=voipVolumeSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+											<TextBox Text="{Binding ElementName=voipVolumeSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDefaultBackground}"/>
 											<Label Content="%"/>
 										</StackPanel>
 									</StackPanel>
 								</Expander>
 								
-								<Expander Header="{x:Static p:Resources.Spectator_Camera_Settings}" Margin="0,4,0,4" BorderBrush="{DynamicResource ContainerBorder}" >
-									<StackPanel>
-										<GroupBox Margin="4,8,4,4" Header="{x:Static p:Resources.Free_Cam_Settings___C_on_the_keyboard_}" ToolTip="{x:Static p:Resources.These_settings_control_game_settings_found_in__C__Program_Files_Oculus_Software_Software_ready_at_dawn_echo_arena_sourcedb_rad15_json_r14_config_mp_spectator_settings_json___This_is_useful_for_spectator_computers_without_a_headset_attached_}">
-											<StackPanel Margin="10,10,10,10">
+								<Expander Header="{x:Static p:Resources.Spectator_Camera_Settings}" Margin="0,4,0,4" BorderBrush="{DynamicResource ControlDefaultBorderBrush}" Background="{DynamicResource BackgroundColour}">
+									<StackPanel Background="{DynamicResource BackgroundColour}">
+										<GroupBox Margin="4,8,4,4" Header="{x:Static p:Resources.Free_Cam_Settings___C_on_the_keyboard_}" ToolTip="{x:Static p:Resources.These_settings_control_game_settings_found_in__C__Program_Files_Oculus_Software_Software_ready_at_dawn_echo_arena_sourcedb_rad15_json_r14_config_mp_spectator_settings_json___This_is_useful_for_spectator_computers_without_a_headset_attached_}" Background="{DynamicResource BackgroundColour}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+											<StackPanel Margin="10,10,10,10" Background="{DynamicResource BackgroundColour}">
 												<StackPanel Orientation="Horizontal">
 													<Label Content="{x:Static p:Resources.Free_Cam_Field_of_View}" Width="160"/>
 													<Slider x:Name="freeCamFovSlider" Value="{Binding Source={StaticResource es}, Path=FreeCamFov}" Minimum="20" Maximum="140" Width="200" Margin="4,0,4,0" Height="20"/>
-													<TextBox Text="{Binding ElementName=freeCamFovSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+													<TextBox Text="{Binding ElementName=freeCamFovSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDefaultBackground}"/>
 													<Label Content="{x:Static p:Resources.deg}"/>
 												</StackPanel>
 												<TextBlock Text="{x:Static p:Resources.FOV_for_free_camera}" Margin="10,0,10,10" FontSize="12" Foreground="{DynamicResource ControlDisabledGlythColour}"/>
@@ -612,7 +616,7 @@
 												<StackPanel Orientation="Horizontal">
 													<Label Content="Movement Speed" Width="160"/>
 													<Slider x:Name="moveSpeedSlider" Value="{Binding Source={StaticResource es}, Path=FreeCamMaxSpeed}" Minimum="0" Maximum="16" Width="200" Margin="4,0,4,0" Height="20" SmallChange="0.1" TickFrequency="0.1"/>
-													<TextBox Text="{Binding ElementName=moveSpeedSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+													<TextBox Text="{Binding ElementName=moveSpeedSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDefaultBackground}"/>
 													<Label Content="m/s"/>
 												</StackPanel>
 												<TextBlock Text="{x:Static p:Resources.Maximum_translational_movement_speed}" Margin="10,0,10,10" FontSize="12" Foreground="{DynamicResource ControlDisabledGlythColour}"/>
@@ -620,7 +624,7 @@
 												<StackPanel Orientation="Horizontal">
 													<Label Content="{x:Static p:Resources.Vertical_Move_Speed}" Width="160"/>
 													<Slider x:Name="moveSpeedVerticalSlider" Value="{Binding Source={StaticResource es}, Path=FreeCamMaxSpeedVertical}" Minimum="0" Maximum="16" Width="200" Margin="4,0,4,0" Height="20" TickFrequency="0.1"/>
-													<TextBox Text="{Binding ElementName=moveSpeedVerticalSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+													<TextBox Text="{Binding ElementName=moveSpeedVerticalSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDefaultBackground}"/>
 													<Label Content="m/s"/>
 												</StackPanel>
 												<TextBlock Text="{x:Static p:Resources.Maximum_translational_movement_speed_on_the_vertical_axis}" Margin="10,0,10,10" FontSize="12" Foreground="{DynamicResource ControlDisabledGlythColour}"/>
@@ -628,7 +632,7 @@
 												<StackPanel Orientation="Horizontal">
 													<Label Content="{x:Static p:Resources.Rotation_Speed}" Width="160"/>
 													<Slider  x:Name="freeCamRotationSpeedSlider" Value="{Binding Source={StaticResource es}, Path=FreeCamRotationSpeed}" Minimum="0" Maximum="10" Width="200" Margin="4,0,4,0" Height="20" TickFrequency="0.1"/>
-													<TextBox Text="{Binding ElementName=freeCamRotationSpeedSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+													<TextBox Text="{Binding ElementName=freeCamRotationSpeedSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDefaultBackground}"/>
 													<Label Content=""/>
 												</StackPanel>
 												<TextBlock Text="{x:Static p:Resources.Maximum_rotation_speed_of_the_camera}" Margin="10,0,10,10" FontSize="12" Foreground="{DynamicResource ControlDisabledGlythColour}"/>
@@ -636,7 +640,7 @@
 												<StackPanel Orientation="Horizontal">
 													<Label Content="{x:Static p:Resources.Speed_Multiplier}" Width="160"/>
 													<Slider x:Name="freeCamSpeedMultSlider" Value="{Binding Source={StaticResource es}, Path=FreeCamSpeedMult}" Minimum="0" Maximum="5" Width="200" Margin="4,0,4,0" Height="20" SmallChange="0.1" TickFrequency="0.1"/>
-													<TextBox Text="{Binding ElementName=freeCamSpeedMultSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+													<TextBox Text="{Binding ElementName=freeCamSpeedMultSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDefaultBackground}"/>
 													<Label Content="x"/>
 												</StackPanel>
 												<TextBlock Text="{x:Static p:Resources.Speed_multiplier_for_movement_speed_when_pressing_the_speed_modifier_button}" Margin="10,0,10,10" FontSize="12" Foreground="{DynamicResource ControlDisabledGlythColour}"/>
@@ -647,12 +651,12 @@
 
 										
 										
-										<GroupBox Margin="4,8,4,4" Header="For the 2D spectator" ToolTip="{x:Static p:Resources.These_settings_control_game_settings_found_in__C__Program_Files_Oculus_Software_Software_ready_at_dawn_echo_arena_sourcedb_rad15_json_r14_config_mp_spectator_settings_json___This_is_useful_for_spectator_computers_without_a_headset_attached_}">
-											<StackPanel Margin="10,10,10,10">
+										<GroupBox Margin="4,8,4,4" Header="For the 2D spectator" ToolTip="{x:Static p:Resources.These_settings_control_game_settings_found_in__C__Program_Files_Oculus_Software_Software_ready_at_dawn_echo_arena_sourcedb_rad15_json_r14_config_mp_spectator_settings_json___This_is_useful_for_spectator_computers_without_a_headset_attached_}" Background="{DynamicResource BackgroundColour}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+											<StackPanel Margin="10,10,10,10" Background="{DynamicResource BackgroundColour}">
 												<StackPanel Orientation="Horizontal">
 													<Label Content="{x:Static p:Resources.Spectator_Field_of_View}" Width="160"/>
 													<Slider x:Name="specFovSlider" Value="{Binding Source={StaticResource es}, Path=SpecFovSlider}" Minimum="40" Maximum="140" Width="200" Margin="4,0,4,0" Height="20"/>
-													<TextBox Text="{Binding ElementName=specFovSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+													<TextBox Text="{Binding ElementName=specFovSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDefaultBackground}"/>
 													<Label Content="{x:Static p:Resources.deg}"/>
 												</StackPanel>
 												<TextBlock Text="{x:Static p:Resources.FOV_for_auto_cam}" Margin="10,0,10,10" FontSize="12" Foreground="{DynamicResource ControlDisabledGlythColour}"/>
@@ -660,16 +664,16 @@
 												<StackPanel Orientation="Horizontal">
 													<Label Content="{x:Static p:Resources.POV_Field_of_View}" Width="160"/>
 													<Slider x:Name="povFovSlider" Value="{Binding Source={StaticResource es}, Path=POVFov}" Minimum="40" Maximum="140" Width="200" Margin="4,0,4,0" Height="20"/>
-													<TextBox Text="{Binding ElementName=povFovSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40"/>
+													<TextBox Text="{Binding ElementName=povFovSlider, Path=Value, UpdateSourceTrigger=PropertyChanged}" Height="22"  Width="40" Background="{DynamicResource ControlDefaultBackground}"/>
 													<Label Content="{x:Static p:Resources.deg}"/>
 												</StackPanel>
 												<TextBlock Text="{x:Static p:Resources.FOV_for_POV_cam___P_on_the_keyboard_when_following_a_player_}" Margin="10,0,10,10" FontSize="12" Foreground="{DynamicResource ControlDisabledGlythColour}"/>
 
 												<StackPanel Orientation="Horizontal">
 													<Label Content="{x:Static p:Resources.Follow_Cam_Offset}" Width="160"/>
-													<TextBox Text="{Binding Source={StaticResource es}, Path=FollowCamOffsetX}" Width="50" Height="22" />
-													<TextBox Text="{Binding Source={StaticResource es}, Path=FollowCamOffsetY}" Width="50" Height="22" />
-													<TextBox Text="{Binding Source={StaticResource es}, Path=FollowCamOffsetZ}" Width="50" Height="22" />
+													<TextBox Text="{Binding Source={StaticResource es}, Path=FollowCamOffsetX}" Width="50" Height="22" Background="{DynamicResource ControlDefaultBackground}"/>
+													<TextBox Text="{Binding Source={StaticResource es}, Path=FollowCamOffsetY}" Width="50" Height="22" Background="{DynamicResource ControlDefaultBackground}"/>
+													<TextBox Text="{Binding Source={StaticResource es}, Path=FollowCamOffsetZ}" Width="50" Height="22" Background="{DynamicResource ControlDefaultBackground}"/>
 													<Label Content="x,y,z"/>
 												</StackPanel>
 
@@ -727,6 +731,11 @@
 							<LineBreak/>
 							Yuuking
 							<LineBreak/>
+							<LineBreak/>
+							<Run Text="Artists" Foreground="{DynamicResource ControlDisabledGlythColour}" />
+							<LineBreak/>
+							Sickmave
+							<LineBreak/>
 							</TextBlock>
 						</StackPanel>
 					</Grid>
@@ -764,9 +773,167 @@
 				</StackPanel>
 			</TabItem>
 
+			<!-- ═══════════════════════════════════════════════════════════════════════════
+			     CHANGE THEME TAB
+			     ═══════════════════════════════════════════════════════════════════════════ -->
+			<TabItem Header="Change Theme" Padding="8,6,8,6"
+			         x:Name="ChangeThemeTab"
+			         Loaded="ChangeThemeTab_Loaded">
+			<ScrollViewer VerticalScrollBarVisibility="Auto">
+				<StackPanel Margin="16,12,16,16">
+
+					<TextBlock Text="Change Theme" FontSize="18" FontWeight="SemiBold"
+					           Margin="0,0,0,4"/>
+					<TextBlock TextWrapping="Wrap" Opacity="0.7" Margin="0,0,0,16" FontSize="12"
+					           Text="Pick three colours to recolour the entire app live. Changes apply immediately and persist between restarts."/>
+
+					<!-- Dark Colour -->
+					<Border Background="{DynamicResource ContainerBackground}" CornerRadius="6"
+					        BorderBrush="{DynamicResource ControlDefaultBorderBrush}" BorderThickness="1"
+					        Margin="0,0,0,12" Padding="14,12,14,12">
+						<StackPanel>
+							<TextBlock Text="Dark (Backgrounds)" FontWeight="SemiBold" Margin="0,0,0,8"/>
+							<StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+								<Rectangle x:Name="DarkPreviewRect" Width="36" Height="36" RadiusX="4" RadiusY="4"
+								           Margin="0,0,10,0" VerticalAlignment="Center"/>
+								<TextBox x:Name="DarkHexBox" Width="90" VerticalContentAlignment="Center"
+								         Padding="6,4" FontFamily="Consolas" FontSize="13"
+								         TextChanged="DarkHexBox_TextChanged" MaxLength="7"/>
+								<TextBlock Text="  Hex" VerticalAlignment="Center" Opacity="0.6" FontSize="12"/>
+							</StackPanel>
+							<TextBlock Text="Hue" FontSize="11" Opacity="0.7" Margin="0,4,0,2"/>
+							<Slider x:Name="DarkHueSlider" Minimum="0" Maximum="360" SmallChange="1" LargeChange="10"
+							        ValueChanged="DarkSlider_Changed" Margin="0,0,0,4" IsSnapToTickEnabled="False"/>
+							<TextBlock Text="Saturation" FontSize="11" Opacity="0.7" Margin="0,2,0,2"/>
+							<Slider x:Name="DarkSatSlider" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.1"
+							        ValueChanged="DarkSlider_Changed" Margin="0,0,0,4" IsSnapToTickEnabled="False"/>
+							<TextBlock Text="Brightness" FontSize="11" Opacity="0.7" Margin="0,2,0,2"/>
+							<Slider x:Name="DarkValSlider" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.1"
+							        ValueChanged="DarkSlider_Changed" IsSnapToTickEnabled="False"/>
+						</StackPanel>
+					</Border>
+
+					<!-- Mid Colour -->
+					<Border Background="{DynamicResource ContainerBackground}" CornerRadius="6"
+					        BorderBrush="{DynamicResource ControlDefaultBorderBrush}" BorderThickness="1"
+					        Margin="0,0,0,12" Padding="14,12,14,12">
+						<StackPanel>
+							<TextBlock Text="Mid (Buttons &amp; Borders)" FontWeight="SemiBold" Margin="0,0,0,8"/>
+							<StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+								<Rectangle x:Name="MidPreviewRect" Width="36" Height="36" RadiusX="4" RadiusY="4"
+								           Margin="0,0,10,0" VerticalAlignment="Center"/>
+								<TextBox x:Name="MidHexBox" Width="90" VerticalContentAlignment="Center"
+								         Padding="6,4" FontFamily="Consolas" FontSize="13"
+								         TextChanged="MidHexBox_TextChanged" MaxLength="7"/>
+								<TextBlock Text="  Hex" VerticalAlignment="Center" Opacity="0.6" FontSize="12"/>
+							</StackPanel>
+							<TextBlock Text="Hue" FontSize="11" Opacity="0.7" Margin="0,4,0,2"/>
+							<Slider x:Name="MidHueSlider" Minimum="0" Maximum="360" SmallChange="1" LargeChange="10"
+							        ValueChanged="MidSlider_Changed" Margin="0,0,0,4" IsSnapToTickEnabled="False"/>
+							<TextBlock Text="Saturation" FontSize="11" Opacity="0.7" Margin="0,2,0,2"/>
+							<Slider x:Name="MidSatSlider" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.1"
+							        ValueChanged="MidSlider_Changed" Margin="0,0,0,4" IsSnapToTickEnabled="False"/>
+							<TextBlock Text="Brightness" FontSize="11" Opacity="0.7" Margin="0,2,0,2"/>
+							<Slider x:Name="MidValSlider" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.1"
+							        ValueChanged="MidSlider_Changed" IsSnapToTickEnabled="False"/>
+						</StackPanel>
+					</Border>
+
+					<!-- Light Colour -->
+					<Border Background="{DynamicResource ContainerBackground}" CornerRadius="6"
+					        BorderBrush="{DynamicResource ControlDefaultBorderBrush}" BorderThickness="1"
+					        Margin="0,0,0,20" Padding="14,12,14,12">
+						<StackPanel>
+							<TextBlock Text="Light (Hover &amp; Highlights)" FontWeight="SemiBold" Margin="0,0,0,8"/>
+							<StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+								<Rectangle x:Name="LightPreviewRect" Width="36" Height="36" RadiusX="4" RadiusY="4"
+								           Margin="0,0,10,0" VerticalAlignment="Center"/>
+								<TextBox x:Name="LightHexBox" Width="90" VerticalContentAlignment="Center"
+								         Padding="6,4" FontFamily="Consolas" FontSize="13"
+								         TextChanged="LightHexBox_TextChanged" MaxLength="7"/>
+								<TextBlock Text="  Hex" VerticalAlignment="Center" Opacity="0.6" FontSize="12"/>
+							</StackPanel>
+							<TextBlock Text="Hue" FontSize="11" Opacity="0.7" Margin="0,4,0,2"/>
+							<Slider x:Name="LightHueSlider" Minimum="0" Maximum="360" SmallChange="1" LargeChange="10"
+							        ValueChanged="LightSlider_Changed" Margin="0,0,0,4" IsSnapToTickEnabled="False"/>
+							<TextBlock Text="Saturation" FontSize="11" Opacity="0.7" Margin="0,2,0,2"/>
+							<Slider x:Name="LightSatSlider" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.1"
+							        ValueChanged="LightSlider_Changed" Margin="0,0,0,4" IsSnapToTickEnabled="False"/>
+							<TextBlock Text="Brightness" FontSize="11" Opacity="0.7" Margin="0,2,0,2"/>
+							<Slider x:Name="LightValSlider" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.1"
+							        ValueChanged="LightSlider_Changed" IsSnapToTickEnabled="False"/>
+						</StackPanel>
+					</Border>
+
+					<TextBlock Text="Presets" FontWeight="SemiBold" Margin="0,0,0,8"/>
+					<WrapPanel Margin="0,0,0,20">
+						<Button x:Name="PresetBlackBtn"      Content="🐈 Black"      Width="100" Margin="0,0,8,8" Click="PresetBlack_Click"/>
+						<Button x:Name="PresetBlueBtn"       Content="🌌 Blue"       Width="100" Margin="0,0,8,8" Click="PresetBlue_Click"/>
+						<Button x:Name="PresetCoolPurpleBtn" Content="🔮 Cool Purple" Width="110" Margin="0,0,8,8" Click="PresetCoolPurple_Click"/>
+						<Button x:Name="PresetDarkRedBtn"    Content="🔥 Dark Red"    Width="100" Margin="0,0,8,8" Click="PresetDarkRed_Click"/>
+						<Button x:Name="PresetGreenBtn"      Content="🌳 Green"      Width="100" Margin="0,0,8,8" Click="PresetGreen_Click"/>
+						<Button x:Name="PresetHotPinkBtn"    Content="💖 Hot Pink"    Width="100" Margin="0,0,8,8" Click="PresetHotPink_Click"/>
+						<Button x:Name="PresetPurpleBtn"     Content="🟣 Purple"      Width="100" Margin="0,0,8,8" Click="PresetPurple_Click"/>
+						<Button x:Name="PresetRedBtn"        Content="🔴 Red"         Width="100" Margin="0,0,8,8" Click="PresetRed_Click"/>
+						<Button x:Name="PresetYellowBtn"     Content="🌞 Yellow"      Width="100" Margin="0,0,8,8" Click="PresetYellow_Click"/>
+						<Button x:Name="PresetPinkBtn"       Content="🌸 Spark Pink"  Width="105" Margin="0,0,8,8" Click="PresetPink_Click"/>
+					</WrapPanel>
+
+					<!-- Apply / Reset Row -->
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+						<Button x:Name="ResetThemeBtn" Content="Reset to Default" Width="120" Margin="0,0,10,0"
+						        Click="ResetTheme_Click"/>
+						<Button x:Name="ApplyThemeBtn" Content="Apply Theme" Width="120" FontWeight="SemiBold"
+						        Click="ApplyTheme_Click"/>
+					</StackPanel>
+
+				</StackPanel>
+			</ScrollViewer>
+			</TabItem>
+
 		</TabControl>
 
-		<Button Content="{x:Static p:Resources.Close}" Width="100" Height="30" VerticalAlignment="Bottom" HorizontalAlignment="Right"
+<Button Content="{x:Static p:Resources.Close}" Width="100" Height="30" VerticalAlignment="Bottom" HorizontalAlignment="Right"
 				Margin="10,10,10,10" Click="CloseButtonEvent" Grid.Row="2" />
+
+		<Grid x:Name="QuestSpectatorPopup" Visibility="Collapsed" Background="#CC000000" Panel.ZIndex="1000" Grid.RowSpan="3">
+			<Border Background="{DynamicResource BackgroundColour}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}" BorderThickness="1" 
+					HorizontalAlignment="Center" VerticalAlignment="Center" Padding="20" CornerRadius="12" Width="450">
+				<StackPanel>
+					<TextBlock Text="Quest Spectator Launcher" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ControlDefaultForeground}" 
+							   HorizontalAlignment="Center" Margin="0,0,0,20"/>
+
+					<TextBlock Text="Your PC Username (Spectator Client):" Foreground="{DynamicResource ControlDefaultForeground}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+					
+					<TextBox x:Name="SpectatorNameInput" Margin="0,0,0,5" Padding="5" 
+							 Background="{DynamicResource ControlDarkerBackground}" 
+							 Foreground="{DynamicResource ControlDefaultForeground}" 
+							 BorderBrush="{DynamicResource ControlDefaultBorderBrush}" 
+							 BorderThickness="1" 
+							 CaretBrush="{DynamicResource ControlDefaultForeground}"/>
+					
+					<TextBlock Text="Safeguard: Spark will NOT join if this user is already in the match." 
+							   Foreground="{DynamicResource ControlDefaultForeground}" FontSize="10" FontStyle="Italic" Opacity="0.7" Margin="0,0,0,15"/>
+
+					<TextBlock Text="Quest Player to Spectate:" Foreground="{DynamicResource ControlDefaultForeground}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+					
+					<TextBox x:Name="TargetNameInput" Margin="0,0,0,15" Padding="5"
+							 Background="{DynamicResource ControlDarkerBackground}" 
+							 Foreground="{DynamicResource ControlDefaultForeground}" 
+							 BorderBrush="{DynamicResource ControlDefaultBorderBrush}" 
+							 BorderThickness="1"
+							 CaretBrush="{DynamicResource ControlDefaultForeground}"/>
+
+					<CheckBox x:Name="AutoJoinCheckbox" Content="Auto-join target player's match" Margin="0,0,0,15" 
+							  IsChecked="True" Foreground="{DynamicResource ControlDefaultForeground}"
+							  ToolTip="If checked, Spark will continuously search for the target player and join their match automatically."/>
+
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+						<Button Content="Cancel" Click="CloseSpectatorPopup" Margin="0,0,10,0" Padding="15,5"/>
+						<Button Content="Launch Spectator" Click="LaunchQuestSpectator" Padding="15,5" FontWeight="Bold"/>
+					</StackPanel>
+				</StackPanel>
+			</Border>
+		</Grid>
 	</Grid>
 </Window>

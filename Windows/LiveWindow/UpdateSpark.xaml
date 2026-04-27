@@ -1,0 +1,119 @@
+<UserControl x:Class="Spark.UpdateSparkControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Spark"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="600"
+             Background="{DynamicResource BackgroundColour}">
+    
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="10,10,10,10">
+            <Label Content="Update Spark" FontSize="18" FontWeight="Bold" Margin="0,0,0,15" 
+                   Foreground="{DynamicResource ControlDefaultForeground}"/>
+            
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,15" FontSize="14" 
+                       Foreground="{DynamicResource ControlDefaultForeground}">
+                Check for updates and automatically download and install the latest version of Spark.
+            </TextBlock>
+            
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <Label Content="Current Version:" Grid.Row="0" Grid.Column="0" 
+                       HorizontalAlignment="Left" Margin="0,0,10,10"
+                       Foreground="{DynamicResource ControlDefaultForeground}"/>
+                <TextBlock x:Name="CurrentVersionText" Grid.Row="0" Grid.Column="1" 
+                         VerticalAlignment="Center" Margin="0,0,0,10" 
+                         FontWeight="Bold" FontSize="14"
+                         Foreground="{DynamicResource ControlDefaultForeground}"/>
+                
+                <Label Content="Latest Version:" Grid.Row="1" Grid.Column="0" 
+                       HorizontalAlignment="Left" Margin="0,0,10,10"
+                       Foreground="{DynamicResource ControlDefaultForeground}"/>
+                <TextBlock x:Name="LatestVersionText" Grid.Row="1" Grid.Column="1" 
+                         VerticalAlignment="Center" Margin="0,0,0,10" 
+                         FontWeight="Bold" FontSize="14"
+                         Foreground="{DynamicResource ControlDefaultForeground}"/>
+                
+                <Label Content="Status:" Grid.Row="2" Grid.Column="0" 
+                       HorizontalAlignment="Left" Margin="0,0,10,10"
+                       Foreground="{DynamicResource ControlDefaultForeground}"/>
+                <TextBlock x:Name="StatusText" Grid.Row="2" Grid.Column="1" 
+                         VerticalAlignment="Center" Margin="0,0,0,10"
+                         Foreground="{DynamicResource ControlDefaultForeground}"/>
+                
+                <ProgressBar x:Name="UpdateProgressBar" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" 
+                           Height="22" Margin="0,0,0,20" Minimum="0" Maximum="100" Value="0" 
+                           Visibility="Collapsed"/>
+
+                <!-- Hidden for compatibility with code-behind -->
+                <ComboBox x:Name="ColorVersionDropdown" Visibility="Collapsed" Width="0" Height="0"/>
+            </Grid>
+            
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,20">
+                <Button x:Name="CheckUpdateButton" Content="Check for Updates" Width="160" Height="32" 
+                        Margin="0,0,12,0" Click="CheckUpdateButton_Click"
+                        FontWeight="SemiBold"/>
+                <Button x:Name="DownloadUpdateButton" Content="Download and Install Update" Width="190" Height="32" 
+                        Margin="0,0,12,0" Click="DownloadUpdateButton_Click" IsEnabled="False"
+                        FontWeight="SemiBold"/>
+                <Button x:Name="OpenTempFolderButton" Content="Open Temp Folder" Width="130" Height="32" 
+                        Click="OpenTempFolderButton_Click"
+                        FontWeight="SemiBold"/>
+            </StackPanel>
+            
+            <Separator Margin="0,0,0,10" Height="1" Background="{DynamicResource ControlDefaultBorderBrush}"/>
+            <Label Content="TTS Cache Update" FontSize="16" FontWeight="Bold" 
+                   Margin="0,0,0,10" Foreground="{DynamicResource ControlDefaultForeground}"/>
+            
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,15" FontSize="14" Foreground="{DynamicResource ControlDefaultForeground}">
+                Download the latest TTS cache to avoid generating speech files on first use.
+                This can reduce loading times for TTS features.
+            </TextBlock>
+            
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <Button x:Name="DownloadTTSCacheButton" Content="Download TTS Cache" Width="160" Height="32" 
+                        Margin="0,0,12,0" Click="DownloadTTSCacheButton_Click"
+                        FontWeight="SemiBold"/>
+                <TextBlock x:Name="TTSCacheStatus" VerticalAlignment="Center" Margin="5,0,0,0"
+                           Foreground="{DynamicResource ControlDefaultForeground}"/>
+            </StackPanel>
+
+            <Separator Margin="0,10,0,10" Height="1" Background="{DynamicResource ControlDefaultBorderBrush}"/>
+            <Label Content="Download EchoVR Haptics Fix" FontSize="16" FontWeight="Bold" 
+                   Margin="0,0,0,10" Foreground="{DynamicResource ControlDefaultForeground}"/>
+
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,15" FontSize="14" Foreground="{DynamicResource ControlDefaultForeground}">
+                EchoVR Haptics dont work for oculus quest link or airlink uses and has been an issue, this fixes that issue and makes it work again.
+            </TextBlock>
+
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <Button x:Name="DownloadHapticsFixButton" Content="Download Haptics Fix" Width="220" Height="32" 
+                        Margin="0,0,12,0" Click="DownloadHapticsFixButton_Click"
+                        FontWeight="SemiBold"/>
+                <TextBlock x:Name="HapticsFixStatus" VerticalAlignment="Center" Margin="5,0,0,0"
+                           Foreground="{DynamicResource ControlDefaultForeground}"/>
+            </StackPanel>
+
+            <Expander Header="Update Details" Margin="0,10,0,0" FontWeight="SemiBold" Foreground="{DynamicResource ControlDefaultForeground}">
+                <TextBox x:Name="UpdateDetailsText" IsReadOnly="True" Height="160" 
+                         VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                         TextWrapping="Wrap" FontFamily="Consolas" FontSize="11"
+                         Background="{DynamicResource ControlDefaultBackground}"
+                         Foreground="{DynamicResource ControlDefaultForeground}"
+                         BorderBrush="{DynamicResource ControlDefaultBorderBrush}"/>
+            </Expander>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

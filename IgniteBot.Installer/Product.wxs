@@ -1,99 +1,64 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
 
 	<?define UpgradeCode = "{3990C76C-D8C9-46B4-9451-F4B5F73006BC}"?>
 	<?define ProductCode = "{8E03117F-8505-4F27-8D78-6A302CAD8CD8}"?>
 	<!--<?define ProductVersion="!(bind.FileVersion.FileId)" ?>-->
 
 	<!-- Define main product -->
-	<Product Id="*"
-           Name="!(loc.ProductName)"
-           Language="!(loc.Language)"
-           Version="$(var.BuildVersion)"
-           Manufacturer="!(loc.Company)"
-           UpgradeCode="$(var.UpgradeCode)">
+	<Package Name="!(loc.ProductName)" Language="!(loc.Language)" Version="$(var.BuildVersion)" Manufacturer="!(loc.Company)" UpgradeCode="$(var.UpgradeCode)" InstallerVersion="200">
 
 		<!-- Provide package details -->
-		<Package InstallerVersion="200"
-             Compressed="yes"
-             InstallScope="perMachine"
-             Manufacturer="!(loc.Company)"
-             Description="!(loc.Description)"
-             Keywords="!(loc.Keywords)"
-             Comments="!(loc.Comments)"
-             Languages="!(loc.Language)"
-             />
+		<SummaryInformation Manufacturer="!(loc.Company)" Description="!(loc.Description)" Keywords="!(loc.Keywords)" />
 
-		<!-- Downgrade error message -->
+		<!-- Major Upgrade -->
 		<MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="!(loc.DowngradeErrorMessage)" />
 
 		<!-- Include .cab file into .msi file -->
 		<MediaTemplate EmbedCab="yes" />
 
 		<!-- Define main app icon -->
-		<Icon Id="icon.ico" SourceFile="..\img\ignite_logo.ico"/>
+		<Icon Id="icon.ico" SourceFile="..\img\ignite_logo.ico" />
+
+		<!-- Property for ShellExec target -->
+		<Property Id="WixShellExecTarget" Value="[INSTALLFOLDER]Spark.exe" />
 
 		<!-- Use the icon.ico icon for this installer (shows up in Add/Remove programs) -->
-		<Property Id="ARPPRODUCTICON">icon.ico</Property>
+		<Property Id="ARPPRODUCTICON" Value="icon.ico" />
 		<!-- Help/Support website (shows in the Add/Remove programs) -->
-		<Property Id="ARPURLINFOABOUT">https://www.ignitevr.gg/spark</Property>
+		<Property Id="ARPURLINFOABOUT" Value="https://www.ignitevr.gg/spark" />
 
 		<!-- Create a basic UI for the installer -->
 		<UI>
-			<UIRef Id="WixUI_InstallDir" />
+			<ui:WixUI Id="WixUI_InstallDir" />
 
 			<!-- Skip license dialog -->
-			<Publish Dialog="WelcomeDlg"
-							 Control="Next"
-							 Event="NewDialog"
-							 Value="InstallDirDlg"
-							 Order="2">1</Publish>
-			<Publish Dialog="InstallDirDlg"
-							 Control="Back"
-							 Event="NewDialog"
-							 Value="WelcomeDlg"
-							 Order="2">1</Publish>
-			<Publish Dialog="ExitDialog"
-							 Control="Finish"
-							 Event="DoAction"
-							 Value="LaunchApplication">
-				WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed
-			</Publish>
-			
+			<Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2" />
+			<Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2" />
+
+			<!-- Launch Spark on Finish -->
+			<Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication" Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed" />
 		</UI>
-		<Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Spark"  />
-		<Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1"  />
+
+		<Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Spark" />
+		<Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+
+		<!-- Custom Action for launching the application -->
+		<CustomAction Id="LaunchApplication" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" DllEntry="WixShellExec" Impersonate="yes" />
 
 		<!-- Change the installer UI background images -->
 		<WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)\Assets\Background.bmp" />
 		<WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)\Assets\Banner.bmp" />
 
+		<!-- Set default path to C:\Spark -->
+		<SetDirectory Id="INSTALLFOLDER" Value="[WindowsVolume]Spark" />
 		<Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
 
-		<!-- Change the installer UI background images -->
-
-		<!-- Define components, shortcuts, files etc... for installer -->
+		<!-- Define features -->
 		<Feature Id="ProductFeature" Title="Spark" Level="1">
-
 			<ComponentGroupRef Id="ProductComponents" />
 			<ComponentGroupRef Id="PublishedComponents" />
-
 		</Feature>
 
-
-		<!-- Run the program after install -->
-		<!-- FileKey is from ComponentsGenerated, so it may change?-->
-		<CustomAction Id="LaunchApplication"
-              Execute="immediate"
-              Impersonate="no"
-              Return="asyncNoWait"
-              FileKey="fil03038851281DF07988C8E92E111B4310" 
-              ExeCommand="" />
-		
-		<!--<InstallExecuteSequence>
-			<Custom Action="EXECUTE_AFTER_FINALIZE" After="InstallFinalize"/>
-		</InstallExecuteSequence>-->
-
-	</Product>
+	</Package>
 
 </Wix>

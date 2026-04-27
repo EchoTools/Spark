@@ -524,10 +524,9 @@ namespace Spark
 
 				DiscordOAuth.Authenticated += () =>
 				{
-					synth = new TTSController();
 					// Configure the audio output.
 					synth.SetOutputToDefaultAudioDevice();
-					synth.SetRate(SparkSettings.instance.TTSSpeed);
+					synth.LoadTtsSpeed();
 				};
 
 
@@ -631,7 +630,7 @@ namespace Spark
 
 					// wait 5 seconds for login to happen
 					await Task.Delay(5000);
-					AutoUploadTabletStats();
+
 				});
 
 				//HighlightsHelper.CloseNVHighlights();
@@ -3538,7 +3537,11 @@ namespace Spark
 			catch (Exception e)
 			{
 				LogRow(LogType.Error, e.ToString());
-				new MessageBox($"Failed to open window: {type}.\nPlease report this to NtsFranz.").Show();
+				if (windowName != null && popupWindows.ContainsKey(windowName))
+				{
+					popupWindows[windowName] = null;
+				}
+				new MessageBox($"Failed to open window: {type}.\nPlease try again.").Show();
 				return false;
 			}
 		}
@@ -3549,96 +3552,7 @@ namespace Spark
 			return popupWindows.ContainsKey(windowName) ? popupWindows[windowName] : null;
 		}
 
-		public static void AutoUploadTabletStats()
-		{
-			_ = Task.Run(async () =>
-			{
-				// wait 5 seconds for write to happen
-				await Task.Delay(1000);
-				
-				List<TabletStats> stats = FindTabletStats();
-				stats.ForEach(s =>
-				{
-					if (SparkSettings.instance.autoUploadProfiles.ContainsKey(s.player_name) &&
-					    SparkSettings.instance.autoUploadProfiles[s.player_name])
-					{
-						UploadTabletStats(s);
-					}
-				});
-			});
-		}
 
-		public static List<TabletStats> FindTabletStats()
-		{
-			try
-			{
-				string baseFolder = Path.Combine(
-					Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-					"..", "Local", "rad", "echovr", "users", "ovr-org");
-				if (!Directory.Exists(baseFolder))
-				{
-					LogRow(LogType.Error, "Can't find the EchoVR profile folder.");
-					return new List<TabletStats>();
-				}
-
-				List<string> folders = Directory.GetDirectories(baseFolder).ToList();
-				List<string> files = new List<string>();
-				folders.ForEach(folder => files.AddRange(Directory.GetFiles(folder).ToList()));
-
-				List<TabletStats> profiles = new List<TabletStats>();
-				files.Where(f => f.EndsWith("serverprofile.json")).ToList().ForEach(file =>
-				{
-					TabletStats tabletStats = new TabletStats(File.ReadAllText(file));
-					if (tabletStats.IsValid())
-					{
-						profiles.Add(tabletStats);
-					}
-				});
-				profiles.Sort((p1, p2) => p2.update_time.CompareTo(p1.update_time));
-				profiles = profiles.DistinctBy(x => x.player_name).ToList();
-
-				return profiles;
-			}
-			catch (Exception ex)
-			{
-				LogRow(LogType.Error, ex.ToString());
-				new MessageBox($"Failed to find tablet stats.\nPlease report this to NtsFranz.").Show();
-				return new List<TabletStats>();
-			}
-		}
-
-		public static void UploadTabletStats(TabletStats p, Action<bool> finishedCallback = null)
-		{
-			try
-			{
-				Task.Run(async () =>
-				{
-					string dataString = JsonConvert.SerializeObject(p);
-					string hash = SecretKeys.Hash(dataString + p.player_name);
-
-
-					StringContent content = new StringContent(dataString, Encoding.UTF8, "application/json");
-
-					try
-					{
-						HttpResponseMessage response = await FetchUtils.client.PostAsync("/update_tablet_stats?hashkey=" + hash + "&player_name=" + p.player_name, content);
-						LogRow(LogType.Info, "[DB][Response] " + response.Content.ReadAsStringAsync().Result);
-						finishedCallback?.Invoke(response.IsSuccessStatusCode);
-					}
-					catch
-					{
-						LogRow(LogType.Error, "Can't connect to the DB server");
-						finishedCallback?.Invoke(false);
-					}
-				});
-			}
-			catch (Exception ex)
-			{
-				LogRow(LogType.Error, ex.ToString());
-				new MessageBox($"Failed to upload tablet stats.\nPlease report this to NtsFranz.").Show();
-				finishedCallback?.Invoke(false);
-			}
-		}
 
 		/// <summary>
 		/// This method is based on the python code that is used in the VRML Discord bot for calculating server score.

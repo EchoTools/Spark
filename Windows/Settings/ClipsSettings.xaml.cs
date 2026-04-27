@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -8,6 +8,7 @@ using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Navigation;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
@@ -15,6 +16,7 @@ using OBSWebsocketDotNet;
 using OBSWebsocketDotNet.Communication;
 using OBSWebsocketDotNet.Types;
 using OBSWebsocketDotNet.Types.Events;
+using Spark.Controllers;
 
 namespace Spark
 {
@@ -25,6 +27,9 @@ namespace Spark
 		private readonly Timer outputUpdateTimer = new Timer();
 
 		private bool sceneDropdownListenersActive = false;
+
+		// ── Controller Clipping detector ──────────────────────────────────────
+		private EchoVRButtonDetector _clipDetector;
 
 		private readonly List<Keyboard.DirectXKeyStrokes> medalTVInputs = new List<Keyboard.DirectXKeyStrokes>
 		{
@@ -80,7 +85,142 @@ namespace Spark
 			outputUpdateTimer.Elapsed += Update;
 			outputUpdateTimer.Enabled = true;
 
+			PopulateKeyDropdowns();
+			RefreshCustomVisibility();
+
 			initialized = true;
+
+			// Auto-start clip detector if Controller Clipping was already enabled
+			if (SparkSettings.instance.mediaControllerCustomEnabled && !SparkSettings.instance.mediaControllerEnabled)
+				StartClipDetector();
+		}
+
+		private void PopulateKeyDropdowns()
+		{
+			var keys = Enum.GetValues(typeof(Keyboard.DirectXKeyStrokes))
+				.Cast<Keyboard.DirectXKeyStrokes>()
+				.Select(k => new { Name = k.ToString().Replace("DIK_", ""), Value = (int)k })
+				.OrderBy(k => k.Name)
+				.ToList();
+
+			keys.Insert(0, new { Name = "None", Value = 0 });
+
+			CustomKey1ComboBox.ItemsSource = keys;
+			CustomKey2ComboBox.ItemsSource = keys;
+
+			CustomKey1ComboBox.SelectedValue = SparkSettings.instance.mediaControllerCustomKey1;
+			CustomKey2ComboBox.SelectedValue = SparkSettings.instance.mediaControllerCustomKey2;
+		}
+
+		private void RefreshCustomVisibility()
+		{
+			if (CustomClicksPanel == null || CustomHoldPanel == null) return;
+			CustomClicksPanel.Visibility = SparkSettings.instance.mediaControllerCustomTrigger == 2 ? Visibility.Visible : Visibility.Collapsed;
+			CustomHoldPanel.Visibility = SparkSettings.instance.mediaControllerCustomTrigger == 1 ? Visibility.Visible : Visibility.Collapsed;
+
+			// Show warning if Media Controller is active
+			if (ExclusivityWarning != null)
+				ExclusivityWarning.Visibility = SparkSettings.instance.mediaControllerEnabled ? Visibility.Visible : Visibility.Collapsed;
+		}
+
+		private void CustomEnabledChanged(object sender, RoutedEventArgs e)
+		{
+			if (!initialized) return;
+
+			// Block enabling if Media Controller is already active
+			if (SparkSettings.instance.mediaControllerCustomEnabled && SparkSettings.instance.mediaControllerEnabled)
+			{
+				SparkSettings.instance.mediaControllerCustomEnabled = false;
+				((CheckBox)sender).IsChecked = false;
+				ExclusivityWarning.Visibility = Visibility.Visible;
+				return;
+			}
+
+			ExclusivityWarning.Visibility = Visibility.Collapsed;
+
+			// Start/stop detector based on state
+			if (SparkSettings.instance.mediaControllerCustomEnabled)
+				StartClipDetector();
+			else
+				StopClipDetector();
+		}
+
+		// ── Clip Detector lifecycle ─────────────────────────────────────────
+
+		private void StartClipDetector()
+		{
+			if (_clipDetector != null) return;
+			_clipDetector = new EchoVRButtonDetector();
+			_clipDetector.StatusChanged += OnClipStatusChanged;
+			_clipDetector.Start();
+		}
+
+		private void StopClipDetector()
+		{
+			if (_clipDetector == null) return;
+			_clipDetector.StatusChanged -= OnClipStatusChanged;
+			_clipDetector.Stop();
+			_clipDetector.Dispose();
+			_clipDetector = null;
+			SetClipStatus(false, "");
+		}
+
+		private void OnClipStatusChanged(string message)
+		{
+			Dispatcher.InvokeAsync(() =>
+			{
+				bool connected = message.StartsWith("Connected", StringComparison.OrdinalIgnoreCase);
+
+				if (message.Equals("Connected", StringComparison.OrdinalIgnoreCase) ||
+				    message.Equals("Disconnected", StringComparison.OrdinalIgnoreCase))
+				{
+					SetClipStatus(connected, "");
+				}
+				else
+				{
+					bool isConn = _clipDetector?.IsConnected == true;
+					SetClipStatus(isConn, message);
+
+					// Clear action text after 3 seconds
+					var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+					timer.Tick += (s, _) => { timer.Stop(); if (ClipActionText.Text.Contains(message)) ClipActionText.Text = ""; };
+					timer.Start();
+				}
+			});
+		}
+
+		private void SetClipStatus(bool connected, string action)
+		{
+			ClipStatusDot.Fill = new SolidColorBrush(connected
+				? Color.FromRgb(0x27, 0xae, 0x60)   // green
+				: Color.FromRgb(0xc0, 0x39, 0x2b));  // red
+
+			ClipStatusText.Text = connected ? "EchoVR: Connected" : "EchoVR: Disconnected";
+			ClipActionText.Text = string.IsNullOrEmpty(action) ? "" : $"│  {action}";
+		}
+
+		private void CustomSettingChanged(object sender, SelectionChangedEventArgs e)
+		{
+			if (!initialized) return;
+			RefreshCustomVisibility();
+		}
+
+		private void CustomKey1Changed(object sender, SelectionChangedEventArgs e)
+		{
+			if (!initialized) return;
+			if (CustomKey1ComboBox.SelectedValue is int val)
+			{
+				SparkSettings.instance.mediaControllerCustomKey1 = val;
+			}
+		}
+
+		private void CustomKey2Changed(object sender, SelectionChangedEventArgs e)
+		{
+			if (!initialized) return;
+			if (CustomKey2ComboBox.SelectedValue is int val)
+			{
+				SparkSettings.instance.mediaControllerCustomKey2 = val;
+			}
 		}
 
 		private void RefreshSceneList()
@@ -364,7 +504,8 @@ namespace Spark
 			echoreplay,
 			OBS,
 			Medal,
-			Voice
+			Voice,
+			Controller
 		}
 
 		private ClipsTab clipsTab;
@@ -410,6 +551,10 @@ namespace Spark
 				saveReplaySceneBox.Visibility = Visibility.Collapsed;
 			}
 			else if (clipsTab == ClipsTab.Voice)
+			{
+				clipsEventsBox.Visibility = Visibility.Collapsed;
+			}
+			else if (clipsTab == ClipsTab.Controller)
 			{
 				clipsEventsBox.Visibility = Visibility.Collapsed;
 			}

@@ -5,20 +5,133 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         FontSize="14" 
-        Background="{DynamicResource BackgroundColour}" 
+        Background="{DynamicResource ControlDarkerBackground}"
         ResizeMode="CanResize" 
-        Title="Lone Echo Subtitles" Height="400" Width="1200"
+        Title="Lone Echo Subtitles" 
+        Height="400" 
+        Width="1200"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Icon="/img/ignite_logo.ico"
-        >
-	<Grid x:Name="grid">
-		<TextBlock x:Name="subtitlesText" Text="{Binding SubtitleText}" Foreground="LightGray" HorizontalAlignment="Left" Margin="10,10,10,10" TextWrapping="Wrap" FontSize="50" VerticalAlignment="Top"/>
-		<TextBlock x:Name="statusLabel" Text="{Binding StatusLabelText}" Foreground="{Binding StatusLabelColor}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8,8,8,8"/>
-		<CheckBox x:Name="streamerModeCheckbox" Content="Streamer Mode" IsChecked="{Binding StreamerModeChecked}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="8,8,100,14" />
-		<ComboBox x:Name="gameVersionDropdown" SelectedIndex="{Binding LoneEchoVersionDropdown}" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="8,8,100,14" Visibility="Collapsed">
-			<ComboBoxItem Content="Lone Echo 1"></ComboBoxItem>
-			<ComboBoxItem Content="Lone Echo 2"></ComboBoxItem>
+        Icon="/img/ignite_logo.ico">
+    
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#ffffff"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#ffffff"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}"/> <!-- Mid pink -->
+            <Setter Property="Foreground" Value="#ffffff"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/> <!-- Light pink -->
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}"/> <!-- Mid pink -->
+            <Setter Property="Foreground" Value="#ffffff"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/> <!-- Light pink -->
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource ControlDefaultBackground}"/> <!-- Mid pink -->
+            <Setter Property="Foreground" Value="#ffffff"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBrightDefaultBackground}"/> <!-- Light pink -->
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="2">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"
+                                            Margin="5,2"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource ControlBrightDefaultBackground}"/> <!-- Light pink -->
+                                <Setter Property="Foreground" Value="#000000"/>
+                                <Setter Property="BorderBrush" Value="#ffffff"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource ControlDarkerBackground}"/> <!-- Dark pink -->
+                                <Setter Property="Foreground" Value="#ffffff"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource ControlDefaultBackground}"/> <!-- Mid pink -->
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#d98eb0"/> <!-- Light muted pink -->
+                                <Setter Property="Foreground" Value="#888888"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource ControlDisabledBackground}"/> <!-- Muted pink -->
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    
+	<Grid x:Name="grid" Background="{DynamicResource ControlDarkerBackground}"> <!-- Dark pink -->
+		<TextBlock x:Name="subtitlesText" 
+                   Text="{Binding SubtitleText}" 
+                   Foreground="#ffffff"
+                   HorizontalAlignment="Left" 
+                   Margin="10,10,10,10" 
+                   TextWrapping="Wrap" 
+                   FontSize="50" 
+                   VerticalAlignment="Top"
+                   Background="Transparent"/>
+		
+        <TextBlock x:Name="statusLabel" 
+                   Text="{Binding StatusLabelText}" 
+                   Foreground="#ffffff" 
+                   HorizontalAlignment="Left" 
+                   VerticalAlignment="Bottom" 
+                   Margin="8,8,8,8"
+                   Background="Transparent"/>
+		
+        <CheckBox x:Name="streamerModeCheckbox" 
+                  Content="Streamer Mode" 
+                  IsChecked="{Binding StreamerModeChecked}" 
+                  VerticalAlignment="Bottom" 
+                  HorizontalAlignment="Right" 
+                  Margin="8,8,100,14"
+                  Foreground="#ffffff"
+                  BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}"/>
+		
+        <ComboBox x:Name="gameVersionDropdown" 
+                  SelectedIndex="{Binding LoneEchoVersionDropdown}" 
+                  VerticalAlignment="Bottom" 
+                  HorizontalAlignment="Right" 
+                  Margin="8,8,100,14" 
+                  Visibility="Collapsed"
+                  Background="{DynamicResource ControlDefaultBackground}"
+                  Foreground="#ffffff"
+                  BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}">
+			<ComboBoxItem Content="Lone Echo 1"
+                         Background="{DynamicResource ControlDefaultBackground}"
+                         Foreground="#ffffff"
+                         BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}"></ComboBoxItem>
+			<ComboBoxItem Content="Lone Echo 2"
+                         Background="{DynamicResource ControlDefaultBackground}"
+                         Foreground="#ffffff"
+                         BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}"></ComboBoxItem>
 		</ComboBox>
-		<Button x:Name="closeButton" Content="Close" Margin="0,0,8,8" HorizontalAlignment="Right" IsCancel="True" IsDefault="True" Padding="4,4,4,4" Width="81" Click="CloseClick" VerticalAlignment="Bottom"/>
+		
+        <Button x:Name="closeButton" 
+                Content="Close" 
+                Margin="0,0,8,8" 
+                HorizontalAlignment="Right" 
+                IsCancel="True" 
+                IsDefault="True" 
+                Padding="4,4,4,4" 
+                Width="81" 
+                Click="CloseClick" 
+                VerticalAlignment="Bottom"
+                Background="{DynamicResource ControlDefaultBackground}"
+                Foreground="#ffffff"
+                BorderBrush="{DynamicResource ControlBrightDefaultBorderBrush}"/>
 	</Grid>
 </Window>

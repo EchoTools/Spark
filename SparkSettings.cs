@@ -6,11 +6,41 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using ButterReplays;
+using System.Windows;
 
 namespace Spark
 {
 	class SparkSettings
 	{
+		[JsonIgnore]
+		public Visibility EchoVRPathNotSetVisibility
+		{
+			get
+			{
+				bool echoVrInstalled = false;
+				if (!string.IsNullOrEmpty(echoVRPath))
+				{
+					try
+					{
+						string exeDir = Path.GetDirectoryName(echoVRPath);
+						if (exeDir != null)
+						{
+							string arenaPath = Path.GetFullPath(Path.Combine(exeDir, "..", ".."));
+							if (Directory.Exists(arenaPath) && Path.GetFileName(arenaPath).Equals("ready-at-dawn-echo-arena", StringComparison.OrdinalIgnoreCase))
+							{
+								echoVrInstalled = true;
+							}
+						}
+					}
+					catch (Exception)
+					{
+						// path is likely invalid, so we'll consider it not installed.
+					}
+				}
+				return echoVrInstalled ? Visibility.Collapsed : Visibility.Visible;
+			}
+		}
+		
 		#region Settings
 
 		public bool startOnBoot { get; set; } = false;
@@ -23,7 +53,12 @@ namespace Spark
 		public bool discordRichPresenceServerLocation { get; set; } = false;
 		public bool discordRichPresenceSpectator { get; set; } = false;
 		public bool logToServer { get; set; } = false;
-		public string echoVRPath { get; set; } = "";
+		private string _echoVRPath = "";
+		public string echoVRPath
+		{
+			get => _echoVRPath;
+			set => _echoVRPath = value.Trim().Trim('"');
+		}
 		public string echoVRIP { get; set; } = "127.0.0.1";
 		public int echoVRPort { get; set; } = 6721;
 		public bool enableStatsLogging { get; set; } = false;
@@ -32,6 +67,7 @@ namespace Spark
 		public bool uploadToFirestore { get; set; } = true;
 		public bool saveEventsToCSV { get; set; } = false;
 		public bool fetchBones { get; set; } = false;
+		public bool questSpectatorAutoJoin { get; set; } = true;
 
 		/// <summary>
 		/// Enable replay files
@@ -85,6 +121,11 @@ namespace Spark
 		public int atlasHostingVisibility { get; set; } = 0;
 		public int languageIndex { get; set; } = 0;
 		public int theme { get; set; } = 0;
+
+		// Custom theme colours (hex strings, e.g. "#151515")
+		public string customThemeDark  { get; set; } = "#151515";
+		public string customThemeMid   { get; set; } = "#363636";
+		public string customThemeLight { get; set; } = "#3E3E3E";
 		public bool betaUpdates { get; set; } = false;
 		public int dashboardItem1 { get; set; } = 0;
 		public int dashboardJoustTimeOrder { get; set; } = 0;
@@ -113,7 +154,7 @@ namespace Spark
 		public bool useAnonymousSpectateMe { get; set; } = true;
 		public bool spectateMeOnByDefault { get; set; } = false;
 
-		public Dictionary<string, bool> autoUploadProfiles { get; } = new Dictionary<string, bool>();
+
 
 		#region TTS
 
@@ -134,6 +175,7 @@ namespace Spark
 		public bool playspaceTTS { get; set; } = false;
 		public bool rulesChangedTTS { get; set; } = false;
 		public int ttsVoice { get; set; } = 0;
+		public string ttsCacheFolder { get; set; } = "";
 		public int ttsCacheSizeBytes { get; set; } = 100000000;
 
 		#endregion
@@ -257,7 +299,53 @@ namespace Spark
 			public bool catches { get; set; } = true;
 		}
 
-		#region Overlays
+		#region MediaController
+
+		/// <summary>Whether the EchoVR mute-button media controller is active.</summary>
+		public bool mediaControllerEnabled { get; set; } = false;
+
+		/// <summary>Automatically attempt to reconnect when EchoVR is not found.</summary>
+		public bool mediaControllerAutoReconnect { get; set; } = true;
+
+		/// <summary>Number of clicks to trigger Previous Track.</summary>
+		public int mediaControllerPrevClicks { get; set; } = 3;
+
+		/// <summary>Number of clicks to trigger Next Track.</summary>
+		public int mediaControllerNextClicks { get; set; } = 4;
+
+		/// <summary>Seconds the button must be held to trigger Play/Pause.</summary>
+		public double mediaControllerHoldThreshold { get; set; } = 3.0;
+
+		/// <summary>Time window (seconds) in which multi-clicks are counted.</summary>
+		public double mediaControllerClickTimeout { get; set; } = 0.8;
+
+		/// <summary>Minimum press duration (seconds) to count as a click (debounce).</summary>
+		public double mediaControllerDebounceDelay { get; set; } = 0.05;
+
+		/// <summary>Minimum press duration (seconds) required to register a click at all.</summary>
+		public double mediaControllerDetectionThreshold { get; set; } = 0.1;
+
+		/// <summary>Whether a custom keyboard action is enabled.</summary>
+		public bool mediaControllerCustomEnabled { get; set; } = false;
+
+		/// <summary>Type of trigger for the custom action: 0=None, 1=Hold, 2=Clicks.</summary>
+		public int mediaControllerCustomTrigger { get; set; } = 1;
+
+		/// <summary>Number of clicks to trigger the custom action (if type is Clicks).</summary>
+		public int mediaControllerCustomClicks { get; set; } = 4;
+
+		/// <summary>Primary scancode for the custom action shortcut.</summary>
+		public int mediaControllerCustomKey1 { get; set; } = 0x38; // DIK_LMENU (Alt)
+
+		/// <summary>Secondary scancode for the custom action shortcut.</summary>
+		public int mediaControllerCustomKey2 { get; set; } = 0x44; // DIK_F10
+
+		/// <summary>Seconds the button must be held to trigger the custom action (if type is Hold).</summary>
+		public double mediaControllerCustomHoldThreshold { get; set; } = 2.0;
+
+	#endregion
+
+	#region Overlays
 
 		/// <summary>
 		/// 0 for manual, 1 for vrml api

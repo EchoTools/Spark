@@ -87,6 +87,8 @@ namespace Spark
 
         public static void SetAccessCodeByUsername(string username)
         {
+            if (string.IsNullOrEmpty(username)) return;
+
             foreach (AccessCodeKey key in availableAccessCodes)
             {
                 if (key.username == username)
@@ -100,6 +102,12 @@ namespace Spark
 
         public static void SetAccessCodeByHash(string hash)
         {
+            if (string.IsNullOrEmpty(hash))
+            {
+                RevertToPersonal();
+                return;
+            }
+
             foreach (AccessCodeKey key in availableAccessCodes)
             {
                 if (SecretKeys.Hash(key.series_name) == hash)

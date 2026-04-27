@@ -1,0 +1,65 @@
+<Project Sdk="WixToolset.Sdk/6.0.2">
+	<PropertyGroup>
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+	</PropertyGroup>
+	<PropertyGroup>
+		<Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+		<Name>Spark.Installer</Name>
+		<BindInputPaths>..\publish</BindInputPaths>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+		<DefineConstants>Debug</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup>
+		<Compile Include="Components.wxs" />
+		<Compile Include="Directories.wxs" />
+		<Compile Include="Product.wxs" />
+	</ItemGroup>
+	<ItemGroup>
+		<HarvestDirectory Include="..\publish">
+			<ComponentGroupName>PublishedComponents</ComponentGroupName>
+			<DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+			<SuppressCom>true</SuppressCom>
+			<SuppressFragments>true</SuppressFragments>
+			<SuppressRegistry>true</SuppressRegistry>
+			<SuppressRootDirectory>true</SuppressRootDirectory>
+		</HarvestDirectory>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="WixToolset.Util.wixext" Version="6.0.2" />
+		<PackageReference Include="WixToolset.UI.wixext" Version="6.0.2" />
+		<PackageReference Include="WixToolset.Heat" Version="6.0.2" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Spark.csproj">
+			<Name>Spark</Name>
+			<Project>{f2ea4914-2372-49d5-83cc-a11302747291}</Project>
+			<Private>True</Private>
+			<DoNotHarvest>True</DoNotHarvest>
+			<RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+			<RefTargetDir>INSTALLFOLDER</RefTargetDir>
+		</ProjectReference>
+	</ItemGroup>
+	<PropertyGroup>
+		<InstallerPlatform>x64</InstallerPlatform>
+		<Platform>x64</Platform>
+	</PropertyGroup>
+	<PropertyGroup>
+		<RunWixToolsOutOfProc Condition=" '$(PROCESSOR_ARCHITECTURE)'!='x86' ">true</RunWixToolsOutOfProc>
+	</PropertyGroup>
+	<Target Name="SetBuildVersion" BeforeTargets="BeforeBuild">
+		<GetAssemblyIdentity AssemblyFiles="..\publish\Spark.dll">
+			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
+		</GetAssemblyIdentity>
+		<PropertyGroup>
+			<DefineConstants>$(DefineConstants);BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
+		</PropertyGroup>
+	</Target>
+	<Target Name="AfterBuild">
+		<GetAssemblyIdentity AssemblyFiles="..\publish\Spark.dll">
+			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
+		</GetAssemblyIdentity>
+		<Exec Command="if not exist Installs mkdir Installs" />
+		<Exec Command="move bin\$(Platform)\$(Configuration)\en-us\$(OutputName).msi Installs\SparkInstaller_v%(AssemblyVersion.Version).msi" />
+	</Target>
+</Project>

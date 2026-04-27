@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <root>
     <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
@@ -66,9 +66,9 @@
           xml:space="preserve">
         <value>Use NVIDIA Highlights in Spark to automatically record clips of all your noteworthy moments.</value>
     </data>
-    <data name="Log into Spark with Discord to enable features like uploading stats to metrics.ignitevr.gg and TTS."
+    <data name="Log into Spark with Discord to enable features like TTS."
           xml:space="preserve">
-        <value>Log into Spark with Discord to enable features like uploading stats to metrics.ignitevr.gg and TTS.</value>
+        <value>Log into Spark with Discord to enable features like TTS.</value>
     </data>
 
     <data name="Enable TTS in Spark for events like exact throw speed, joust times, player leave events, and more."
@@ -113,10 +113,7 @@
           xml:space="preserve">
         <value>Use the server score provided by Spark to choose a server that is fair for both teams.</value>
     </data>
-    <data name="You can automatically upload your tablet stats and view them on metrics.ignitevr.gg."
-          xml:space="preserve">
-        <value>You can automatically upload your tablet stats and view them on metrics.ignitevr.gg.</value>
-    </data>
+
     <data name="Ignite Playercards show you bars for your stats with your percentile compared to other players."
           xml:space="preserve">
         <value>Ignite Playercards show you bars for your stats with your percentile compared to other players.</value>
@@ -165,9 +162,7 @@
     <data name="Respect the save!" xml:space="preserve">
         <value>Respect the save!</value>
     </data>
-    <data name="metrics.ignitevr.gg" xml:space="preserve">
-        <value>metrics.ignitevr.gg</value>
-    </data>
+
     <data name="God is my copilot, and RAD_Natalie is my boss." xml:space="preserve">
         <value>God is my copilot, and CHAD_Natalie is my boss.</value>
     </data>
@@ -199,9 +194,7 @@
     <data name="Check out the Replay Viewer. It looks really good now." xml:space="preserve">
         <value>Check out the Replay Viewer. It looks really good now.</value>
     </data>
-    <data name="If you upload your tablet stats through Spark, you can see the day you first played Echo VR" xml:space="preserve">
-        <value>If you upload your tablet stats through Spark, you can see the day you first played Echo VR</value>
-    </data>
+
     <data name="The more you pass, the better you are." xml:space="preserve">
         <value>The more you pass, the better you are.</value>
     </data>

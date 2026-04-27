@@ -9,13 +9,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using Microsoft.WindowsAPICodePack.Dialogs;
+using System.Windows.Media;
 using System.Windows.Navigation;
 using System.Windows.Data;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Net;
 using EchoVRAPI;
+
+
 
 namespace Spark
 {
@@ -27,49 +29,63 @@ namespace Spark
 		// set to false initially so that loading the settings from disk doesn't activate the events
 		private bool initialized;
 
+
+
 		/// <summary>
-		/// Set to true once the opt in status fetched.
+		/// Throttles theme updates during slider dragging to prevent UI lag.
 		/// </summary>
-		private bool optInFound;
+		private readonly System.Windows.Threading.DispatcherTimer _themeDebounceTimer;
 
 
 		public UnifiedSettingsWindow()
 		{
 			InitializeComponent();
+
+			_themeDebounceTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+			_themeDebounceTimer.Tick += (s, ev) =>
+			{
+				_themeDebounceTimer.Stop();
+				ThemesController.ApplyCustomTheme(_themeDark, _themeMid, _themeLight);
+			};
 		}
 
 		private void WindowLoad(object sender, RoutedEventArgs e)
 		{
-			//Initialize();
+			try
+			{
+				//Initialize();
 
-			optInCheckbox.IsEnabled = false;
-			optInStatusLabel.Content = "Fetching opt-in status...";
-			_ = GetOptInStatus();
+
 
 
 #if WINDOWS_STORE_RELEASE
-			enableBetasCheckbox.Visibility = Visibility.Collapsed;
+				enableBetasCheckbox.Visibility = Visibility.Collapsed;
 #endif
 
 
-			ThisPCLocalIP.Text = $"This PC's Local IP: {QuestIPFetching.GetLocalIP()} (for PC-PC Spectate Me)";
+				ThisPCLocalIP.Text = $"This PC's Local IP: {QuestIPFetching.GetLocalIP()} (for PC-PC Spectate Me)";
 
-			CameraModeDropdownChanged(SparkSettings.instance.spectatorCamera);
+				CameraModeDropdownChanged(SparkSettings.instance.spectatorCamera);
 
-			if (SparkSettings.instance.mutePlayerComms)
-			{
-				MutePlayerCommsDropdown.SelectedIndex = 2;
-			}
-			else if (SparkSettings.instance.muteEnemyTeam)
-			{
-				MutePlayerCommsDropdown.SelectedIndex = 1;
-			}
-			else
-			{
-				MutePlayerCommsDropdown.SelectedIndex = 0;
-			}
+				if (SparkSettings.instance.mutePlayerComms)
+				{
+					MutePlayerCommsDropdown.SelectedIndex = 2;
+				}
+				else if (SparkSettings.instance.muteEnemyTeam)
+				{
+					MutePlayerCommsDropdown.SelectedIndex = 1;
+				}
+				else
+				{
+					MutePlayerCommsDropdown.SelectedIndex = 0;
+				}
 
-			initialized = true;
+				initialized = true;
+			}
+			catch (Exception ex)
+			{
+				Logger.LogRow(Logger.LogType.Error, $"Error during settings window load: {ex}");
+			}
 		}
 
 
@@ -152,6 +168,203 @@ namespace Spark
 			}
 		}
 
+		private void OpenQuestSpectatorPopup(object sender, RoutedEventArgs e)
+		{
+			if (!string.IsNullOrEmpty(SparkSettings.instance.followPlayerName))
+			{
+				TargetNameInput.Text = SparkSettings.instance.followPlayerName;
+			}
+			SpectatorNameInput.Text = SparkSettings.instance.client_name ?? "";
+			
+			AutoJoinCheckbox.IsChecked = SparkSettings.instance.questSpectatorAutoJoin;
+			
+			QuestSpectatorPopup.Visibility = Visibility.Visible;
+		}
+
+		private void CloseSpectatorPopup(object sender, RoutedEventArgs e)
+		{
+			QuestSpectatorPopup.Visibility = Visibility.Collapsed;
+		}
+
+private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
+		{
+			string spectatorName = SpectatorNameInput.Text.Trim();
+			string targetName = TargetNameInput.Text.Trim();
+
+			if (string.IsNullOrEmpty(targetName))
+			{
+				new Spark.MessageBox("Please enter the name of the player you want to spectate.", Properties.Resources.Error).Show();
+				return;
+			}
+
+			// 1. Save Settings
+			SparkSettings.instance.followPlayerName = targetName;
+			SparkSettings.instance.client_name = spectatorName;
+			SparkSettings.instance.questSpectatorAutoJoin = AutoJoinCheckbox.IsChecked == true;
+			SparkSettings.instance.Save();
+
+			// 2. Set Camera Mode to 'Follow specific player' (Index 3)
+			SparkSettings.instance.spectatorCamera = 3;
+			CameraModeDropdownChanged(3);
+
+			// 3. Hide Popup
+			QuestSpectatorPopup.Visibility = Visibility.Collapsed;
+
+			// 4. Async Launch & Monitor
+			Task.Run(async () =>
+			{
+				// --- PHASE 1: INITIAL LAUNCH ---
+				// Try to find them immediately to generate Launch Arguments
+				string initialLobbyId = "";
+				Logger.LogRow(Logger.LogType.Info, $"Quest Spectator: Initial check for '{targetName}'...");
+				
+				try 
+				{
+					using (WebClient client = new WebClient()) 
+					{
+						string json = await client.DownloadStringTaskAsync("https://g.echovrce.com/status/matches");
+						JObject data = JObject.Parse(json);
+						JArray labels = (JArray)data["labels"];
+						if (labels != null) 
+						{
+							foreach (var server in labels) 
+							{
+								var players = server["players"] as JArray;
+								if (players != null && players.Any(p => string.Equals((string)p["display_name"], targetName, StringComparison.OrdinalIgnoreCase))) 
+								{
+									initialLobbyId = (string)server["id"];
+									break;
+								}
+							}
+						}
+					}
+				} 
+				catch (Exception) { /* Ignore initial error */ }
+
+				string args = "-spectatorstream";
+				if (SparkSettings.instance.spectatorStreamNoOVR) args += " -noovr";
+				if (!string.IsNullOrEmpty(initialLobbyId)) args += $" -lobbyid {initialLobbyId}";
+
+				if (File.Exists(SparkSettings.instance.echoVRPath)) 
+				{
+					try 
+					{ 
+						Process.Start(SparkSettings.instance.echoVRPath, args); 
+					}
+					catch (Exception ex) 
+					{ 
+						Logger.LogRow(Logger.LogType.Error, $"Error launching Echo VR: {ex.Message}"); 
+						return; 
+					}
+				} 
+				else 
+				{
+					Logger.LogRow(Logger.LogType.Error, "Echo VR executable not found.");
+					return;
+				}
+
+				// --- PHASE 2: MONITOR LOOP ---
+				if (SparkSettings.instance.questSpectatorAutoJoin)
+				{
+					string lastAttemptedSessionId = initialLobbyId;
+
+					using (WebClient client = new WebClient())
+					{
+						while (Program.running)
+						{
+							try
+							{
+								// STEP 1: Check Local State (Are we already with the player?)
+								bool targetInLocalMatch = false;
+								if (Program.lastFrame != null && !string.IsNullOrEmpty(Program.lastFrame.sessionid))
+								{
+									// Check if the target is in our current player list
+									var allPlayers = Program.lastFrame.GetAllPlayers();
+									if (allPlayers.Any(p => string.Equals(p.name, targetName, StringComparison.OrdinalIgnoreCase)))
+									{
+										targetInLocalMatch = true;
+									}
+								}
+
+								// IF FOUND LOCALLY: Do nothing, just wait. We are where we want to be.
+								if (targetInLocalMatch)
+								{
+									// Clear the last attempted ID so if they leave and rejoin the same server, we can follow.
+									lastAttemptedSessionId = ""; 
+									await Task.Delay(3000);
+									continue; 
+								}
+
+								// STEP 2: Target NOT in local match. Search API.
+								// We only query the API if the player is missing locally.
+								
+								string json = await client.DownloadStringTaskAsync("https://g.echovrce.com/status/matches");
+								JObject data = JObject.Parse(json);
+								JArray labels = (JArray)data["labels"];
+								
+								if (labels != null)
+								{
+									foreach (var server in labels)
+									{
+										var players = server["players"] as JArray;
+										if (players != null)
+										{
+											bool targetHere = false;
+											bool spectatorHere = false;
+
+											foreach (var p in players)
+											{
+												string pName = (string)p["display_name"];
+												if (string.Equals(pName, targetName, StringComparison.OrdinalIgnoreCase)) targetHere = true;
+												if (string.Equals(pName, spectatorName, StringComparison.OrdinalIgnoreCase)) spectatorHere = true;
+											}
+
+											if (targetHere)
+											{
+												string serverId = (string)server["id"];
+
+												// JOIN CRITERIA:
+												// 1. We aren't already trying to join this specific server (Loop protection)
+												// 2. The API doesn't see us inside that server already (Safeguard)
+												// 3. Our local game isn't already in that session (Double check)
+												
+												if (serverId != lastAttemptedSessionId && !spectatorHere)
+												{
+													if (Program.lastFrame == null || Program.lastFrame.sessionid != serverId)
+													{
+														Logger.LogRow(Logger.LogType.Info, $"Quest Spectator: Found {targetName} in {serverId}. Joining...");
+														
+														lastAttemptedSessionId = serverId;
+														await Program.APIJoin(serverId);
+
+														// Wait for join to process
+														await Task.Delay(5000);
+														
+														// Force Camera Lock
+														Application.Current.Dispatcher.Invoke(() => {
+															CameraWriteController.UseCameraControlKeys();
+														});
+													}
+												}
+												break; // Found them, stop checking other servers
+											}
+										}
+									}
+								}
+								// If target not found in API, we simply loop again. We stay in the current match (if any).
+							}
+							catch (Exception ex)
+							{
+								Console.WriteLine($"Quest Spectator Loop Error: {ex.Message}");
+							}
+
+							await Task.Delay(3000);
+						}
+					}
+				}
+			});
+		}
+		
 		private async void FindQuestClick(object sender, RoutedEventArgs e)
 		{
 			if (!initialized) return;
@@ -240,75 +453,7 @@ namespace Spark
 			}
 		}
 
-		private async Task GetOptInStatus()
-		{
-			if (string.IsNullOrEmpty(SparkSettings.instance.client_name))
-			{
-				optInFound = true;
-				optInCheckbox.IsEnabled = false;
-				optInStatusLabel.Content = "Run the game once to find your Oculus name.";
-				return;
-			}
 
-			if (DiscordOAuth.oauthToken == string.Empty)
-			{
-				optInFound = true;
-				optInCheckbox.IsEnabled = false;
-				optInStatusLabel.Content = "Log into Discord to be able to opt in.";
-				return;
-			}
-
-			try
-			{
-				string resp = await FetchUtils.GetRequestAsync(
-					$"{Program.APIURL}/optin/get/{SparkSettings.instance.client_name}",
-					new Dictionary<string, string> { { "x-api-key", DiscordOAuth.igniteUploadKey } });
-
-				JToken objResp = JsonConvert.DeserializeObject<JToken>(resp);
-				if (objResp?["opted_in"] != null)
-				{
-					optInCheckbox.IsChecked = (bool)objResp["opted_in"];
-				}
-				else
-				{
-					Logger.LogRow(Logger.LogType.Error, $"Couldn't get opt-in status.");
-					optInStatusLabel.Content = "Failed to get opt-in status. Response invalid.";
-				}
-			}
-			catch (Exception e)
-			{
-				Logger.LogRow(Logger.LogType.Error, $"Couldn't get opt-in status.\n{e}");
-				optInStatusLabel.Content = "Failed to get opt-in status.";
-			}
-
-			optInFound = true;
-			optInCheckbox.IsEnabled = true;
-			optInStatusLabel.Content = $"Oculus Username: {SparkSettings.instance.client_name}";
-		}
-
-		private void OptIn(object sender, RoutedEventArgs e)
-		{
-			if (!optInFound) return;
-
-			FetchUtils.PostRequestCallback(
-				$"{Program.APIURL}/optin/set/{SparkSettings.instance.client_name}/{((CheckBox)sender).IsChecked}",
-				new Dictionary<string, string>
-				{
-					{ "x-api-key", DiscordOAuth.igniteUploadKey }, { "token", DiscordOAuth.oauthToken }
-				},
-				string.Empty,
-				(resp) =>
-				{
-					if (resp.Contains("opted in"))
-					{
-						optInCheckbox.IsChecked = true;
-					}
-					else if (resp.Contains("opted normal"))
-					{
-						optInCheckbox.IsChecked = false;
-					}
-				});
-		}
 
 		#endregion
 
@@ -337,14 +482,13 @@ namespace Spark
 		{
 			if (!initialized) return;
 			string selectedPath = "";
-			CommonOpenFileDialog folderBrowserDialog = new CommonOpenFileDialog
+			OpenFolderDialog folderBrowserDialog = new OpenFolderDialog
 			{
-				InitialDirectory = SparkSettings.instance.saveFolder,
-				IsFolderPicker = true
+				InitialDirectory = SparkSettings.instance.saveFolder
 			};
-			if (folderBrowserDialog.ShowDialog() == CommonFileDialogResult.Ok)
+			if (folderBrowserDialog.ShowDialog() == true)
 			{
-				selectedPath = folderBrowserDialog.FileName;
+				selectedPath = folderBrowserDialog.FolderName;
 			}
 
 			if (selectedPath != "")
@@ -746,15 +890,7 @@ namespace Spark
 			CameraWriteController.SetNameplatesVisibility(HideNameplatesCheckbox.IsChecked != true);
 		}
 
-		private void UploadTabletStats(object sender, RoutedEventArgs e)
-		{
-			List<TabletStats> stats = Program.FindTabletStats();
 
-			if (stats != null)
-			{
-				new UploadTabletStatsMenu(stats) { Owner = this }.Show();
-			}
-		}
 
 		private void ResetAllSettings(object sender, RoutedEventArgs e)
 		{
@@ -792,6 +928,26 @@ namespace Spark
 		private void ClearTTSCacheButton(object sender, RoutedEventArgs e)
 		{
 			TTSController.ClearCacheFolder();
+		}
+
+		private void ChangeTTSCacheFolderButton_Click(object sender, RoutedEventArgs e)
+		{
+			if (!initialized) return;
+			string selectedPath = "";
+			OpenFolderDialog folderBrowserDialog = new OpenFolderDialog
+			{
+				InitialDirectory = TTSController.CacheFolder
+			};
+			if (folderBrowserDialog.ShowDialog() == true)
+			{
+				selectedPath = folderBrowserDialog.FolderName;
+			}
+
+			if (selectedPath != "")
+			{
+				SparkSettings.instance.ttsCacheFolder = selectedPath;
+				RefreshAllSettings(sender, null);
+			}
 		}
 
 		private void OpenTTSCacheButton(object sender, RoutedEventArgs e)
@@ -919,9 +1075,239 @@ namespace Spark
 		{
 			Program.synth.SpeakAsync("THIS IS A TEST SOUND!");
 		}
+
+		#region Change Theme
+
+		// Tracks whether we're currently programmatically updating sliders/hex boxes
+		// (to avoid feedback loops between TextChanged and Slider.ValueChanged)
+		private bool _themeUpdating;
+
+		// The 3 working colours
+		private Color _themeDark;
+		private Color _themeMid;
+		private Color _themeLight;
+
+		private void ChangeThemeTab_Loaded(object sender, RoutedEventArgs e)
+		{
+			LoadThemeFromSettings();
+		}
+
+		private void LoadThemeFromSettings()
+		{
+			_themeDark  = ThemesController.ParseHex(SparkSettings.instance?.customThemeDark  ?? "#151515");
+			_themeMid   = ThemesController.ParseHex(SparkSettings.instance?.customThemeMid   ?? "#363636");
+			_themeLight = ThemesController.ParseHex(SparkSettings.instance?.customThemeLight ?? "#3E3E3E");
+			SyncUIFromColors();
+		}
+
+		private void SyncUIFromColors()
+		{
+			// Crash Fix: Check if UI controls are ready before syncing.
+			// This happens if the settings window is loaded but the theme tab hasn't been visited yet.
+			if (DarkPreviewRect == null || DarkHexBox == null || DarkHueSlider == null) return;
+
+			_themeUpdating = true;
+			SyncColorToUI(DarkPreviewRect,  DarkHexBox,  DarkHueSlider,  DarkSatSlider,  DarkValSlider,  _themeDark);
+			SyncColorToUI(MidPreviewRect,   MidHexBox,   MidHueSlider,   MidSatSlider,   MidValSlider,   _themeMid);
+			SyncColorToUI(LightPreviewRect, LightHexBox, LightHueSlider, LightSatSlider, LightValSlider, _themeLight);
+			_themeUpdating = false;
+		}
+
+		private static void SyncColorToUI(System.Windows.Shapes.Rectangle preview,
+			                               TextBox hexBox,
+			                               Slider hue, Slider sat, Slider val,
+			                               Color color)
+		{
+			if (preview == null || hexBox == null || hue == null || sat == null || val == null) return;
+			preview.Fill = new SolidColorBrush(color);
+			hexBox.Text = ThemesController.ColorToHex(color);
+			ColorToHsv(color, out double h, out double s, out double v);
+			hue.Value = h;
+			sat.Value = s;
+			val.Value = v;
+		}
+
+		// ─── Dark sliders ───────────────────────────────────────────────────────
+		private void DarkSlider_Changed(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)
+		{
+			if (_themeUpdating || DarkHueSlider == null) return;
+			_themeDark = HsvToColor(DarkHueSlider.Value, DarkSatSlider.Value, DarkValSlider.Value);
+			_themeUpdating = true;
+			DarkPreviewRect.Fill = new SolidColorBrush(_themeDark);
+			DarkHexBox.Text = ThemesController.ColorToHex(_themeDark);
+			_themeUpdating = false;
+			_themeDebounceTimer.Stop();
+			_themeDebounceTimer.Start();
+		}
+
+		private void DarkHexBox_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			if (_themeUpdating || DarkHexBox == null) return;
+			if (!TryParseHexBox(DarkHexBox.Text, out Color c)) return;
+			_themeDark = c;
+			_themeUpdating = true;
+			DarkPreviewRect.Fill = new SolidColorBrush(c);
+			ColorToHsv(c, out double h, out double s, out double v);
+			DarkHueSlider.Value = h; DarkSatSlider.Value = s; DarkValSlider.Value = v;
+			_themeUpdating = false;
+			ThemesController.ApplyCustomTheme(_themeDark, _themeMid, _themeLight);
+		}
+
+		// ─── Mid sliders ────────────────────────────────────────────────────────
+		private void MidSlider_Changed(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)
+		{
+			if (_themeUpdating || MidHueSlider == null) return;
+			_themeMid = HsvToColor(MidHueSlider.Value, MidSatSlider.Value, MidValSlider.Value);
+			_themeUpdating = true;
+			MidPreviewRect.Fill = new SolidColorBrush(_themeMid);
+			MidHexBox.Text = ThemesController.ColorToHex(_themeMid);
+			_themeUpdating = false;
+			_themeDebounceTimer.Stop();
+			_themeDebounceTimer.Start();
+		}
+
+		private void MidHexBox_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			if (_themeUpdating || MidHexBox == null) return;
+			if (!TryParseHexBox(MidHexBox.Text, out Color c)) return;
+			_themeMid = c;
+			_themeUpdating = true;
+			MidPreviewRect.Fill = new SolidColorBrush(c);
+			ColorToHsv(c, out double h, out double s, out double v);
+			MidHueSlider.Value = h; MidSatSlider.Value = s; MidValSlider.Value = v;
+			_themeUpdating = false;
+			ThemesController.ApplyCustomTheme(_themeDark, _themeMid, _themeLight);
+		}
+
+		// ─── Light sliders ──────────────────────────────────────────────────────
+		private void LightSlider_Changed(object sender, System.Windows.RoutedPropertyChangedEventArgs<double> e)
+		{
+			if (_themeUpdating || LightHueSlider == null) return;
+			_themeLight = HsvToColor(LightHueSlider.Value, LightSatSlider.Value, LightValSlider.Value);
+			_themeUpdating = true;
+			LightPreviewRect.Fill = new SolidColorBrush(_themeLight);
+			LightHexBox.Text = ThemesController.ColorToHex(_themeLight);
+			_themeUpdating = false;
+			_themeDebounceTimer.Stop();
+			_themeDebounceTimer.Start();
+		}
+
+		private void LightHexBox_TextChanged(object sender, TextChangedEventArgs e)
+		{
+			if (_themeUpdating || LightHexBox == null) return;
+			if (!TryParseHexBox(LightHexBox.Text, out Color c)) return;
+			_themeLight = c;
+			_themeUpdating = true;
+			LightPreviewRect.Fill = new SolidColorBrush(c);
+			ColorToHsv(c, out double h, out double s, out double v);
+			LightHueSlider.Value = h; LightSatSlider.Value = s; LightValSlider.Value = v;
+			_themeUpdating = false;
+			ThemesController.ApplyCustomTheme(_themeDark, _themeMid, _themeLight);
+		}
+
+		// ─── Presets ────────────────────────────────────────────────────────────
+		private void ApplyPreset(string dark, string mid, string light)
+		{
+			_themeDark  = ThemesController.ParseHex(dark);
+			_themeMid   = ThemesController.ParseHex(mid);
+			_themeLight = ThemesController.ParseHex(light);
+			SyncUIFromColors();
+			ThemesController.ApplyCustomTheme(_themeDark, _themeMid, _themeLight);
+		}
+
+		private void PresetBlack_Click     (object s, RoutedEventArgs e) => ApplyPreset("#000000", "#141414", "#363636");
+		private void PresetBlue_Click      (object s, RoutedEventArgs e) => ApplyPreset("#4040ff", "#5b5bff", "#9d9dff");
+		private void PresetCoolPurple_Click(object s, RoutedEventArgs e) => ApplyPreset("#c76fdd", "#ce82e1", "#e3b9ee");
+		private void PresetDarkRed_Click   (object s, RoutedEventArgs e) => ApplyPreset("#4a0002", "#820003", "#ff0d13");
+		private void PresetGreen_Click     (object s, RoutedEventArgs e) => ApplyPreset("#006400", "#008000", "#00e800");
+		private void PresetHotPink_Click   (object s, RoutedEventArgs e) => ApplyPreset("#fe63d8", "#fe81df", "#ffbfef");
+		private void PresetPurple_Click    (object s, RoutedEventArgs e) => ApplyPreset("#690f96", "#8a14c2", "#d213bb");
+		private void PresetRed_Click       (object s, RoutedEventArgs e) => ApplyPreset("#b70004", "#df0005", "#ff7174");
+		private void PresetYellow_Click    (object s, RoutedEventArgs e) => ApplyPreset("#fab011", "#fcc520", "#fcde64");
+		private void PresetPink_Click      (object s, RoutedEventArgs e) => ApplyPreset("#c32b61", "#ea6192", "#ffaac9");
+
+		// ─── Apply / Reset ──────────────────────────────────────────────────────
+		private void ApplyTheme_Click(object sender, RoutedEventArgs e)
+		{
+			ThemesController.SaveAndApply(_themeDark, _themeMid, _themeLight);
+		}
+
+		private void ResetTheme_Click(object sender, RoutedEventArgs e)
+		{
+			// Reset to Spark Stealth Gray (Default)
+			ApplyPreset("#151515", "#363636", "#3E3E3E");
+			ThemesController.SaveAndApply(_themeDark, _themeMid, _themeLight);
+		}
+
+		// ─── Helpers ────────────────────────────────────────────────────────────
+		private static bool TryParseHexBox(string text, out Color color)
+		{
+			color = default;
+			string t = text?.TrimStart('#') ?? "";
+			if (t.Length != 6) return false;
+			try { color = ThemesController.ParseHex("#" + t); return true; }
+			catch { return false; }
+		}
+
+		private static Color HsvToColor(double hue, double sat, double val)
+		{
+			hue = hue % 360.0;
+			if (hue < 0) hue += 360.0;
+			if (sat < 0) sat = 0; if (sat > 1) sat = 1;
+			if (val < 0) val = 0; if (val > 1) val = 1;
+
+			if (sat == 0)
+			{
+				byte c = (byte)(val * 255);
+				return Color.FromRgb(c, c, c);
+			}
+
+			double h = hue / 60.0;
+			int i = (int)Math.Floor(h);
+			double f = h - i;
+			double p = val * (1 - sat);
+			double q = val * (1 - sat * f);
+			double t2 = val * (1 - sat * (1 - f));
+
+			double r, g, b;
+			switch (i % 6)
+			{
+				case 0: r = val; g = t2;  b = p;   break;
+				case 1: r = q;   g = val; b = p;   break;
+				case 2: r = p;   g = val; b = t2;  break;
+				case 3: r = p;   g = q;   b = val; break;
+				case 4: r = t2;  g = p;   b = val; break;
+				default: r = val; g = p;  b = q;   break;
+			}
+
+			return Color.FromRgb((byte)(r * 255), (byte)(g * 255), (byte)(b * 255));
+		}
+
+		private static void ColorToHsv(Color color, out double hue, out double sat, out double val)
+		{
+			double r = color.R / 255.0;
+			double g = color.G / 255.0;
+			double b = color.B / 255.0;
+			double max = Math.Max(r, Math.Max(g, b));
+			double min = Math.Min(r, Math.Min(g, b));
+			double delta = max - min;
+
+			val = max;
+			sat = max == 0 ? 0 : delta / max;
+
+			if (delta == 0) { hue = 0; return; }
+
+			if (max == r)      hue = 60 * (((g - b) / delta) % 6);
+			else if (max == g) hue = 60 * (((b - r) / delta) + 2);
+			else               hue = 60 * (((r - g) / delta) + 4);
+
+			if (hue < 0) hue += 360;
+		}
+
+		#endregion
 	}
 
-
+	
 	public class SettingBindingExtension : Binding
 	{
 		public SettingBindingExtension()
