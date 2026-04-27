@@ -9,7 +9,13 @@ Modified fork of Spark with extra features and bug fixes, new features include
 - Added PlayerStats And Leaderboard
 - Ability To Update In Spark
 - Different Colour Themes In Settings
-  
+- Added friebds tab
+- Reworked UI
+- Update option within settings tab
+- PlayerCard tab so you can make your own playercards
+- EchoVRCE Portal tab
+- Media Controller and New clipping option using in game "A" button
+
 Installation instructions:  
 https://echopedia.gg/wiki/Spark
 
