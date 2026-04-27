@@ -153,7 +153,7 @@ namespace Spark
             {
                 while (isRunning)
                 {
-                    await Task.Delay(20000);
+                    await Task.Delay(2000);
                     try { await PollFriends(); } catch { }
                 }
             });

@@ -655,9 +655,9 @@ namespace Spark
 
 		private static void OnLeftGame(Frame obj)
 		{
-			// Tell the Friends bot the user went offline
-			try { _ = FriendsTab.PushOffline(); }
-			catch (Exception e) { Console.WriteLine("Friends offline push error: " + e.Message); }
+			// Tell the Friends bot the user is now in the menu/transitioning
+			try { _ = FriendsTab.PushLobbyUpdate(null, null, "In Menu"); }
+			catch (Exception e) { Console.WriteLine("Friends menu push error: " + e.Message); }
 		}
 
 
@@ -892,6 +892,22 @@ namespace Spark
 				catch (Exception ex)
 				{
 					LogRow(LogType.Error, $"Error in fetch request.\n{ex}");
+				}
+
+				if (connectionState != lastConnectionState)
+				{
+					switch (connectionState)
+					{
+						case ConnectionState.Menu:
+							_ = FriendsTab.PushLobbyUpdate(null, null, "In Menu");
+							break;
+						case ConnectionState.InLobby:
+							_ = FriendsTab.PushLobbyUpdate(null, null, "In Lobby");
+							break;
+						case ConnectionState.NotConnected:
+							_ = FriendsTab.PushOffline();
+							break;
+					}
 				}
 
 				lastConnectionState = connectionState;
@@ -3747,6 +3763,7 @@ namespace Spark
 			running = false;
 			
 			SparkClosing?.Invoke();
+			try { _ = FriendsTab.PushOffline(); } catch { }
 			SparkSettings.instance.Save();
 			
 			if (closingWindow != null)
