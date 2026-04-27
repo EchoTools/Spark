@@ -125,6 +125,26 @@
 						          VerticalAlignment="Stretch" Margin="10,4,10,4" />
 						<CheckBox x:Name="enableAutoFocusCheckbox" Content="{x:Static p:Resources.Autofocus_EchoVR}" Margin="10,4,10,4" IsChecked="{l:SettingBinding isAutofocusEnabled}" ToolTip="{x:Static p:Resources.enableAutoFocusCheckbox_ToolTip}"/>
 						
+						<TextBlock Margin="0,10,0,0">Dashboard Tabs (Visible tabs on the main screen)</TextBlock>
+						<Separator/>
+						<WrapPanel Orientation="Horizontal" Margin="10,4,10,4">
+							<CheckBox Content="Dashboard" IsChecked="{l:SettingBinding showDashboardTab}" Margin="0,0,15,5" />
+							<CheckBox Content="Portal" IsChecked="{l:SettingBinding showPortalTab}" Margin="0,0,15,5" />
+							<CheckBox Content="Web Browser" IsChecked="{l:SettingBinding showWebBrowserTab}" Margin="0,0,15,5" />
+							<CheckBox Content="Download EchoVR" IsChecked="{l:SettingBinding showDownloadEchoVRTab}" Margin="0,0,15,5" />
+							<CheckBox Content="Atlas" IsChecked="{l:SettingBinding showLinksTab}" Margin="0,0,15,5" />
+							<CheckBox Content="Event Log" IsChecked="{l:SettingBinding showEventLogTab}" Margin="0,0,15,5" />
+							<CheckBox Content="Scoreboard" IsChecked="{l:SettingBinding showScoreboardTab}" Margin="0,0,15,5" />
+							<CheckBox Content="Speaker System" IsChecked="{l:SettingBinding showSpeakerSystemTab}" Margin="0,0,15,5" />
+							<CheckBox Content="Server Info" IsChecked="{l:SettingBinding showServerInfoTab}" Margin="0,0,15,5" />
+							<CheckBox Content="Camera Write" IsChecked="{l:SettingBinding showWriteAPITab}" Margin="0,0,15,5" />
+							<CheckBox Content="Echo GP" IsChecked="{l:SettingBinding showEchoGPTab}" Margin="0,0,15,5" />
+							<CheckBox Content="Match Rules" IsChecked="{l:SettingBinding showPrivateMatchRulesTab}" Margin="0,0,15,5" />
+							<CheckBox Content="Choose Server" IsChecked="{l:SettingBinding showCreateServerTab}" Margin="0,0,15,5" />
+							<CheckBox Content="PlayerCard" IsChecked="{l:SettingBinding showPlayerCardTab}" Margin="0,0,15,5" />
+							<CheckBox Content="Friends" IsChecked="{l:SettingBinding showFriendsTab}" Margin="0,0,15,5" />
+						</WrapPanel>
+
 						<TextBlock Margin="0,10,0,0">Spectatorstream (Spectates highest level public match)</TextBlock>
 						<Separator/>
 						<!-- <CheckBox Content="{x:Static p:Resources.Spectatorstream_opens_Echo_Combat}" Margin="10,4,10,4" IsChecked="{l:SettingBinding spectatorStreamCombat}" ToolTip="The Open Spectatatorstream button opens Echo Combat instead."/> -->
