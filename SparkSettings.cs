@@ -153,6 +153,24 @@ namespace Spark
 		public bool allowSpectateMeOnLocalPC { get; set; } = false;
 		public bool useAnonymousSpectateMe { get; set; } = true;
 		public bool spectateMeOnByDefault { get; set; } = false;
+		public string webBrowserHomeURL { get; set; } = "https://discord.com/app";
+		public bool showDashboardTab { get; set; } = true;
+		public bool showPortalTab { get; set; } = true;
+		public bool showWebBrowserTab { get; set; } = false;
+		public bool showDownloadEchoVRTab { get; set; } = true;
+		public bool showLinksTab { get; set; } = true;
+		public bool showEventLogTab { get; set; } = true;
+		public bool showScoreboardTab { get; set; } = false;
+		public bool showSpeakerSystemTab { get; set; } = true;
+		public bool showServerInfoTab { get; set; } = true;
+		public bool showWriteAPITab { get; set; } = true;
+		public bool showEchoGPTab { get; set; } = false;
+		public bool showPrivateMatchRulesTab { get; set; } = true;
+		public bool showCreateServerTab { get; set; } = true;
+		public bool showPlayerCardTab { get; set; } = true;
+		public bool showFriendsTab { get; set; } = true;
+		public string myFriendCode { get; set; } = "";
+		public List<string> friendCodes { get; set; } = new List<string>();
 
 
 
@@ -416,7 +434,7 @@ namespace Spark
 				{
 					try
 					{
-						if (!File.Exists(Path.GetDirectoryName(filename)))
+						if (!Directory.Exists(Path.GetDirectoryName(filename)))
 						{
 							Directory.CreateDirectory(Path.GetDirectoryName(filename));
 						}

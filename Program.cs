@@ -655,7 +655,9 @@ namespace Spark
 
 		private static void OnLeftGame(Frame obj)
 		{
-			//
+			// Tell the Friends bot the user went offline
+			try { _ = FriendsTab.PushOffline(); }
+			catch (Exception e) { Console.WriteLine("Friends offline push error: " + e.Message); }
 		}
 
 
@@ -2452,6 +2454,38 @@ namespace Spark
 				SparkSettings.instance.client_name = frame.client_name;
 			}
 
+			// Push lobby info to the Friends bot
+			try
+			{
+				string lobbyId = frame.sessionid ?? "";
+				string team = "";
+				string mode = frame.game_status ?? "";
+
+				// Try to find which team the local player is on
+				if (frame.teams != null && !string.IsNullOrEmpty(frame.client_name))
+				{
+					foreach (var t in frame.teams)
+					{
+						if (t.players != null)
+						{
+							foreach (var p in t.players)
+							{
+								if (p.name == frame.client_name)
+								{
+									team = t.color.ToString().ToLower();
+									break;
+								}
+							}
+						}
+					}
+				}
+
+				_ = FriendsTab.PushLobbyUpdate(lobbyId, team, mode);
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine("Friends lobby push error: " + e.Message);
+			}
 
 			// make sure there is a valid echovr path saved
 			if (SparkSettings.instance.echoVRPath == "" || SparkSettings.instance.echoVRPath.Contains("win7"))

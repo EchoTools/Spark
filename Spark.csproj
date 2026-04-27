@@ -8,7 +8,7 @@
 		<StartupObject>Spark.App</StartupObject>
     <ApplicationIcon>img\ignite_logo.ico</ApplicationIcon>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <Version>3.0.4</Version>
+    <Version>3.0.5</Version>
     <PackageProjectUrl>https://www.ignitevr.gg/spark</PackageProjectUrl>
     <Company>IgniteVR</Company>
     <Authors>NtsFranz, VTSxKING, iblowatsports</Authors>
@@ -19,7 +19,7 @@
     <AssemblyName>Spark</AssemblyName>
     <RootNamespace>Spark</RootNamespace>
     <LangVersion>14</LangVersion>
-    <PackageVersion>3.0.4</PackageVersion>
+    <PackageVersion>3.0.5</PackageVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -175,6 +175,24 @@
     <Compile Update="Windows\LiveWindow\CreatePlayerCardTab.xaml.cs">
       <SubType>Code</SubType>
       <DependentUpon>CreatePlayerCardTab.xaml</DependentUpon>
+    </Compile>
+    <Page Update="Windows\LiveWindow\WebBrowserTab.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <XamlRuntime>Wpf</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Update="Windows\LiveWindow\WebBrowserTab.xaml.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>WebBrowserTab.xaml</DependentUpon>
+    </Compile>
+    <Page Update="Windows\LiveWindow\FriendsTab.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <XamlRuntime>Wpf</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Update="Windows\LiveWindow\FriendsTab.xaml.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>FriendsTab.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
 
