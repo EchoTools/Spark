@@ -168,9 +168,10 @@ namespace Spark
 		public bool showPrivateMatchRulesTab { get; set; } = true;
 		public bool showCreateServerTab { get; set; } = true;
 		public bool showPlayerCardTab { get; set; } = true;
-		public bool showFriendsTab { get; set; } = true;
+		public bool showFriendsTab { get; set; } = false;
 		public string myFriendCode { get; set; } = "";
 		public List<string> friendCodes { get; set; } = new List<string>();
+		public string ignoredUpdateVersion { get; set; } = "";
 
 
 

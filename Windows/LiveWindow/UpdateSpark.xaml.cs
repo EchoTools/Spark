@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
+using System.Net;
 using System.Windows;
 using System.Windows.Controls;
 using System.Diagnostics;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
@@ -17,8 +15,6 @@ namespace Spark
 {
     public partial class UpdateSparkControl : UserControl
     {
-        private static readonly HttpClient _httpClient = new HttpClient();
-
         private string _latestVersion = "";
         private string _currentVersion = "";
         private string _tempFolder = "";
@@ -36,10 +32,6 @@ namespace Spark
         public UpdateSparkControl()
         {
             InitializeComponent();
-
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Spark-Updater");
-            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-
             Loaded += OnLoaded;
             ColorVersionDropdown.SelectionChanged += ColorVersionDropdown_SelectionChanged;
         }
@@ -63,66 +55,76 @@ namespace Spark
 
         private string GetCurrentVersion()
         {
-            Version version = Assembly.GetExecutingAssembly().GetName().Version;
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
             return $"{version.Major}.{version.Minor}.{version.Build}";
         }
 
-        private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
+private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
+{
+    CheckUpdateButton.IsEnabled = false;
+    StatusText.Text = "Checking for updates...";
+    UpdateDetailsText.Text += $"[{DateTime.Now}] Checking for updates...\n";
+
+    try
+    {
+        using (var client = new WebClient())
         {
-            CheckUpdateButton.IsEnabled = false;
-            StatusText.Text = "Checking for updates...";
-            UpdateDetailsText.Text += $"[{DateTime.Now}] Checking for updates...\n";
+            client.Headers.Add("User-Agent", "Spark-Updater");
+            client.Headers.Add("Accept", "application/vnd.github.v3+json");
 
-            try
+            // URL for the specific 'ignore' tag
+            string latestReleaseUrl = "https://api.github.com/repos/heisthecat31/Spark/releases/tags/ignore";
+            
+            // Download the JSON
+            string json = await client.DownloadStringTaskAsync(latestReleaseUrl);
+
+            // 1. CREATE the 'release' variable here
+            var release = JObject.Parse(json);
+            
+            // 2. NOW you can use it. 
+            // We try to grab the "name" (Release Title) first.
+            string titleName = release["name"]?.ToString();
+            
+            // If the title is empty, we fall back to the "tag_name"
+            if (string.IsNullOrWhiteSpace(titleName))
             {
-                // URL for the specific tag 'ignore' tag, download it
-                string json = await _httpClient.GetStringAsync("https://api.github.com/repos/heisthecat31/Spark/releases/tags/ignore");
-
-                // CREATE the 'release' variable here
-                JObject release = JObject.Parse(json);
-
-                string titleName = release["name"]?.ToString();
-                // If the title is empty, we fall back to the "tag_name"
-                if (string.IsNullOrWhiteSpace(titleName))
-                {
-                    titleName = release["tag_name"]?.ToString();
-                }
-
-                // Remove 'v' prefix if it exists (just in case)
-                _latestVersion = titleName?.TrimStart('v') ?? "Unknown";
-                LatestVersionText.Text = _latestVersion;
-                StatusText.Text = $"Version found: {_latestVersion}";
-
-                string releaseNotes = release["body"]?.ToString();
-                UpdateDetailsText.Text += $"[{DateTime.Now}] Update found: {_latestVersion}\n";
-
-                if (!string.IsNullOrEmpty(releaseNotes))
-                {
-                    UpdateDetailsText.Text += $"Release Notes:\n{releaseNotes}\n";
-                }
-
-                await LoadAvailableVersions(release);
+                titleName = release["tag_name"]?.ToString();
             }
-            catch (HttpRequestException ex) when (ex.Message.Contains("404"))
+
+            // Remove 'v' prefix if it exists (just in case)
+            _latestVersion = titleName?.TrimStart('v') ?? "Unknown";
+
+            LatestVersionText.Text = _latestVersion;
+            StatusText.Text = $"Version found: {_latestVersion}";
+
+            string releaseNotes = release["body"]?.ToString();
+            UpdateDetailsText.Text += $"[{DateTime.Now}] Update found: {_latestVersion}\n";
+
+            if (!string.IsNullOrEmpty(releaseNotes))
             {
-        StatusText.Text = "Error: Tag not found or API error.";
-                UpdateDetailsText.Text += $"[{DateTime.Now}] Error: {ex.Message}\n";
-                UpdateDetailsText.Text += "Tip: Check that the tag 'ignore' exists in your GitHub Releases.\n";
-                ColorVersionDropdown.IsEnabled = false;
-                DownloadUpdateButton.IsEnabled = false;
+                UpdateDetailsText.Text += $"Release Notes:\n{releaseNotes}\n";
             }
-            catch (Exception ex)
-            {
-                StatusText.Text = "Error checking for updates.";
-                UpdateDetailsText.Text += $"[{DateTime.Now}] Error: {ex.Message}\n";
-                ColorVersionDropdown.IsEnabled = false;
-                DownloadUpdateButton.IsEnabled = false;
-            }
-            finally
-            {
-                CheckUpdateButton.IsEnabled = true;
-            }
+
+            await LoadAvailableVersions(release);
         }
+    }
+    catch (Exception ex)
+    {
+        StatusText.Text = "Error: Tag not found or API error.";
+        UpdateDetailsText.Text += $"[{DateTime.Now}] Error: {ex.Message}\n";
+        
+        if (ex.Message.Contains("404")) {
+            UpdateDetailsText.Text += "Tip: Check that the tag 'ignore' exists in your GitHub Releases.\n";
+        }
+        
+        ColorVersionDropdown.IsEnabled = false;
+        DownloadUpdateButton.IsEnabled = false;
+    }
+    finally
+    {
+        CheckUpdateButton.IsEnabled = true;
+    }
+}
 
         private async Task LoadAvailableVersions(JObject release)
         {
@@ -131,23 +133,24 @@ namespace Spark
 
             try
             {
-                JArray assets = release["assets"] as JArray;
+                var assets = release["assets"] as JArray;
                 if (assets != null)
                 {
-                    foreach (JToken asset in assets)
+                    foreach (var asset in assets)
                     {
                         string name = asset["name"]?.ToString();
                         string downloadUrl = asset["browser_download_url"]?.ToString();
 
                         // Look for Spark theme files but exclude SparkTTSCache.zip
-                        if (name != null && downloadUrl != null &&
-                            name.StartsWith("Spark", StringComparison.OrdinalIgnoreCase) &&
+                        if (name != null && downloadUrl != null && 
+                            name.StartsWith("Spark", StringComparison.OrdinalIgnoreCase) && 
                             name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) &&
                             !name.Equals("SparkTTSCache.zip", StringComparison.OrdinalIgnoreCase))
                         {
+                            string displayName = GetDisplayName(name);
                             _availableVersions.Add(new ColorVersion
                             {
-                                DisplayName = GetDisplayName(name),
+                                DisplayName = displayName,
                                 FileName = name,
                                 DownloadUrl = downloadUrl
                             });
@@ -157,35 +160,52 @@ namespace Spark
 
                 if (_availableVersions.Count > 0)
                 {
-                    ColorVersionDropdown.ItemsSource = _availableVersions;
-                    ColorVersionDropdown.DisplayMemberPath = "DisplayName";
-                    ColorVersionDropdown.SelectedValuePath = "DownloadUrl";
-
-                    ColorVersion defaultVersion = _availableVersions.FirstOrDefault(v =>
-                        v.FileName.Equals("Spark.zip", StringComparison.OrdinalIgnoreCase));
-
-                    ColorVersionDropdown.SelectedItem = defaultVersion ?? _availableVersions[0];
-                    ColorVersionDropdown.IsEnabled = true;
-                    DownloadUpdateButton.IsEnabled = true;
-
-                    UpdateDetailsText.Text += $"[{DateTime.Now}] Found {_availableVersions.Count} theme version(s):\n";
-                    foreach (ColorVersion version in _availableVersions)
+                    Dispatcher.Invoke(() =>
                     {
-                        UpdateDetailsText.Text += $"[{DateTime.Now}]   • {version.DisplayName} ({version.FileName})\n";
-                    }
+                        ColorVersionDropdown.ItemsSource = _availableVersions;
+                        ColorVersionDropdown.DisplayMemberPath = "DisplayName";
+                        ColorVersionDropdown.SelectedValuePath = "DownloadUrl";
+
+                        var defaultVersion = _availableVersions.FirstOrDefault(v =>
+                            v.FileName.Equals("Spark.zip", StringComparison.OrdinalIgnoreCase));
+
+                        if (defaultVersion != null)
+                        {
+                            ColorVersionDropdown.SelectedItem = defaultVersion;
+                        }
+                        else
+                        {
+                            ColorVersionDropdown.SelectedIndex = 0;
+                        }
+
+                        ColorVersionDropdown.IsEnabled = true;
+                        DownloadUpdateButton.IsEnabled = true;
+
+                        UpdateDetailsText.Text += $"[{DateTime.Now}] Found {_availableVersions.Count} theme version(s):\n";
+                        foreach (var version in _availableVersions)
+                        {
+                            UpdateDetailsText.Text += $"[{DateTime.Now}]   • {version.DisplayName} ({version.FileName})\n";
+                        }
+                    });
                 }
                 else
                 {
-                    StatusText.Text = "No theme versions found in release.";
-                    ColorVersionDropdown.IsEnabled = false;
-                    DownloadUpdateButton.IsEnabled = false;
-                    UpdateDetailsText.Text += $"[{DateTime.Now}] Warning: No Spark*.zip theme files found in release\n";
+                    Dispatcher.Invoke(() =>
+                    {
+                        StatusText.Text = "No theme versions found in release";
+                        ColorVersionDropdown.IsEnabled = false;
+                        DownloadUpdateButton.IsEnabled = false;
+                        UpdateDetailsText.Text += $"[{DateTime.Now}] Warning: No Spark*.zip theme files found in release\n";
+                    });
                 }
             }
             catch (Exception ex)
             {
-                StatusText.Text = $"Error loading versions: {ex.Message}";
-                UpdateDetailsText.Text += $"[{DateTime.Now}] Error loading versions: {ex.Message}\n";
+                Dispatcher.Invoke(() =>
+                {
+                    StatusText.Text = $"Error loading versions: {ex.Message}";
+                    UpdateDetailsText.Text += $"[{DateTime.Now}] Error loading versions: {ex.Message}\n";
+                });
             }
         }
 
@@ -195,89 +215,84 @@ namespace Spark
                 return "Default Theme";
 
             string baseName = Path.GetFileNameWithoutExtension(fileName);
-
+            
             if (baseName.StartsWith("Spark", StringComparison.OrdinalIgnoreCase))
             {
                 string themeName = baseName.Substring(5);
-                return string.IsNullOrWhiteSpace(themeName) ? "Default Theme" : $"{themeName} Theme";
+                if (string.IsNullOrWhiteSpace(themeName))
+                    return "Default Theme";
+                    
+                return $"{themeName} Theme";
             }
-
+            
             return baseName;
         }
 
         private void ColorVersionDropdown_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ColorVersionDropdown.SelectedItem is ColorVersion selected)
+            if (ColorVersionDropdown.SelectedItem != null)
             {
-                _selectedDownloadUrl = selected.DownloadUrl;
-                UpdateDetailsText.Text += $"[{DateTime.Now}] Selected: {selected.DisplayName}\n";
+                var selectedVersion = (ColorVersion)ColorVersionDropdown.SelectedItem;
+                _selectedDownloadUrl = selectedVersion.DownloadUrl;
+                UpdateDetailsText.Text += $"[{DateTime.Now}] Selected: {selectedVersion.DisplayName}\n";
             }
         }
 
         private async void DownloadUpdateButton_Click(object sender, RoutedEventArgs e)
         {
-            if (ColorVersionDropdown.SelectedItem is not ColorVersion selectedVersion)
+            if (ColorVersionDropdown.SelectedItem == null)
             {
                 StatusText.Text = "Please select a theme version first";
                 return;
             }
 
-            DownloadUpdateButton.IsEnabled = false;
-            CheckUpdateButton.IsEnabled = false;
-            ColorVersionDropdown.IsEnabled = false;
-            UpdateProgressBar.Visibility = Visibility.Visible;
-            UpdateProgressBar.Value = 0;
-
-            StatusText.Text = $"Downloading {selectedVersion.DisplayName}...";
-            UpdateDetailsText.Text += $"[{DateTime.Now}] Starting download of {selectedVersion.DisplayName}...\n";
-
-            string tempFilePath = Path.Combine(_tempFolder, selectedVersion.FileName);
+            var selectedVersion = (ColorVersion)ColorVersionDropdown.SelectedItem;
 
             try
             {
-                await DownloadFileWithProgressAsync(selectedVersion.DownloadUrl, tempFilePath, (pct) =>
+                DownloadUpdateButton.IsEnabled = false;
+                CheckUpdateButton.IsEnabled = false;
+                ColorVersionDropdown.IsEnabled = false;
+                UpdateProgressBar.Visibility = Visibility.Visible;
+                UpdateProgressBar.Value = 0;
+
+                StatusText.Text = $"Downloading {selectedVersion.DisplayName}...";
+                UpdateDetailsText.Text += $"[{DateTime.Now}] Starting download of {selectedVersion.DisplayName}...\n";
+
+                string tempFilePath = Path.Combine(_tempFolder, selectedVersion.FileName);
+
+                using (var client = new WebClient())
                 {
-                    UpdateProgressBar.Value = pct;
-                    StatusText.Text = $"Downloading {selectedVersion.DisplayName}: {pct}%";
-                });
+                    client.Headers.Add("User-Agent", "Spark-Updater");
+                    
+                    client.DownloadProgressChanged += (s, args) =>
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            UpdateProgressBar.Value = args.ProgressPercentage;
+                            StatusText.Text = $"Downloading {selectedVersion.DisplayName}: {args.ProgressPercentage}%";
+                        });
+                    };
 
-                StatusText.Text = "Download complete. Extracting and installing...";
-                UpdateDetailsText.Text += $"[{DateTime.Now}] Download complete. Extracting...\n";
+                    await client.DownloadFileTaskAsync(new Uri(_selectedDownloadUrl), tempFilePath);
 
-                await Task.Run(() => InstallUpdate(tempFilePath, selectedVersion.FileName));
+                    Dispatcher.Invoke(() =>
+                    {
+                        StatusText.Text = "Download complete. Extracting and installing...";
+                        UpdateDetailsText.Text += $"[{DateTime.Now}] Download complete. Extracting...\n";
+                    });
+
+                    await Task.Run(() => InstallUpdate(tempFilePath, selectedVersion.FileName));
+                }
             }
             catch (Exception ex)
             {
-                StatusText.Text = $"Error: {ex.Message}";
-                UpdateDetailsText.Text += $"[{DateTime.Now}] Error downloading {selectedVersion.DisplayName}: {ex.Message}\n";
-                ResetButtons();
-            }
-        }
-
-        private async Task DownloadFileWithProgressAsync(string url, string destPath, Action<int> onProgress, CancellationToken ct = default)
-        {
-            using HttpResponseMessage response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
-            response.EnsureSuccessStatusCode();
-
-            long? totalBytes = response.Content.Headers.ContentLength;
-
-            await using Stream contentStream = await response.Content.ReadAsStreamAsync(ct);
-            await using FileStream fileStream = new FileStream(destPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
-
-            byte[] buffer = new byte[8192];
-            long bytesRead = 0;
-            int read;
-
-            while ((read = await contentStream.ReadAsync(buffer, ct)) > 0)
-            {
-                await fileStream.WriteAsync(buffer.AsMemory(0, read), ct);
-                bytesRead += read;
-
-                if (totalBytes.HasValue)
+                Dispatcher.Invoke(() =>
                 {
-                    int pct = (int)(bytesRead * 100 / totalBytes.Value);
-                    Dispatcher.Invoke(() => onProgress(pct));
-                }
+                    StatusText.Text = $"Error: {ex.Message}";
+                    UpdateDetailsText.Text += $"[{DateTime.Now}] Error downloading {selectedVersion.DisplayName}: {ex.Message}\n";
+                    ResetButtons();
+                });
             }
         }
 
@@ -300,7 +315,6 @@ namespace Spark
 
                 string currentExe = Process.GetCurrentProcess().MainModule.FileName;
                 string targetFolder = Path.GetDirectoryName(currentExe);
-                string actualSourceFolder = FindActualSourceFolder(extractPath);
 
                 Dispatcher.Invoke(() =>
                 {
@@ -308,7 +322,10 @@ namespace Spark
                     StatusText.Text = "Creating update script...";
                 });
 
+                string actualSourceFolder = FindActualSourceFolder(extractPath);
+
                 string batchFile = Path.Combine(_tempFolder, "update_spark.bat");
+
                 string batchContent = $@"
 @echo off
 setlocal enabledelayedexpansion
@@ -365,23 +382,36 @@ if exist ""{extractPath}"" rmdir /s /q ""{extractPath}""
 (goto) 2>nul & del ""%~f0""
 exit
 ";
+
                 File.WriteAllText(batchFile, batchContent);
 
                 Dispatcher.Invoke(() =>
                 {
                     UpdateDetailsText.Text += $"[{DateTime.Now}] Batch file created\n";
                     StatusText.Text = "Starting update...";
+                });
 
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = batchFile,
-                        WindowStyle = ProcessWindowStyle.Normal,
-                        UseShellExecute = true,
-                        WorkingDirectory = _tempFolder
-                    });
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = batchFile,
+                    WindowStyle = ProcessWindowStyle.Normal,
+                    UseShellExecute = true,
+                    WorkingDirectory = _tempFolder
+                };
 
+                Dispatcher.Invoke(() =>
+                {
+                    UpdateDetailsText.Text += $"[{DateTime.Now}] Launching update...\n";
                     
-                    Program.Quit();
+                    Process.Start(psi);
+                    
+                    Task.Delay(500).ContinueWith(t =>
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            Process.GetCurrentProcess().Kill();
+                        });
+                    });
                 });
             }
             catch (Exception ex)
@@ -406,7 +436,9 @@ exit
                 {
                     string folder = Path.GetDirectoryName(files[0]);
                     if (!string.IsNullOrEmpty(folder))
+                    {
                         return folder;
+                    }
                 }
             }
             catch (Exception ex)
@@ -422,46 +454,71 @@ exit
 
         private async void DownloadTTSCacheButton_Click(object sender, RoutedEventArgs e)
         {
-            DownloadTTSCacheButton.IsEnabled = false;
-            TTSCacheStatus.Text = "Downloading TTS Cache...";
-
             try
             {
-                string json = await _httpClient.GetStringAsync("https://api.github.com/repos/heisthecat31/Spark/releases/latest");
-                JObject release = JObject.Parse(json);
+                DownloadTTSCacheButton.IsEnabled = false;
+                TTSCacheStatus.Text = "Downloading TTS Cache...";
 
-                JArray assets = release["assets"] as JArray;
-                string ttsCacheUrl = assets?
-                    .FirstOrDefault(a => a["name"]?.ToString().Equals("SparkTTSCache.zip", StringComparison.OrdinalIgnoreCase) == true)
-                    ?["browser_download_url"]?.ToString();
+                string apiUrl = "https://api.github.com/repos/heisthecat31/Spark/releases/latest";
+                using (var client = new WebClient())
+                {
+                    client.Headers.Add("User-Agent", "Spark-Updater");
+                    string json = await client.DownloadStringTaskAsync(apiUrl);
+                    var release = JObject.Parse(json);
 
-                if (string.IsNullOrEmpty(ttsCacheUrl))
-                    throw new Exception("SparkTTSCache.zip not found in release assets.");
+                    var assets = release["assets"] as JArray;
+                    string ttsCacheUrl = "";
 
-                // Use the custom cache folder configured in settings, or the default Spark directory fallback
-                string ttsCacheFolder = TTSController.CacheFolder;
+                    if (assets != null)
+                    {
+                        foreach (var asset in assets)
+                        {
+                            string name = asset["name"]?.ToString();
+                            if (name != null && name.Equals("SparkTTSCache.zip", StringComparison.OrdinalIgnoreCase))
+                            {
+                                ttsCacheUrl = asset["browser_download_url"]?.ToString();
+                                break;
+                            }
+                        }
+                    }
 
-                if (Directory.Exists(ttsCacheFolder))
-                    Directory.Delete(ttsCacheFolder, true);
+                    if (string.IsNullOrEmpty(ttsCacheUrl))
+                    {
+                        throw new Exception("SparkTTSCache.zip not found in release assets");
+                    }
 
-                Directory.CreateDirectory(ttsCacheFolder);
+                    string ttsCacheFolder = TTSController.CacheFolder;
 
-                string tempTtsZip = Path.Combine(ttsCacheFolder, "SparkTTSCache.zip");
+                    if (Directory.Exists(ttsCacheFolder))
+                    {
+                        Directory.Delete(ttsCacheFolder, true);
+                    }
 
-                await DownloadFileWithProgressAsync(ttsCacheUrl, tempTtsZip, _ => { });
+                    Directory.CreateDirectory(ttsCacheFolder);
 
-                ZipFile.ExtractToDirectory(tempTtsZip, ttsCacheFolder);
-                File.Delete(tempTtsZip);
+                    string tempTtsZip = Path.Combine(ttsCacheFolder, "SparkTTSCache.zip");
 
-                TTSCacheStatus.Text = "TTS Cache downloaded successfully!";
-                UpdateDetailsText.Text += $"[{DateTime.Now}] TTS Cache downloaded to: {ttsCacheFolder}\n";
-                new MessageBox($"Success: TTS Cache downloaded and extracted to:\n{ttsCacheFolder}").Show();
+                    await client.DownloadFileTaskAsync(new Uri(ttsCacheUrl), tempTtsZip);
+
+                    ZipFile.ExtractToDirectory(tempTtsZip, ttsCacheFolder);
+                    File.Delete(tempTtsZip);
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        TTSCacheStatus.Text = "TTS Cache downloaded successfully!";
+                        UpdateDetailsText.Text += $"[{DateTime.Now}] TTS Cache downloaded to: {ttsCacheFolder}\n";
+                        new MessageBox($"Success: TTS Cache downloaded and extracted to:\n{ttsCacheFolder}").Show();
+                    });
+                }
             }
             catch (Exception ex)
             {
-                TTSCacheStatus.Text = $"Error: {ex.Message}";
-                UpdateDetailsText.Text += $"[{DateTime.Now}] TTS Cache error: {ex.Message}\n";
-                new MessageBox($"Error downloading TTS Cache: {ex.Message}").Show();
+                Dispatcher.Invoke(() =>
+                {
+                    TTSCacheStatus.Text = $"Error: {ex.Message}";
+                    UpdateDetailsText.Text += $"[{DateTime.Now}] TTS Cache error: {ex.Message}\n";
+                    new MessageBox($"Error downloading TTS Cache: {ex.Message}").Show();
+                });
             }
             finally
             {
@@ -471,42 +528,45 @@ exit
 
         private async void DownloadHapticsFixButton_Click(object sender, RoutedEventArgs e)
         {
-            if (SparkSettings.instance == null || string.IsNullOrEmpty(SparkSettings.instance.echoVRPath))
-            {
-                new MessageBox("Error: EchoVR Path is not set in Spark Settings. Please set it in the main settings first.").Show();
-                return;
-            }
-
-            string echoDir = Path.GetDirectoryName(SparkSettings.instance.echoVRPath);
-            if (!Directory.Exists(echoDir))
-            {
-                new MessageBox($"Error: EchoVR directory not found at:\n{echoDir}").Show();
-                return;
-            }
-
-            DownloadHapticsFixButton.IsEnabled = false;
-            HapticsFixStatus.Text = "Downloading Haptics Fix...";
-            UpdateDetailsText.Text += $"[{DateTime.Now}] Starting Haptics Fix download...\n";
-
             try
             {
+                if (SparkSettings.instance == null || string.IsNullOrEmpty(SparkSettings.instance.echoVRPath))
+                {
+                    new MessageBox("Error: EchoVR Path is not set in Spark Settings. Please set it in the main settings first.").Show();
+                    return;
+                }
+
+                string echoDir = Path.GetDirectoryName(SparkSettings.instance.echoVRPath);
+                if (!Directory.Exists(echoDir))
+                {
+                    new MessageBox($"Error: EchoVR directory not found at:\n{echoDir}").Show();
+                    return;
+                }
+
+                DownloadHapticsFixButton.IsEnabled = false;
+                HapticsFixStatus.Text = "Downloading Haptics Fix...";
+                UpdateDetailsText.Text += $"[{DateTime.Now}] Starting Haptics Fix download...\n";
+
+                string url = "https://github.com/heisthecat31/EchoVR-Haptics/releases/download/haptics/HapticsFix.zip";
                 string zipPath = Path.Combine(_tempFolder, "HapticsFix.zip");
                 string extractPath = Path.Combine(_tempFolder, "HapticsFix_Extracted");
 
-                await DownloadFileWithProgressAsync(
-                    "https://github.com/heisthecat31/EchoVR-Haptics/releases/download/haptics/HapticsFix.zip",
-                    zipPath,
-                    _ => { });
+                using (WebClient client = new WebClient())
+                {
+                    client.Headers.Add("User-Agent", "Spark-Updater");
+                    await client.DownloadFileTaskAsync(new Uri(url), zipPath);
+                }
 
                 UpdateDetailsText.Text += $"[{DateTime.Now}] Download complete. Extracting...\n";
 
                 if (Directory.Exists(extractPath))
                     Directory.Delete(extractPath, true);
-
+                
                 ZipFile.ExtractToDirectory(zipPath, extractPath);
 
                 // Copy files
-                foreach (string fileName in new[] { "dbgcore.dll", "haptics_config.txt" })
+                string[] filesToCopy = { "dbgcore.dll", "haptics_config.txt" };
+                foreach (string fileName in filesToCopy)
                 {
                     string sourceFile = Path.Combine(extractPath, fileName);
                     string destFile = Path.Combine(echoDir, fileName);
@@ -556,6 +616,100 @@ exit
             CheckUpdateButton.IsEnabled = true;
             ColorVersionDropdown.IsEnabled = true;
             UpdateProgressBar.Visibility = Visibility.Collapsed;
+        }
+
+        public static async Task CheckForUpdatesBackgroundAsync()
+        {
+            try
+            {
+                using (var client = new WebClient())
+                {
+                    client.Headers.Add("User-Agent", "Spark-Updater");
+                    client.Headers.Add("Accept", "application/vnd.github.v3+json");
+
+                    string latestReleaseUrl = "https://api.github.com/repos/heisthecat31/Spark/releases/tags/ignore";
+                    
+                    string json = await client.DownloadStringTaskAsync(latestReleaseUrl);
+
+                    var release = JObject.Parse(json);
+                    
+                    string titleName = release["name"]?.ToString();
+                    if (string.IsNullOrWhiteSpace(titleName))
+                    {
+                        titleName = release["tag_name"]?.ToString();
+                    }
+
+                    string latestVersionStr = "0.0.0";
+                    var match = System.Text.RegularExpressions.Regex.Match(titleName ?? "", @"\d+\.\d+(\.\d+)?");
+                    if (match.Success)
+                    {
+                        latestVersionStr = match.Value;
+                    }
+                    
+                    var currentAssemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
+                    string currentVersionStr = $"{currentAssemblyVersion.Major}.{currentAssemblyVersion.Minor}.{currentAssemblyVersion.Build}";
+
+                    Logger.Error($"[Updater] Parsed latestVersionStr: {latestVersionStr} from release name '{titleName}'");
+                    Logger.Error($"[Updater] Parsed currentVersionStr: {currentVersionStr}");
+
+                    if (latestVersionStr.Equals(SparkSettings.instance.ignoredUpdateVersion, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Logger.Error($"[Updater] Skipping update check because version {latestVersionStr} is marked as ignored.");
+                        return;
+                    }
+
+                    if (Version.TryParse(latestVersionStr, out Version latestVersion) &&
+                        Version.TryParse(currentVersionStr, out Version currentVersion))
+                    {
+                        Logger.Error($"[Updater] Comparing versions: latest {latestVersion} vs current {currentVersion}. Result: latest > current = {latestVersion > currentVersion}");
+                        if (latestVersion > currentVersion)
+                        {
+                            string downloadUrl = null;
+                            string zipFileName = "Spark.zip";
+                            var assets = release["assets"] as JArray;
+                            if (assets != null)
+                            {
+                                var targetAsset = assets.FirstOrDefault(asset =>
+                                    "Spark.zip".Equals(asset["name"]?.ToString(), StringComparison.OrdinalIgnoreCase));
+                                    
+                                if (targetAsset == null)
+                                {
+                                    targetAsset = assets.FirstOrDefault(asset =>
+                                    {
+                                        string name = asset["name"]?.ToString();
+                                        return name != null &&
+                                               name.StartsWith("Spark", StringComparison.OrdinalIgnoreCase) &&
+                                               name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) &&
+                                               !name.Equals("SparkTTSCache.zip", StringComparison.OrdinalIgnoreCase);
+                                    });
+                                }
+                                
+                                if (targetAsset != null)
+                                {
+                                    downloadUrl = targetAsset["browser_download_url"]?.ToString();
+                                    zipFileName = targetAsset["name"]?.ToString();
+                                }
+                            }
+
+                            if (!string.IsNullOrEmpty(downloadUrl))
+                            {
+                                string changelog = release["body"]?.ToString() ?? "No release notes provided.";
+
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    var prompt = new UpdatePromptWindow(latestVersionStr, changelog, downloadUrl, zipFileName);
+                                    prompt.Show();
+                                    prompt.Focus();
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[Updater] Background update check failed: {ex.Message}\n{ex.StackTrace}");
+            }
         }
     }
 }

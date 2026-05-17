@@ -236,7 +236,7 @@ namespace Spark
 
             SetDashboardItem1Visibility(SparkSettings.instance.dashboardItem1);
 
-            _ = CheckForAppUpdate();
+            _ = Task.Run(async () => await UpdateSparkControl.CheckForUpdatesBackgroundAsync());
 
             initialized = true;
         }

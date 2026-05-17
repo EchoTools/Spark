@@ -23,6 +23,9 @@ namespace Spark
         private bool isRunning = true;
         private bool isPublic = true;
         private static readonly HttpClient http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        private readonly object stateLock = new object();
+        private bool isRefreshing = false;
+        private bool isPollingActive = false;
 
         // ─── Bot API — same Ignite API server, same Discord OAuth token ──────
 
@@ -55,52 +58,74 @@ namespace Spark
         {
             InitializeComponent();
             FriendsItemsControl.ItemsSource = friends;
+
+            // React when the user logs into Discord - registered ONCE in constructor to avoid event handler leak
+            DiscordOAuth.Authenticated += () => Task.Run(async () => await RefreshAll());
         }
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            // React when the user logs into Discord
-            DiscordOAuth.Authenticated += () => Dispatcher.Invoke(async () => await RefreshAll());
-
             // Initialise immediately if already logged in
-            Dispatcher.BeginInvoke(new Action(async () => await RefreshAll()));
+            Task.Run(async () => await RefreshAll());
         }
 
         // ─── Auth state ────────────────────────────────────────────────────────
 
         private async Task RefreshAll()
         {
-            if (!BotConfigured)
+            lock (stateLock)
             {
-                ShowNotLoggedIn();
-                return;
+                if (isRefreshing) return;
+                isRefreshing = true;
             }
 
-            ShowLoggedIn();
-            SetStatus(null, "Connecting...");
-            await RegisterWithBot();
-            await PollFriends();
-            StartPolling();
+            try
+            {
+                if (!BotConfigured)
+                {
+                    ShowNotLoggedIn();
+                    return;
+                }
+
+                ShowLoggedIn();
+                SetStatus(null, "Connecting...");
+                await RegisterWithBot();
+                await PollFriends();
+                StartPolling();
+            }
+            finally
+            {
+                lock (stateLock)
+                {
+                    isRefreshing = false;
+                }
+            }
         }
 
         private void ShowNotLoggedIn()
         {
-            NotLoggedInPanel.Visibility = Visibility.Visible;
-            FriendsSection.Visibility = Visibility.Collapsed;
-            MyFriendCodeSection.Visibility = Visibility.Collapsed;
-            SetStatus(false, "Log in with Discord to use Friends");
+            Dispatcher.Invoke(() =>
+            {
+                NotLoggedInPanel.Visibility = Visibility.Visible;
+                FriendsSection.Visibility = Visibility.Collapsed;
+                MyFriendCodeSection.Visibility = Visibility.Collapsed;
+                SetStatus(false, "Log in with Discord to use Friends");
+            });
         }
 
         private void ShowLoggedIn()
         {
-            NotLoggedInPanel.Visibility = Visibility.Collapsed;
-            FriendsSection.Visibility = Visibility.Visible;
-
-            if (!string.IsNullOrEmpty(SparkSettings.instance.myFriendCode))
+            Dispatcher.Invoke(() =>
             {
-                MyFriendCodeText.Text = FormatCode(SparkSettings.instance.myFriendCode);
-                MyFriendCodeSection.Visibility = Visibility.Visible;
-            }
+                NotLoggedInPanel.Visibility = Visibility.Collapsed;
+                FriendsSection.Visibility = Visibility.Visible;
+
+                if (!string.IsNullOrEmpty(SparkSettings.instance.myFriendCode))
+                {
+                    MyFriendCodeText.Text = FormatCode(SparkSettings.instance.myFriendCode);
+                    MyFriendCodeSection.Visibility = Visibility.Visible;
+                }
+            });
         }
 
         // ─── Bot API calls ─────────────────────────────────────────────────────
@@ -148,13 +173,28 @@ namespace Spark
 
         private void StartPolling()
         {
-            if (!isRunning) return;
+            lock (stateLock)
+            {
+                if (isPollingActive || !isRunning) return;
+                isPollingActive = true;
+            }
+
             Task.Run(async () =>
             {
-                while (isRunning)
+                try
                 {
-                    await Task.Delay(2000);
-                    try { await PollFriends(); } catch { }
+                    while (isRunning)
+                    {
+                        await Task.Delay(2500);
+                        try { await PollFriends(); } catch { }
+                    }
+                }
+                finally
+                {
+                    lock (stateLock)
+                    {
+                        isPollingActive = false;
+                    }
                 }
             });
         }

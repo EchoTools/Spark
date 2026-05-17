@@ -413,12 +413,22 @@ namespace Spark
 
 				netMQEvents = new NetMQEvents();
 
-				InstalledSpeakerSystemVersion = FindEchoSpeakerSystemInstallVersion();
-				if (InstalledSpeakerSystemVersion.Length > 0)
+				_ = Task.Run(() =>
 				{
-					string[] latestSpeakerSystemVer = GetLatestSpeakerSystemURLVer();
-					IsSpeakerSystemUpdateAvailable = latestSpeakerSystemVer[1] != InstalledSpeakerSystemVersion;
-				}
+					try
+					{
+						InstalledSpeakerSystemVersion = FindEchoSpeakerSystemInstallVersion();
+						if (InstalledSpeakerSystemVersion.Length > 0)
+						{
+							string[] latestSpeakerSystemVer = GetLatestSpeakerSystemURLVer();
+							IsSpeakerSystemUpdateAvailable = latestSpeakerSystemVer[1] != InstalledSpeakerSystemVersion;
+						}
+					}
+					catch (Exception ex)
+					{
+						Logger.Error($"[SpeakerSystem] Background update check failed: {ex.Message}");
+					}
+				});
 
 
 				SparkSettings.instance.sparkExeLocation = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Spark.exe");
@@ -492,15 +502,34 @@ namespace Spark
 
 
 
-				if (!SparkSettings.instance.onlyActivateHighlightsWhenGameIsOpen &&
-					SparkSettings.instance.isNVHighlightsEnabled)
+				_ = Task.Run(() =>
 				{
-					HighlightsHelper.SetupNVHighlights();
-				}
-				else
-				{
-					HighlightsHelper.InitHighlightsSDK(true);
-				}
+					if (!SparkSettings.instance.onlyActivateHighlightsWhenGameIsOpen &&
+						SparkSettings.instance.isNVHighlightsEnabled)
+					{
+						HighlightsHelper.SetupNVHighlights();
+					}
+					else
+					{
+						HighlightsHelper.InitHighlightsSDK(true);
+					}
+
+					// Safely update UI once done, if highlights successfully initialized
+					if (HighlightsHelper.didHighlightsInit && HighlightsHelper.isNVHighlightsEnabled)
+					{
+						Application.Current?.Dispatcher?.Invoke(() =>
+						{
+							if (liveWindow != null)
+							{
+								liveWindow.showHighlights.IsEnabled = HighlightsHelper.DoNVClipsExist();
+								liveWindow.showHighlights.Visibility = Visibility.Visible;
+								liveWindow.showHighlights.Content = HighlightsHelper.DoNVClipsExist() 
+									? Properties.Resources.Show + " " + HighlightsHelper.nvHighlightClipCount + " " + Properties.Resources.Highlights 
+									: Properties.Resources.No_clips_available;
+							}
+						});
+					}
+				});
 
 				// only enable Highlights when game is open
 				ConnectedToGame += (_, _) =>
