@@ -29,6 +29,15 @@ using Frame = EchoVRAPI.Frame;
 
 namespace Spark
 {
+    public class CombatLoadout
+    {
+        public string Name { get; set; }
+        public int Ping { get; set; }
+        public string Weapon { get; set; }
+        public string Ordnance { get; set; }
+        public string TacMod { get; set; }
+    }
+
     /// <summary>
     /// Interaction logic for LiveWindow.xaml
     /// </summary>
@@ -602,6 +611,125 @@ namespace Spark
                         }
 
                         #endregion
+
+                        // Combat Dashboard Logic
+                        if (Program.lastFrame.match_type == "Echo_Combat")
+                        {
+                            ArenaDashboardGrid.Visibility = Visibility.Collapsed;
+                            CombatDashboardGrid.Visibility = Visibility.Visible;
+
+                            try
+                            {
+                                if (!string.IsNullOrEmpty(Program.lastJSON))
+                                {
+                                    JObject jsonObj = JObject.Parse(Program.lastJSON);
+
+                                    // Use round scores for the top header if available, otherwise fallback to points (e.g. for payload or older API)
+                                    string blueScore = jsonObj["blue_round_score"]?.ToString() ?? jsonObj["blue_points"]?.ToString() ?? "0";
+                                    string orangeScore = jsonObj["orange_round_score"]?.ToString() ?? jsonObj["orange_points"]?.ToString() ?? "0";
+                                    
+                                    CombatBlueScore.Text = blueScore;
+                                    CombatOrangeScore.Text = orangeScore;
+
+                                    var blueLoadouts = new List<CombatLoadout>();
+                                    var orangeLoadouts = new List<CombatLoadout>();
+
+                                    var teamsArray = jsonObj["teams"] as JArray;
+
+                                    for (int t = 0; t < 3; t++)
+                                    {
+                                        if (t >= Program.lastFrame.teams.Count) continue;
+                                        var apiTeam = Program.lastFrame.teams[t];
+                                        var jsonTeam = teamsArray != null && teamsArray.Count > t ? teamsArray[t] : null;
+                                        var jsonPlayers = jsonTeam?["players"] as JArray;
+
+                                        for (int pIndex = 0; pIndex < apiTeam.players.Count; pIndex++)
+                                        {
+                                            var apiPlayer = apiTeam.players[pIndex];
+                                            var jsonPlayer = jsonPlayers != null && jsonPlayers.Count > pIndex ? jsonPlayers[pIndex] : null;
+
+                                            // Fallbacks to handle casing and nested data
+                                            string weapon = jsonPlayer?["Weapon"]?.ToString() ?? jsonPlayer?["weapon"]?.ToString() ?? "N/A";
+                                            string ordnance = jsonPlayer?["Ordnance"]?.ToString() ?? jsonPlayer?["ordnance"]?.ToString() ?? "N/A";
+                                            string tacmod = jsonPlayer?["TacMod"]?.ToString() ?? jsonPlayer?["tacmod"]?.ToString() ?? "N/A";
+
+                                            var loadout = new CombatLoadout
+                                            {
+                                                Name = apiPlayer.name,
+                                                Ping = apiPlayer.ping,
+                                                Weapon = weapon,
+                                                Ordnance = ordnance,
+                                                TacMod = tacmod
+                                            };
+
+                                            if (t == 0) blueLoadouts.Add(loadout);
+                                            else if (t == 1) orangeLoadouts.Add(loadout);
+                                        }
+                                    }
+
+                                    BlueCombatLoadouts.ItemsSource = blueLoadouts;
+                                    OrangeCombatLoadouts.ItemsSource = orangeLoadouts;
+
+                                    string mapName = jsonObj["map_name"]?.ToString();
+                                    CombatMapName.Text = $"MAP: {mapName?.ToUpper()}";
+
+                                    if (mapName == "mpl_combat_fission" || mapName == "mpl_combat_gauss")
+                                    {
+                                        CombatObjectiveBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#444"));
+                                        var payload = jsonObj["payload"];
+                                        if (payload != null)
+                                        {
+                                            CombatObjectiveLabel.Text = "PAYLOAD DISTANCE";
+                                            CombatObjectiveValue.Text = $"{payload["distance"]?.ToObject<float>() ?? 0:N1}m";
+                                            CombatObjectiveSecondaryLabel.Text = "SPEED";
+                                            CombatObjectiveSecondaryValue.Text = $"{payload["speed"]?.ToObject<float>() ?? 0:N2} m/s";
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // Capture point or other maps
+                                        bool isContested = jsonObj["contested"]?.ToObject<bool>() ?? false;
+                                        float blueProgress = jsonObj["blue_points"]?.ToObject<float>() ?? 0;
+                                        float orangeProgress = jsonObj["orange_points"]?.ToObject<float>() ?? 0;
+
+                                        CombatObjectiveLabel.Text = "CAPTURE POINT";
+                                        
+                                        if (isContested)
+                                        {
+                                            CombatObjectiveBorder.BorderBrush = new SolidColorBrush(Colors.Red);
+                                            CombatObjectiveValue.Text = "CONTESTED";
+                                        }
+                                        else if (blueProgress > orangeProgress)
+                                        {
+                                            CombatObjectiveBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0088ff"));
+                                            CombatObjectiveValue.Text = "BLUE OWNS";
+                                        }
+                                        else if (orangeProgress > blueProgress)
+                                        {
+                                            CombatObjectiveBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ff8800"));
+                                            CombatObjectiveValue.Text = "ORANGE OWNS";
+                                        }
+                                        else
+                                        {
+                                            CombatObjectiveBorder.BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#444"));
+                                            CombatObjectiveValue.Text = "NEUTRAL";
+                                        }
+
+                                        CombatObjectiveSecondaryLabel.Text = "PROGRESS";
+                                        CombatObjectiveSecondaryValue.Text = $"{Math.Max(blueProgress, orangeProgress):N0}%";
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                LogRow(LogType.Error, $"Error parsing combat JSON:\n{ex}");
+                            }
+                        }
+                        else
+                        {
+                            ArenaDashboardGrid.Visibility = Visibility.Visible;
+                            CombatDashboardGrid.Visibility = Visibility.Collapsed;
+                        }
                     }
 
                     bool blueReadyVisible = false;

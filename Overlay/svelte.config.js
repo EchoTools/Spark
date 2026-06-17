@@ -9,7 +9,13 @@ const config = {
 
 	kit: {
 		adapter: adapter(),
-		trailingSlash: "always",
+		typescript: {
+			config: (config) => {
+				delete config.compilerOptions.importsNotUsedAsValues;
+				delete config.compilerOptions.preserveValueImports;
+				return config;
+			}
+		}
 	}
 };
 

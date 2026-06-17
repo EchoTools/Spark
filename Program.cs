@@ -116,11 +116,11 @@ namespace Spark
 		/// <summary>
 		/// Not actually Hz. 1/Hz.
 		/// </summary>
-		public static float StatsIntervalMs => statsDeltaTimes[SparkSettings.instance.lowFrequencyMode ? 1 : 0];
+		public static float StatsIntervalMs => statsDeltaTimes[SparkSettings.instance.lowFrequencyMode ? 2 : 0];
 		private static bool? lastLowFreqMode = null;
 
-		// 30 or 15 hz main fetch speed
-		private static readonly List<float> statsDeltaTimes = new List<float> { 33.3333333f, 66.6666666f };
+		// 60, 30 or 15 hz main fetch speed
+		private static readonly List<float> statsDeltaTimes = new List<float> { 16.6666666f, 33.3333333f, 66.6666666f };
 
 
 		public static LiveWindow liveWindow;
@@ -474,6 +474,29 @@ namespace Spark
 					SparkSettings.instance.firstTimeSetupShown = true;
 				}
 
+				if (!SparkSettings.instance.combatUpdatePopupShown)
+				{
+					Application.Current.Dispatcher.InvokeAsync(() =>
+					{
+						if (!string.IsNullOrEmpty(SparkSettings.instance.echoVRPath) && File.Exists(SparkSettings.instance.echoVRPath))
+						{
+							SparkSettings.instance.combatUpdatePopupShown = true;
+							SparkSettings.instance.Save();
+
+							var result = System.Windows.MessageBox.Show(
+								"A small Echo Combat patch is available which adds bullet trails to weapons missing them.\n\nWould you like to download and install the Combat Update now?",
+								"Combat Update Available",
+								MessageBoxButton.YesNo,
+								MessageBoxImage.Information);
+
+							if (result == MessageBoxResult.Yes)
+							{
+								_ = UpdateSparkControl.InstallCombatUpdateAsync();
+							}
+						}
+					});
+				}
+
 				// Check for command-line flags
 				if (args.Contains("-slowmode"))
 				{
@@ -612,7 +635,16 @@ namespace Spark
 				{
 					try
 					{
-						EchoVRSettingsManager.ReloadLoadingTips();
+						JToken embeddedTips = EchoVRSettingsManager.ReadEchoVRLoadingTips(true);
+						if (embeddedTips != null)
+						{
+							EchoVRSettingsManager.loadingTips = embeddedTips;
+						}
+						else
+						{
+							EchoVRSettingsManager.ReloadLoadingTips();
+						}
+
 						if (EchoVRSettingsManager.loadingTips != null)
 						{
 							JToken toolsAll = EchoVRSettingsManager.loadingTips["tools-all"];

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -41,9 +41,10 @@ namespace Spark
 		private const string fileNameFormat = "rec_yyyy-MM-dd_HH-mm-ss";
 
 		private int lastButterNumChunks;
-		private static readonly List<float> fullDeltaTimes = new List<float> { 33.3333333f, 66.666666f, 100 };
-		private static int FrameInterval => Math.Clamp((int)(fullDeltaTimes[SparkSettings.instance.targetDeltaTimeIndexFull] / Program.StatsIntervalMs), 1, 10000);
-		private int frameIndex;
+		private static readonly List<float> fullDeltaTimes = new List<float> { 16.6666666f, 33.3333333f, 100f };
+		private static float TargetDeltaTime => SparkSettings.instance.targetDeltaTimeIndexFull < fullDeltaTimes.Count ? fullDeltaTimes[SparkSettings.instance.targetDeltaTimeIndexFull] : 33.3333333f;
+		private DateTime lastRecordedEchoreplayTime = DateTime.MinValue;
+		private DateTime lastRecordedButterTime = DateTime.MinValue;
 
 		public ReplayFilesManager()
 		{
@@ -112,15 +113,14 @@ namespace Spark
 
 		private void AddEchoreplayFrame(DateTime timestamp, string session, string bones)
 		{
-			frameIndex++;
-
 			if (!SparkSettings.instance.enableReplayBuffer)
 			{
 				if (!SparkSettings.instance.enableFullLogging) return;
 				if (!SparkSettings.instance.saveEchoreplayFiles) return;
 			}
 
-			if (frameIndex % FrameInterval != 0) return;
+			if ((timestamp - lastRecordedEchoreplayTime).TotalMilliseconds < TargetDeltaTime * 0.85f) return;
+			lastRecordedEchoreplayTime = timestamp;
 
 			try
 			{
@@ -178,7 +178,8 @@ namespace Spark
 			if (!SparkSettings.instance.enableFullLogging) return;
 			if (!SparkSettings.instance.saveButterFiles) return;
 
-			if (frameIndex % FrameInterval != 0) return;
+			if ((f.recorded_time - lastRecordedButterTime).TotalMilliseconds < TargetDeltaTime * 0.85f) return;
+			lastRecordedButterTime = f.recorded_time;
 			
             if (!writeQueue.IsAddingCompleted)
             {

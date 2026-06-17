@@ -602,6 +602,142 @@ exit
             }
         }
 
+        private async void DownloadCombatUpdateButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                DownloadCombatUpdateButton.IsEnabled = false;
+                
+                Action<string> statusCallback = (msg) => 
+                {
+                    Dispatcher.Invoke(() => 
+                    {
+                        if (msg.StartsWith("Status: "))
+                        {
+                            CombatUpdateStatus.Text = msg.Substring(8);
+                        }
+                        else
+                        {
+                            UpdateDetailsText.Text += $"[{DateTime.Now}] {msg}\n";
+                        }
+                    });
+                };
+
+                await InstallCombatUpdateAsync(statusCallback);
+            }
+            finally
+            {
+                DownloadCombatUpdateButton.IsEnabled = true;
+            }
+        }
+
+        public static async Task InstallCombatUpdateAsync(Action<string> statusCallback = null)
+        {
+            try
+            {
+                if (SparkSettings.instance == null || string.IsNullOrEmpty(SparkSettings.instance.echoVRPath))
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        new MessageBox("Error: EchoVR Path is not set in Spark Settings. Please set it in the main settings first.").Show();
+                    });
+                    return;
+                }
+
+                string echoDir = Path.GetDirectoryName(SparkSettings.instance.echoVRPath);
+                if (!Directory.Exists(echoDir))
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        new MessageBox($"Error: EchoVR directory not found at:\n{echoDir}").Show();
+                    });
+                    return;
+                }
+
+                string targetBaseDir = Path.GetFullPath(Path.Combine(echoDir, "..", "..", "_data", "5932408047", "rad15", "win10"));
+
+                if (!Directory.Exists(targetBaseDir))
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        new MessageBox($"Error: Combat update target directory not found at:\n{targetBaseDir}\nAre you sure Echo VR is fully installed?").Show();
+                    });
+                    return;
+                }
+
+                statusCallback?.Invoke("Status: Downloading Combat Update...");
+                statusCallback?.Invoke("Starting Combat Update download...");
+
+                string _tempFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spark", "Temp");
+                if (!Directory.Exists(_tempFolder))
+                {
+                    Directory.CreateDirectory(_tempFolder);
+                }
+
+                string url = "https://github.com/heisthecat31/EchoVR-Updater/releases/download/combat/combatmod.zip";
+                string zipPath = Path.Combine(_tempFolder, "combatmod.zip");
+                string extractPath = Path.Combine(_tempFolder, "CombatMod_Extracted");
+
+                using (WebClient client = new WebClient())
+                {
+                    client.Headers.Add("User-Agent", "Spark-Updater");
+                    await client.DownloadFileTaskAsync(new Uri(url), zipPath);
+                }
+
+                statusCallback?.Invoke("Download complete. Extracting...");
+
+                if (Directory.Exists(extractPath))
+                    Directory.Delete(extractPath, true);
+                
+                ZipFile.ExtractToDirectory(zipPath, extractPath);
+
+                // Copy files recursively
+                void CopyDirectory(string sourceDir, string destinationDir)
+                {
+                    var dir = new DirectoryInfo(sourceDir);
+                    if (!dir.Exists) return;
+
+                    Directory.CreateDirectory(destinationDir);
+
+                    foreach (FileInfo file in dir.GetFiles())
+                    {
+                        string targetFilePath = Path.Combine(destinationDir, file.Name);
+                        file.CopyTo(targetFilePath, true);
+                        statusCallback?.Invoke($"Copying {file.Name} to {destinationDir}");
+                    }
+
+                    foreach (DirectoryInfo subDir in dir.GetDirectories())
+                    {
+                        string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
+                        CopyDirectory(subDir.FullName, newDestinationDir);
+                    }
+                }
+
+                CopyDirectory(extractPath, targetBaseDir);
+
+                // Cleanup
+                if (File.Exists(zipPath)) File.Delete(zipPath);
+                if (Directory.Exists(extractPath)) Directory.Delete(extractPath, true);
+
+                statusCallback?.Invoke("Status: Combat Update installed successfully!");
+                statusCallback?.Invoke("Combat Update installed successfully.");
+                
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    new MessageBox("Success: Combat Update installed successfully!").Show();
+                });
+            }
+            catch (Exception ex)
+            {
+                statusCallback?.Invoke("Status: Error installing Combat Update.");
+                statusCallback?.Invoke($"Error installing Combat Update: {ex.Message}");
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    new MessageBox($"Error installing Combat Update: {ex.Message}").Show();
+                });
+            }
+        }
+
         private void OpenTempFolderButton_Click(object sender, RoutedEventArgs e)
         {
             if (Directory.Exists(_tempFolder))

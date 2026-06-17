@@ -182,73 +182,233 @@
                             <Image Source="/img/view-dashboard.png" Height="16"/>
                         </StackPanel>
                     </TabItem.Header>
-                    <Grid Background="{DynamicResource ControlDarkerBackground}">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="5*"/>
-                            <RowDefinition Height="3*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="6*"/>
-                            <ColumnDefinition Width="3*"/>
-                            <ColumnDefinition Width="3*"/>
-                            <ColumnDefinition Width="6*"/>
-                        </Grid.ColumnDefinitions>
-                        <GroupBox x:Name="playerSpeedsGroupbox" Grid.Row="0" Grid.Column="0" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                            <GroupBox.Header>
-                                <ComboBox SelectedIndex="{l:SettingBinding dashboardItem1}" SelectionChanged="DashboardItem1Changed">
-                                    <ComboBoxItem Content="{x:Static p:Resources.Last_Throw}"/>
-                                    <ComboBoxItem Content="{x:Static p:Resources.Player_Speeds}" />
-                                </ComboBox>
-                            </GroupBox.Header>
-                            <StackPanel Background="{DynamicResource ControlDarkerBackground}">
-                                <StackPanel x:Name="playerSpeedsBox" Orientation="Vertical" Margin="0,10,10,10">
-                                    <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
-                                        <TextBlock x:Name="bluePlayerSpeedsSpeeds" Text="" VerticalAlignment="Top" Width="35" Padding="0,0,5,0" HorizontalAlignment="Right" Margin="10,0,0,0" />
-                                        <TextBlock x:Name="bluePlayersSpeedsNames" Text="" VerticalAlignment="Top" Foreground="CornflowerBlue" />
-                                    </StackPanel>
-                                    <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
-                                        <TextBlock x:Name="orangePlayerSpeedsSpeeds" Text="" VerticalAlignment="Top" Width="35" Padding="0,0,5,0" HorizontalAlignment="Right" Margin="10,0,0,0" />
-                                        <TextBlock x:Name="orangePlayersSpeedsNames" Text="" VerticalAlignment="Top" Foreground="#ffd4941e" />
-                                    </StackPanel>
-                                </StackPanel>
-                                <TextBlock x:Name="lastThrowStats" Margin="4,4,4,4" />
-                            </StackPanel>
-                        </GroupBox>
-                        <GroupBox x:Name="discSpeedsGroupbox" Header="{x:Static p:Resources.Disc_Speed}" Grid.Row="0" Grid.Column="1" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Top" Grid.ColumnSpan="2" Panel.ZIndex="-2" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                            <TextBlock x:Name="discSpeedLabel" Text="0" Height="30" HorizontalAlignment="Center" Padding="15,5,15,5" VerticalAlignment="Stretch"/>
-                        </GroupBox>
-                        <GroupBox x:Name="playerPingsGroupbox" Header="{x:Static p:Resources.Player_Pings}" Grid.Row="0" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="3" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                            <StackPanel Orientation="Vertical" Margin="0,10,0,10" Background="{DynamicResource ControlDarkerBackground}">
-                                <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight">
-                                    <TextBlock x:Name="bluePlayerPingsPings" Text="" VerticalAlignment="Top" Width="100"  Padding="5,0,0,0" HorizontalAlignment="Right" Margin="10,0,0,0"/>
-                                    <TextBlock x:Name="bluePlayerPingsNames" Text="" VerticalAlignment="Top" Foreground="CornflowerBlue"/>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight">
-                                    <TextBlock x:Name="orangePlayerPingsPings" Text="" VerticalAlignment="Top" Width="100" Padding="5,0,0,0" HorizontalAlignment="Right" Margin="10,0,0,0"/>
-                                    <TextBlock x:Name="orangePlayerPingsNames" Text="" VerticalAlignment="Top" Foreground="#ffd4941e"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </GroupBox>
-                        <GroupBox Header="{x:Static p:Resources.Previous_Rounds}" Grid.Column="0" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.ColumnSpan="2" Grid.Row="1" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                            <StackPanel x:Name="LastRoundScoresBox" Margin="-3,-3,-3,-3" Background="{DynamicResource ControlDarkerBackground}"></StackPanel>
-                        </GroupBox>
-                        <GroupBox Header="{x:Static p:Resources.Previous_Goals}" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left" Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="1" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                            <StackPanel x:Name="LastGoalsBox" Margin="-3,-3,-3,-3" Background="{DynamicResource ControlDarkerBackground}"></StackPanel>
-                        </GroupBox>
-                        <GroupBox x:Name="lastJoustsBox" Grid.Row="0" Margin="10,90,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="1" Grid.ColumnSpan="2" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                            <GroupBox.Header>
-                                <StackPanel Orientation="Horizontal">
-                                    <Label Content="{x:Static p:Resources.Joust_Times}"/>
-                                    <ComboBox SelectedIndex="{l:SettingBinding dashboardJoustTimeOrder}" ToolTip="{x:Static p:Resources.Only_stores_up_to_the_100_most_recent_joust_times_}">
-                                        <ComboBoxItem Content="{x:Static p:Resources.Recent}"/>
-                                        <ComboBoxItem Content="{x:Static p:Resources.Fastest}"/>
+                    <Grid>
+                        <Grid x:Name="ArenaDashboardGrid" Background="{DynamicResource ControlDarkerBackground}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="5*"/>
+                                <RowDefinition Height="3*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="6*"/>
+                                <ColumnDefinition Width="3*"/>
+                                <ColumnDefinition Width="3*"/>
+                                <ColumnDefinition Width="6*"/>
+                            </Grid.ColumnDefinitions>
+                            <GroupBox x:Name="playerSpeedsGroupbox" Grid.Row="0" Grid.Column="0" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                                <GroupBox.Header>
+                                    <ComboBox SelectedIndex="{l:SettingBinding dashboardItem1}" SelectionChanged="DashboardItem1Changed">
+                                        <ComboBoxItem Content="{x:Static p:Resources.Last_Throw}"/>
+                                        <ComboBoxItem Content="{x:Static p:Resources.Player_Speeds}" />
                                     </ComboBox>
-                                    <Button Click="OpenLocalDatabaseBrowser" Margin="50,0,0,0" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"><Image Source="/img/open-in-new.png" Height="16"></Image></Button>
-                                    
+                                </GroupBox.Header>
+                                <StackPanel Background="{DynamicResource ControlDarkerBackground}">
+                                    <StackPanel x:Name="playerSpeedsBox" Orientation="Vertical" Margin="0,10,10,10">
+                                        <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
+                                            <TextBlock x:Name="bluePlayerSpeedsSpeeds" Text="" VerticalAlignment="Top" Width="35" Padding="0,0,5,0" HorizontalAlignment="Right" Margin="10,0,0,0" />
+                                            <TextBlock x:Name="bluePlayersSpeedsNames" Text="" VerticalAlignment="Top" Foreground="CornflowerBlue" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
+                                            <TextBlock x:Name="orangePlayerSpeedsSpeeds" Text="" VerticalAlignment="Top" Width="35" Padding="0,0,5,0" HorizontalAlignment="Right" Margin="10,0,0,0" />
+                                            <TextBlock x:Name="orangePlayersSpeedsNames" Text="" VerticalAlignment="Top" Foreground="#ffd4941e" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <TextBlock x:Name="lastThrowStats" Margin="4,4,4,4" />
                                 </StackPanel>
-                            </GroupBox.Header>
-                            <TextBlock x:Name="lastJoustsTextBlock" ScrollViewer.VerticalScrollBarVisibility="Visible"/>
-                        </GroupBox>
+                            </GroupBox>
+                            <GroupBox x:Name="discSpeedsGroupbox" Header="{x:Static p:Resources.Disc_Speed}" Grid.Row="0" Grid.Column="1" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Top" Grid.ColumnSpan="2" Panel.ZIndex="-2" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                                <TextBlock x:Name="discSpeedLabel" Text="0" Height="30" HorizontalAlignment="Center" Padding="15,5,15,5" VerticalAlignment="Stretch"/>
+                            </GroupBox>
+                            <GroupBox x:Name="playerPingsGroupbox" Header="{x:Static p:Resources.Player_Pings}" Grid.Row="0" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="3" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                                <StackPanel Orientation="Vertical" Margin="0,10,0,10" Background="{DynamicResource ControlDarkerBackground}">
+                                    <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight">
+                                        <TextBlock x:Name="bluePlayerPingsPings" Text="" VerticalAlignment="Top" Width="100"  Padding="5,0,0,0" HorizontalAlignment="Right" Margin="10,0,0,0"/>
+                                        <TextBlock x:Name="bluePlayerPingsNames" Text="" VerticalAlignment="Top" Foreground="CornflowerBlue"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight">
+                                        <TextBlock x:Name="orangePlayerPingsPings" Text="" VerticalAlignment="Top" Width="100" Padding="5,0,0,0" HorizontalAlignment="Right" Margin="10,0,0,0"/>
+                                        <TextBlock x:Name="orangePlayerPingsNames" Text="" VerticalAlignment="Top" Foreground="#ffd4941e"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox Header="{x:Static p:Resources.Previous_Rounds}" Grid.Column="0" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.ColumnSpan="2" Grid.Row="1" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                                <StackPanel x:Name="LastRoundScoresBox" Margin="-3,-3,-3,-3" Background="{DynamicResource ControlDarkerBackground}"></StackPanel>
+                            </GroupBox>
+                            <GroupBox Header="{x:Static p:Resources.Previous_Goals}" Margin="10,10,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" HorizontalContentAlignment="Left" Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="1" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                                <StackPanel x:Name="LastGoalsBox" Margin="-3,-3,-3,-3" Background="{DynamicResource ControlDarkerBackground}"></StackPanel>
+                            </GroupBox>
+                            <GroupBox x:Name="lastJoustsBox" Grid.Row="0" Margin="10,90,10,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="1" Grid.ColumnSpan="2" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
+                                <GroupBox.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Label Content="{x:Static p:Resources.Joust_Times}"/>
+                                        <ComboBox SelectedIndex="{l:SettingBinding dashboardJoustTimeOrder}" ToolTip="{x:Static p:Resources.Only_stores_up_to_the_100_most_recent_joust_times_}">
+                                            <ComboBoxItem Content="{x:Static p:Resources.Recent}"/>
+                                            <ComboBoxItem Content="{x:Static p:Resources.Fastest}"/>
+                                        </ComboBox>
+                                        <Button Click="OpenLocalDatabaseBrowser" Margin="50,0,0,0" Background="{DynamicResource ControlDefaultBackground}" Foreground="{DynamicResource ControlDefaultForeground}" BorderBrush="{DynamicResource ControlDarkerBorderBrush}"><Image Source="/img/open-in-new.png" Height="16"></Image></Button>
+                                        
+                                    </StackPanel>
+                                </GroupBox.Header>
+                                <TextBlock x:Name="lastJoustsTextBlock" ScrollViewer.VerticalScrollBarVisibility="Visible"/>
+                            </GroupBox>
+                        </Grid>
+
+                        <Grid x:Name="CombatDashboardGrid" Background="#1a1a1a" Visibility="Collapsed" Margin="10,10,10,10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Top Score Header -->
+                            <Grid Grid.Row="0" Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- Blue Score -->
+                                <Border Grid.Column="0" Background="#112233" BorderBrush="#0088ff" BorderThickness="2" CornerRadius="5" Padding="10">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <TextBlock Text="BLUE TEAM" Foreground="#0088ff" FontWeight="Bold" FontSize="20" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                                        <TextBlock x:Name="CombatBlueScore" Text="0" Foreground="White" FontWeight="Bold" FontSize="36" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- VS -->
+                                <TextBlock Grid.Column="1" Text="VS" Foreground="#888" FontSize="24" FontWeight="Bold" VerticalAlignment="Center" Margin="20,0" />
+
+                                <!-- Orange Score -->
+                                <Border Grid.Column="2" Background="#331800" BorderBrush="#ff8800" BorderThickness="2" CornerRadius="5" Padding="10">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <TextBlock x:Name="CombatOrangeScore" Text="0" Foreground="White" FontWeight="Bold" FontSize="36" Margin="0,0,15,0" />
+                                        <TextBlock Text="ORANGE TEAM" Foreground="#ff8800" FontWeight="Bold" FontSize="20" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- Loadouts -->
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="20" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Blue Loadouts -->
+                                <Border Grid.Column="0" BorderBrush="#0088ff" BorderThickness="1" CornerRadius="3" Background="#05101a">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <Border Background="#004488" Padding="5">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="PLAYER" Foreground="White" FontWeight="Bold" />
+                                                <TextBlock Text="PING" Grid.Column="1" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" />
+                                                <TextBlock Text="WEAPON" Grid.Column="2" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" />
+                                                <TextBlock Text="ORDNANCE" Grid.Column="3" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" />
+                                                <TextBlock Text="TACMOD" Grid.Column="4" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" />
+                                            </Grid>
+                                        </Border>
+                                        <ItemsControl x:Name="BlueCombatLoadouts" Grid.Row="1" Margin="5">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="0,5">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="2*"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding Name}" Foreground="#00ccff" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Ping}" Grid.Column="1" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Weapon}" Grid.Column="2" Foreground="#ddd" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Ordnance}" Grid.Column="3" Foreground="#ddd" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding TacMod}" Grid.Column="4" Foreground="#ddd" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Orange Loadouts -->
+                                <Border Grid.Column="2" BorderBrush="#ff8800" BorderThickness="1" CornerRadius="3" Background="#1a0a00">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <Border Background="#884400" Padding="5">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="2*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="PLAYER" Foreground="White" FontWeight="Bold" />
+                                                <TextBlock Text="PING" Grid.Column="1" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" />
+                                                <TextBlock Text="WEAPON" Grid.Column="2" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" />
+                                                <TextBlock Text="ORDNANCE" Grid.Column="3" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" />
+                                                <TextBlock Text="TACMOD" Grid.Column="4" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" />
+                                            </Grid>
+                                        </Border>
+                                        <ItemsControl x:Name="OrangeCombatLoadouts" Grid.Row="1" Margin="5">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="0,5">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="2*"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding Name}" Foreground="#ffcc00" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Ping}" Grid.Column="1" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Weapon}" Grid.Column="2" Foreground="#ddd" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Ordnance}" Grid.Column="3" Foreground="#ddd" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding TacMod}" Grid.Column="4" Foreground="#ddd" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+
+                            <!-- Map & Objective -->
+                            <Border x:Name="CombatObjectiveBorder" Grid.Row="2" Background="#111" BorderBrush="#444" BorderThickness="2" CornerRadius="5" Margin="0,10,0,0" Padding="10">
+                                <StackPanel>
+                                    <TextBlock x:Name="CombatMapName" Text="MAP: UNKNOWN" Foreground="#aaa" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                            <TextBlock x:Name="CombatObjectiveLabel" Text="PAYLOAD" Foreground="#888" FontSize="14" HorizontalAlignment="Center" />
+                                            <TextBlock x:Name="CombatObjectiveValue" Text="0.0m" Foreground="White" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                            <TextBlock x:Name="CombatObjectiveSecondaryLabel" Text="SPEED" Foreground="#888" FontSize="14" HorizontalAlignment="Center" />
+                                            <TextBlock x:Name="CombatObjectiveSecondaryValue" Text="0.0 m/s" Foreground="White" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </Grid>
                 </TabItem>
                 

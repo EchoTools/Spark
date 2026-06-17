@@ -428,6 +428,8 @@
 										  IsChecked="{Binding PlayerSwitch}" />
 							<CheckBox Content="Private Match Rules Changed" Margin="4,10,4,0"
 							          IsChecked="{Binding RulesChanged}" />
+							<CheckBox x:Name="ttsSpecificNumbersCheckbox" Content="Use Specific Numbers (e.g. 18.67)" Margin="4,10,4,0"
+										  IsChecked="{Binding TTSSpecificNumbers}" />
 						</StackPanel>
 					</StackPanel>
 				</ScrollViewer>

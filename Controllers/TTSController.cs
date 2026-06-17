@@ -125,14 +125,14 @@ namespace Spark
 			{
 				if (SparkSettings.instance.throwSpeedTTS && frame.last_throw.total_speed > 10)
 				{
-					SpeakAsync($"{frame.last_throw.total_speed:N1}");
+					SpeakAsync(SparkSettings.instance.ttsSpecific ? $"{frame.last_throw.total_speed:N2}" : $"{frame.last_throw.total_speed:N1}");
 				}
 			};
 			Program.BigBoost += (frame, team, player, speed, howLongAgo) =>
 			{
 				if (SparkSettings.instance.maxBoostSpeedTTS && player.name == frame.client_name)
 				{
-					SpeakAsync($"{speed:N0} {Resources.tts_meters_per_second}");
+					SpeakAsync(SparkSettings.instance.ttsSpecific ? $"{speed:N1} {Resources.tts_meters_per_second}" : $"{speed:N0} {Resources.tts_meters_per_second}");
 				}
 			};
 			Program.PlayspaceAbuse += (frame, team, player, playspacePos) =>
@@ -144,32 +144,38 @@ namespace Spark
 			};
 			Program.Joust += (frame, team, player, isNeutral, joustTime, maxSpeed, maxTubeExitSpeed) =>
 			{
+				string joustTimeStr = SparkSettings.instance.ttsSpecific ? $"{joustTime:N2}" : $"{joustTime:N1}";
+				string maxSpeedStr = SparkSettings.instance.ttsSpecific ? $"{maxSpeed:N1}" : $"{maxSpeed:N0}";
+
 				if (SparkSettings.instance.joustTimeTTS && !SparkSettings.instance.joustSpeedTTS)
 				{
-					SpeakAsync($"{team.color} {joustTime:N1}");
+					SpeakAsync($"{team.color} {joustTimeStr}");
 				}
 				else if (!SparkSettings.instance.joustTimeTTS && SparkSettings.instance.joustSpeedTTS)
 				{
-					SpeakAsync($"{team.color} {maxSpeed:N0} {Resources.tts_meters_per_second}");
+					SpeakAsync($"{team.color} {maxSpeedStr} {Resources.tts_meters_per_second}");
 				}
 				else if (SparkSettings.instance.joustTimeTTS && SparkSettings.instance.joustSpeedTTS)
 				{
-					SpeakAsync($"{team.color} {joustTime:N1} {maxSpeed:N0} {Resources.tts_meters_per_second}");
+					SpeakAsync($"{team.color} {joustTimeStr} {maxSpeedStr} {Resources.tts_meters_per_second}");
 				}
 			};
 			Program.Goal += (frame, goalEvent) =>
 			{
+				string distanceStr = SparkSettings.instance.ttsSpecific ? $"{frame.last_score.distance_thrown:N2}" : $"{frame.last_score.distance_thrown:N1}";
+				string speedStr = SparkSettings.instance.ttsSpecific ? $"{frame.last_score.disc_speed:N2}" : $"{frame.last_score.disc_speed:N1}";
+
 				if (SparkSettings.instance.goalDistanceTTS && SparkSettings.instance.goalSpeedTTS)
 				{
-					SpeakAsync($"{frame.last_score.distance_thrown:N1} {Resources.tts_meters}. {frame.last_score.disc_speed:N1} {Resources.tts_meters_per_second}");
+					SpeakAsync($"{distanceStr} {Resources.tts_meters}. {speedStr} {Resources.tts_meters_per_second}");
 				}
 				else if (SparkSettings.instance.goalDistanceTTS)
 				{
-					SpeakAsync($"{frame.last_score.distance_thrown:N1} {Resources.tts_meters}");
+					SpeakAsync($"{distanceStr} {Resources.tts_meters}");
 				}
 				else if (SparkSettings.instance.goalSpeedTTS)
 				{
-					SpeakAsync($"{frame.last_score.disc_speed:N1} {Resources.tts_meters_per_second}");
+					SpeakAsync($"{speedStr} {Resources.tts_meters_per_second}");
 				}
 			};
 			Program.RulesChanged += frame =>

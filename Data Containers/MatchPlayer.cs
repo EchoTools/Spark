@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -270,8 +270,8 @@ namespace Spark
 		public void AddRecentVelocity(float vel)
 		{
 			recentVelocities.Add(vel);
-			// anything older than 10s at 60hz
-			while (recentVelocities.Count > Program.StatsIntervalMs * 10)
+			// anything older than 10s
+			while (recentVelocities.Count > (1000f / Program.StatsIntervalMs) * 10)
 			{
 				recentVelocities.RemoveAt(0);
 			}
@@ -294,12 +294,12 @@ namespace Spark
 				recentVelocities.Clear();
 			}
 
-			return (maxVel, (float)(recentVelocities.Count - maxVelIndex) / Program.StatsIntervalMs);
+			return (maxVel, (recentVelocities.Count - maxVelIndex) * (Program.StatsIntervalMs / 1000f));
 		}
 
 		public float GetSmoothedVelocity(float smoothTime = 1)
 		{
-			int N = (int)(smoothTime * Program.StatsIntervalMs);
+			int N = (int)(smoothTime * (1000f / Program.StatsIntervalMs));
 			if (N > recentVelocities.Count - 1)
 			{
 				return recentVelocities.Average();

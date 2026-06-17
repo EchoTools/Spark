@@ -156,11 +156,33 @@ namespace Spark
 		private void ExecutableLocationChanged(object sender, TextChangedEventArgs e)
 		{
 			if (!initialized) return;
-			string path = ((TextBox)sender).Text;
+			string path = ((TextBox)sender).Text.Trim().Trim('"');
+
+			if (path.EndsWith("ready-at-dawn-echo-arena", StringComparison.OrdinalIgnoreCase) || 
+				path.EndsWith("ready-at-dawn-echo-arena\\", StringComparison.OrdinalIgnoreCase) ||
+				path.EndsWith("ready-at-dawn-echo-arena/", StringComparison.OrdinalIgnoreCase))
+			{
+				string exePath = Path.Combine(path, "bin", "win10", "echovr.exe");
+				if (File.Exists(exePath))
+				{
+					path = exePath;
+				}
+				else
+				{
+					ExeLocationLabel.Content = "EchoVR Executable Location:   (echovr.exe not found in bin\\win10)";
+					return;
+				}
+			}
+
 			if (File.Exists(path))
 			{
 				ExeLocationLabel.Content = "EchoVR Executable Location:";
 				SparkSettings.instance.echoVRPath = path;
+
+				if (((TextBox)sender).Text != path)
+				{
+					((TextBox)sender).Text = path;
+				}
 			}
 			else
 			{
@@ -687,6 +709,20 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 				if (value)
 				{
 					Program.synth.SpeakAsync($"NtsFranz changed the rules");
+				}
+			}
+		}
+
+		public static bool TTSSpecificNumbers
+		{
+			get => SparkSettings.instance.ttsSpecific;
+			set
+			{
+				SparkSettings.instance.ttsSpecific = value;
+
+				if (value)
+				{
+					Program.synth.SpeakAsync("18.67");
 				}
 			}
 		}

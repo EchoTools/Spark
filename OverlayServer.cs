@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -136,6 +136,26 @@ namespace Spark
                 // Global CORS policy - applied before static files
                 app.UseCors("CorsPolicy");
 
+                string buildArenaPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Overlay", "build_arena");
+                string buildCombatPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Overlay", "build_combat");
+
+                app.Use(async (context, next) =>
+                {
+                    if (!context.Request.Path.Value.Contains("."))
+                    {
+                        string pathWithHtml = context.Request.Path.Value + ".html";
+                        string relativePath = pathWithHtml.TrimStart('/');
+                        
+                        if (File.Exists(Path.Combine(StaticOverlayFolder, relativePath)) ||
+                            File.Exists(Path.Combine(buildArenaPath, relativePath)) ||
+                            File.Exists(Path.Combine(buildCombatPath, relativePath)))
+                        {
+                            context.Request.Path = pathWithHtml;
+                        }
+                    }
+                    await next();
+                });
+
                 // Serve from AppData Overlays folder
                 app.UseFileServer(new FileServerOptions
                 {
@@ -150,17 +170,34 @@ namespace Spark
                     }
                 });
 
-                // Serve from Build folder
-                string buildPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Overlay", "build");
-                if (Directory.Exists(buildPath))
+                // Serve from Arena Build folder
+                if (Directory.Exists(buildArenaPath))
                 {
                     app.UseFileServer(new FileServerOptions
                     {
-                        FileProvider = new PhysicalFileProvider(buildPath),
+                        FileProvider = new PhysicalFileProvider(buildArenaPath),
                         RequestPath = "",
                         EnableDefaultFiles = true,
                         StaticFileOptions =
                         {
+                            ServeUnknownFileTypes = true,
+                            ContentTypeProvider = provider,
+                            OnPrepareResponse = onPrepareResponse
+                        }
+                    });
+                }
+
+                // Serve from Combat Build folder
+                if (Directory.Exists(buildCombatPath))
+                {
+                    app.UseFileServer(new FileServerOptions
+                    {
+                        FileProvider = new PhysicalFileProvider(buildCombatPath),
+                        RequestPath = "",
+                        EnableDefaultFiles = true,
+                        StaticFileOptions =
+                        {
+                            ServeUnknownFileTypes = true,
                             ContentTypeProvider = provider,
                             OnPrepareResponse = onPrepareResponse
                         }

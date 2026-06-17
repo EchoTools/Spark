@@ -156,9 +156,9 @@ namespace Spark
 		public string webBrowserHomeURL { get; set; } = "https://discord.com/app";
 		public bool showDashboardTab { get; set; } = true;
 		public bool showPortalTab { get; set; } = true;
-		public bool showWebBrowserTab { get; set; } = false;
+		public bool showWebBrowserTab { get; set; } = true;
 		public bool showDownloadEchoVRTab { get; set; } = true;
-		public bool showLinksTab { get; set; } = true;
+		public bool showLinksTab { get; set; } = false;
 		public bool showEventLogTab { get; set; } = true;
 		public bool showScoreboardTab { get; set; } = false;
 		public bool showSpeakerSystemTab { get; set; } = true;
@@ -172,6 +172,7 @@ namespace Spark
 		public string myFriendCode { get; set; } = "";
 		public List<string> friendCodes { get; set; } = new List<string>();
 		public string ignoredUpdateVersion { get; set; } = "";
+		public bool combatUpdatePopupShown { get; set; } = false;
 
 
 
@@ -196,6 +197,7 @@ namespace Spark
 		public int ttsVoice { get; set; } = 0;
 		public string ttsCacheFolder { get; set; } = "";
 		public int ttsCacheSizeBytes { get; set; } = 100000000;
+		public bool ttsSpecific { get; set; } = false;
 
 		#endregion
 
