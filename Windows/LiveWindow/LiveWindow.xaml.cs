@@ -1209,16 +1209,23 @@ namespace Spark
                 try
                 {
                     // string resp = await FetchUtils.client.GetStringAsync(new Uri($"{Program.APIURL}/ip_geolocation/{ip}"));
-                    string resp = await FetchUtils.client.GetStringAsync(new Uri($"{Program.APIURL}/ip_geolocation/{ip}"));
-                    Program.CurrentRound.serverLocationResponse = resp;
-                    Dictionary<string, dynamic> obj = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(resp);
-                    if (obj == null) return;
+                    string resp = await FetchUtils.client.GetStringAsync(new Uri($"http://ip-api.com/json/{ip}"));
+                    Dictionary<string, dynamic> ipApiObj = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(resp);
+                    if (ipApiObj == null || (ipApiObj.ContainsKey("status") && ipApiObj["status"] == "fail")) return;
+                    
+                    Dictionary<string, dynamic> obj = new Dictionary<string, dynamic>
+                    {
+                        { "ip-api", ipApiObj }
+                    };
+                    string modifiedResp = JsonConvert.SerializeObject(obj);
+                    Program.CurrentRound.serverLocationResponse = modifiedResp;
+
                     string loc = (string)obj["ip-api"]["city"] + ", " + (string)obj["ip-api"]["regionName"];
 
                     // if an aws server, use ipdata.co instead
-                    if ((string)obj["ip-api"]["org"] == "AWS EC2 (us-east-1)")
+                    if ((string)obj["ip-api"]["org"] == "AWS EC2 (us-east-1)" || (string)obj["ip-api"]["org"] == "Amazon.com, Inc.")
                     {
-                        loc = (string)obj["ipdata"]["city"] + ", " + (string)obj["ipdata"]["region"];
+                        loc = "Ashburn, Virginia";
                     }
 
                     Program.CurrentRound.serverLocation = loc;
@@ -1228,7 +1235,7 @@ namespace Spark
 
                     try
                     {
-                        Program.IPGeolocated?.Invoke(resp);
+                        Program.IPGeolocated?.Invoke(modifiedResp);
                     }
                     catch (Exception)
                     {
