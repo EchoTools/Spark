@@ -11,6 +11,9 @@ namespace Spark
 		public const string CLIENT_ID = "706375130531758081";
 		public const string CLIENT_SECRET = "";
 		public const string OAuthURL = "https://discord.com/api/oauth2/authorize?client_id=706375130531758081&redirect_uri=http%3A%2F%2Flocalhost%3A6722%2Foauth_login&response_type=code&scope=identify";
+
+		//Leave Blank
+		public const string FRIENDS_BOT_URL = "";
 		
 		private const string salt = "not_real";
 
