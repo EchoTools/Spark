@@ -24,9 +24,9 @@ namespace Spark
 {
     public class OverlayServer
     {
-        private IWebHost server;
+        private IHost server;
         private readonly SemaphoreSlim restartLock = new SemaphoreSlim(1, 1);
-        private bool isRestarting = false;
+
 
         public static string StaticOverlayFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "IgniteVR", "Spark", "Overlays");
 
@@ -55,7 +55,7 @@ namespace Spark
 
             try
             {
-                isRestarting = true;
+
 
                 // Fetch data needed for the server
                 await OverlaysCustom.FetchOverlayData();
@@ -68,11 +68,14 @@ namespace Spark
                 }
 
                 // Create and start the server
-                server = WebHost
+                server = Host
                     .CreateDefaultBuilder()
-                    .UseKestrel(x => { x.ListenAnyIP(6724); })
-                    .ConfigureLogging((logging) => { /* Configure logging if needed, or keep silent to save perf */ })
-                    .UseStartup<Routes>()
+                    .ConfigureWebHostDefaults(webBuilder =>
+                    {
+                        webBuilder.UseKestrel(x => { x.ListenAnyIP(6724); })
+                                  .ConfigureLogging((logging) => { /* Configure logging if needed, or keep silent to save perf */ })
+                                  .UseStartup<Routes>();
+                    })
                     .Build();
 
                 await server.StartAsync();
@@ -83,7 +86,7 @@ namespace Spark
             }
             finally
             {
-                isRestarting = false;
+
                 restartLock.Release();
             }
         }
@@ -368,7 +371,7 @@ namespace Spark
                                 _ => "application/octet-stream"
                             };
 
-                            context.Response.Headers.Add("content-type", contentType);
+                            context.Response.Headers.Append("content-type", contentType);
                             // Prefer loading from disk if available (for dev/modding), fall back to resource
                             if (sparkPath != null)
                             {

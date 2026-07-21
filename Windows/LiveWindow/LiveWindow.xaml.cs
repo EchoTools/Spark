@@ -1172,9 +1172,7 @@ namespace Spark
 
         private async Task CheckForAppUpdate()
         {
-#if WINDOWS_STORE_RELEASE
-            return;
-#endif
+#if !WINDOWS_STORE_RELEASE
             try
             {
                 string respString = await FetchUtils.GetRequestAsync("https://api.github.com/repos/NtsFranz/Spark/releases", null);
@@ -1213,7 +1211,9 @@ namespace Spark
             {
                 LogRow(LogType.Error, $"Couldn't check for update.\n{e}");
             }
+#endif
         }
+
 
         private async Task GetServerLocation(string ip)
         {

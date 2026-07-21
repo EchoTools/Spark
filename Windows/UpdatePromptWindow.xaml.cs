@@ -71,25 +71,18 @@ namespace Spark
             {
                 string tempFilePath = Path.Combine(_tempFolder, _zipFileName);
 
-                using (var client = new WebClient())
+                await FetchUtils.DownloadFileAsync(_downloadUrl, tempFilePath, percentage =>
                 {
-                    client.Headers.Add("User-Agent", "Spark-Updater");
-
-                    client.DownloadProgressChanged += (s, args) =>
+                    Dispatcher.Invoke(() =>
                     {
-                        Dispatcher.Invoke(() =>
-                        {
-                            DownloadProgressBar.Value = args.ProgressPercentage;
-                            StatusText.Text = $"Downloading update: {args.ProgressPercentage}%";
-                        });
-                    };
+                        DownloadProgressBar.Value = percentage;
+                        StatusText.Text = $"Downloading update: {percentage}%";
+                    });
+                });
 
-                    await client.DownloadFileTaskAsync(new Uri(_downloadUrl), tempFilePath);
-
-                    StatusText.Text = "Download complete. Extracting and installing...";
-                    
-                    await Task.Run(() => InstallUpdate(tempFilePath, _zipFileName));
-                }
+                StatusText.Text = "Download complete. Extracting and installing...";
+                
+                await Task.Run(() => InstallUpdate(tempFilePath, _zipFileName));
             }
             catch (Exception ex)
             {

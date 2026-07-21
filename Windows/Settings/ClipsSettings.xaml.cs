@@ -466,7 +466,7 @@ namespace Spark
 				{
 					try
 					{
-						Program.obs.ws.Connect(SparkSettings.instance.obsIP, SparkSettings.instance.obsPassword);
+						Program.obs.ws.ConnectAsync(SparkSettings.instance.obsIP, SparkSettings.instance.obsPassword);
 						// Program.obs.instance.GetReplayBufferStatus();
 					}
 					catch (AuthFailureException)

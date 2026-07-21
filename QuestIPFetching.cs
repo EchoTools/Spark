@@ -108,7 +108,7 @@ namespace Spark
 		{
 			foreach (NetworkInterface adapter in NetworkInterface.GetAllNetworkInterfaces().Where(ni => ni.OperationalStatus == OperationalStatus.Up && (ni.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 || ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet)))
 			{
-				GatewayIPAddressInformation? addr = adapter.GetIPProperties().GatewayAddresses.FirstOrDefault();
+				GatewayIPAddressInformation addr = adapter.GetIPProperties().GatewayAddresses.FirstOrDefault();
 				if (addr != null && !addr.Address.ToString().Equals("0.0.0.0"))
 				{
 					foreach (UnicastIPAddressInformation unicastIPAddressInformation in adapter.GetIPProperties().UnicastAddresses)
@@ -128,7 +128,7 @@ namespace Spark
 		{
 			foreach (NetworkInterface adapter in NetworkInterface.GetAllNetworkInterfaces().Where(ni => ni.OperationalStatus == OperationalStatus.Up && (ni.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 || ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet)))
 			{
-				GatewayIPAddressInformation? addr = adapter.GetIPProperties().GatewayAddresses.FirstOrDefault();
+				GatewayIPAddressInformation addr = adapter.GetIPProperties().GatewayAddresses.FirstOrDefault();
 				if (addr != null && !addr.Address.ToString().Equals("0.0.0.0"))
 				{
 					foreach (UnicastIPAddressInformation unicastIPAddressInformation in adapter.GetIPProperties().UnicastAddresses)

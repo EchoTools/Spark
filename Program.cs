@@ -94,7 +94,6 @@ namespace Spark
 		static List<UserAtTime[]> stunningMatchedPairs = new List<UserAtTime[]>();
 		private const float stunMatchingTimeout = 4f;
 
-		public static string lastDateTimeString;
 		public static string lastJSON;
 		public static string lastBonesJSON;
 		public static ulong fetchFrameIndex = 0;
@@ -117,7 +116,6 @@ namespace Spark
 		/// Not actually Hz. 1/Hz.
 		/// </summary>
 		public static float StatsIntervalMs => statsDeltaTimes[SparkSettings.instance.lowFrequencyMode ? 2 : 0];
-		private static bool? lastLowFreqMode = null;
 
 		// 60, 30 or 15 hz main fetch speed
 		private static readonly List<float> statsDeltaTimes = new List<float> { 16.6666666f, 33.3333333f, 66.6666666f };
@@ -168,8 +166,6 @@ namespace Spark
 		private static Timer ccuCounter;
 		public static CameraController cameraController;
 
-		public static CoreWebView2Environment webView2Environment;
-
 
 		#region Event Callbacks
 
@@ -192,7 +188,7 @@ namespace Spark
 		/// <summary>
 		/// Called when a frame is finished with conversion and it is an Echo Combat frame
 		/// </summary>
-		public static Action<Frame> NewCombatFrame;
+		public static event Action<Frame> NewCombatFrame;
 		/// <summary>
 		/// Called when connectedToGame state changes.
 		/// This could be on loading screen or lobby
@@ -225,8 +221,8 @@ namespace Spark
 		public static Action<Frame> NewRound;
 		
 
-		public static Action<Frame> JoinedLobby;
-		public static Action<Frame> LeftLobby;
+		public static Action<Frame> JoinedLobby = delegate { };
+		public static Action<Frame> LeftLobby = delegate { };
 
 		public static Action<Frame, Team, Player> PlayerJoined;
 		public static Action<Frame, Team, Player> PlayerLeft;
@@ -239,7 +235,7 @@ namespace Spark
 		/// <summary>
 		/// Frame is the last frame of the last match
 		/// </summary>
-		public static Action<Frame> MatchReset;
+		public static event Action<Frame> MatchReset;
 		/// <summary>
 		/// Frame, nearest player, distance to podium
 		/// </summary>
@@ -319,8 +315,8 @@ namespace Spark
 		public static Action<Frame, Team, Player> LargePing;
 		public static Action<Frame> RulesChanged;
 		
-		public static Action ManualClip;
-		public static Action BadWordDetected;
+		public static Action ManualClip = delegate { };
+		public static Action BadWordDetected = delegate { };
 
 		/// <summary>
 		/// For any event type that has EventData
@@ -2459,13 +2455,6 @@ namespace Spark
 						}
 
 						// TODO check if a pass was made
-						if (false)
-						{
-							CurrentRound.events.Enqueue(new EventData(CurrentRound, EventContainer.EventType.pass, frame.game_clock,
-								team, player, null, player.head.Position, Vector3.Zero));
-							LogRow(LogType.File, frame.sessionid,
-								frame.game_clock_display + " - " + player.name + " made a pass");
-						}
 					}
 				}
 
@@ -3249,7 +3238,7 @@ namespace Spark
 						await APIJoin(parts[3], joinType == JoinType.Spectator ? 2 : -1);
 					}
 				}
-				catch (Exception e)
+				catch (Exception)
 				{
 					new MessageBox(Resources.Failed_to_send_join_data_to_the_game__Maybe_you_left_the_game_, Resources.Error, Quit).Show();
 				}

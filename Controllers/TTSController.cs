@@ -24,7 +24,7 @@ namespace Spark
 			{ { "en-US-Standard-D", "en-US-Standard-C" }, { "ja-JP-Standard-D", "ja-JP-Standard-B" } }
 		};
 
-		private bool playing = true;
+
 		private readonly Thread ttsThread;
 		private readonly Queue<DateTime> rateLimiterQueue = new Queue<DateTime>();
 		private const float rateLimitPerSecond = 15;
@@ -197,7 +197,7 @@ namespace Spark
 		{
 			try
 			{
-				ttsThread?.Abort();
+				ttsQueue?.CompleteAdding();
 				synth?.Dispose();
 			}
 			catch { }
@@ -225,7 +225,6 @@ namespace Spark
 			MediaPlayer mediaPlayer = new MediaPlayer();
 			mediaPlayer.MediaEnded += (sender, e) =>
 			{
-				playing = false;
 			};
 			
 			// Use GetConsumingEnumerable to block until item exists (CPU efficient)
@@ -263,7 +262,7 @@ namespace Spark
 						// Ensure previous playback stops
 						mediaPlayer.Stop();
 						mediaPlayer.Open(new Uri(result));
-						playing = true;
+
 						mediaPlayer.Play();
 						
 						// Only trim cache probabilistically to save IO

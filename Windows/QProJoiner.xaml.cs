@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Spark
 {
@@ -14,8 +15,8 @@ namespace Spark
 	public partial class QProJoiner
 	{
 		private static string sessionId;
-		private bool? sessionDataFound;
-		private IWebHost server;
+
+		private IHost server;
 
 		public QProJoiner(string session_id)
 		{
@@ -31,10 +32,13 @@ namespace Spark
 			MainMessage.Text = $"http://{QuestIPFetching.GetLocalIP()}:6726";
 
 			// restart the server
-			server = WebHost
+			server = Host
 				.CreateDefaultBuilder()
-				.UseKestrel(x => { x.ListenAnyIP(6726); })
-				.UseStartup<Routes>()
+				.ConfigureWebHostDefaults(webBuilder =>
+				{
+					webBuilder.UseKestrel(x => { x.ListenAnyIP(6726); })
+							  .UseStartup<Routes>();
+				})
 				.Build();
 
 			_ = server.RunAsync();

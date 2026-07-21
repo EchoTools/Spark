@@ -286,7 +286,6 @@ namespace Spark
 			int maxVelIndex = recentVelocities.IndexOf(maxVel);
 			if (maxVel < boostVelCutoff)
 			{
-				var asdf = 1;
 			}
 
 			if (reset)
