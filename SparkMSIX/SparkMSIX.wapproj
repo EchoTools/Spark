@@ -164,4 +164,11 @@
       <SkipGetTargetFrameworkProperties>True</SkipGetTargetFrameworkProperties>
     </ProjectReference>
   </ItemGroup>
+  
+  <!-- Add dummy targets when Microsoft.DesktopBridge.targets is not imported so dotnet build won't fail -->
+  <Target Name="Build" Condition="!Exists('$(WapProjPath)\Microsoft.DesktopBridge.targets')" />
+  <Target Name="Clean" Condition="!Exists('$(WapProjPath)\Microsoft.DesktopBridge.targets')" />
+  <Target Name="Rebuild" Condition="!Exists('$(WapProjPath)\Microsoft.DesktopBridge.targets')" />
+  <Target Name="Publish" Condition="!Exists('$(WapProjPath)\Microsoft.DesktopBridge.targets')" />
+  
 </Project>
