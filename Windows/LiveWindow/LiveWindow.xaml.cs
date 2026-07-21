@@ -502,17 +502,20 @@ namespace Spark
 
                         StringBuilder blueTextNames = new StringBuilder();
                         StringBuilder orangeTextNames = new StringBuilder();
+                        StringBuilder spectatorTextNames = new StringBuilder();
                         StringBuilder bluePingsTextPings = new StringBuilder();
                         StringBuilder orangePingsTextPings = new StringBuilder();
+                        StringBuilder spectatorPingsTextPings = new StringBuilder();
                         StringBuilder blueSpeedsTextSpeeds = new StringBuilder();
                         StringBuilder orangeSpeedsTextSpeeds = new StringBuilder();
+                        StringBuilder spectatorSpeedsTextSpeeds = new StringBuilder();
                         StringBuilder[] teamNames =
                         {
                             new StringBuilder(),
                             new StringBuilder(),
                             new StringBuilder()
                         };
-                        List<List<int>> pings = new List<List<int>> { new List<int>(), new List<int>() };
+                        List<List<int>> pings = new List<List<int>> { new List<int>(), new List<int>(), new List<int>() };
 
                         // loop through all the players and set their speed progress bars and pings
                         for (int t = 0; t < 3; t++)
@@ -535,6 +538,12 @@ namespace Spark
                                         orangeSpeedsTextSpeeds.AppendLine(player.velocity.ToVector3().Length().ToString("N1"));
                                         pings[t].Add(player.ping);
                                         break;
+                                    case 2:
+                                        spectatorTextNames.AppendLine(player.name);
+                                        spectatorPingsTextPings.AppendLine($"{player.ping}");
+                                        spectatorSpeedsTextSpeeds.AppendLine(player.velocity.ToVector3().Length().ToString("N1"));
+                                        pings[t].Add(player.ping);
+                                        break;
                                 }
 
                                 teamNames[t].AppendLine(player.name);
@@ -545,6 +554,8 @@ namespace Spark
                         bluePlayerPingsPings.Text = bluePingsTextPings.ToString();
                         orangePlayerPingsNames.Text = orangeTextNames.ToString();
                         orangePlayerPingsPings.Text = orangePingsTextPings.ToString();
+                        spectatorPlayerPingsNames.Text = spectatorTextNames.ToString();
+                        spectatorPlayerPingsPings.Text = spectatorPingsTextPings.ToString();
 
 
                         string playerPingsHeader;
@@ -590,6 +601,8 @@ namespace Spark
                         bluePlayerSpeedsSpeeds.Text = blueSpeedsTextSpeeds.ToString();
                         orangePlayersSpeedsNames.Text = orangeTextNames.ToString();
                         orangePlayerSpeedsSpeeds.Text = orangeSpeedsTextSpeeds.ToString();
+                        spectatorPlayersSpeedsNames.Text = spectatorTextNames.ToString();
+                        spectatorPlayerSpeedsSpeeds.Text = spectatorSpeedsTextSpeeds.ToString();
 
 
                         #region Rejoiner

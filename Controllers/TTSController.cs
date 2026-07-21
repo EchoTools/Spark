@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using System.Speech.Synthesis;
 using Newtonsoft.Json;
 using Spark.Properties;
 
@@ -32,6 +33,7 @@ namespace Spark
 		
 		// Use BlockingCollection for efficient threading (no polling/sleep loops)
 		private readonly BlockingCollection<string> ttsQueue = new BlockingCollection<string>();
+		private readonly SpeechSynthesizer synth;
 
 		public static string CacheFolder {
 			get {
@@ -54,10 +56,13 @@ namespace Spark
 
 		public TTSController()
 		{
+			synth = new SpeechSynthesizer();
+			SetOutputToDefaultAudioDevice();
 			LoadTtsSpeed();
 			
 			ttsThread = new Thread(TTSThread);
 			ttsThread.IsBackground = true;
+			ttsThread.SetApartmentState(ApartmentState.STA); // Ensure STA for MediaPlayer
 			ttsThread.Start();
 
 			Task.Run(async () =>
@@ -190,7 +195,12 @@ namespace Spark
 
 		~TTSController()
 		{
-			ttsThread?.Abort();
+			try
+			{
+				ttsThread?.Abort();
+				synth?.Dispose();
+			}
+			catch { }
 		}
 
 		public void LoadTtsSpeed()
@@ -225,20 +235,46 @@ namespace Spark
 
 				try
 				{
-					// Ensure previous playback stops
-					mediaPlayer.Stop();
-					mediaPlayer.Open(new Uri(result));
-					playing = true;
-					mediaPlayer.Play();
-					
-					// Only trim cache probabilistically to save IO
-					if (_rng.Next(0, 10) == 0)
+					if (result.StartsWith("OFFLINE|"))
 					{
-						Task.Run(TrimCacheFolder);
+						string offlineText = result.Substring(8);
+						mediaPlayer.Stop(); // Ensure any playing audio stops
+						synth.SpeakAsyncCancelAll(); // Stop any currently playing offline speech
+						
+						try
+						{
+							if (SparkSettings.instance.ttsVoice == 0)
+							{
+								synth.SelectVoiceByHints(VoiceGender.Male);
+							}
+							else
+							{
+								synth.SelectVoiceByHints(VoiceGender.Female);
+							}
+						}
+						catch { }
+						
+						synth.SpeakAsync(offlineText);
+						Thread.Sleep(50);
 					}
-					
-					// Small buffer to prevent stutter if rapid fire
-					Thread.Sleep(50);
+					else
+					{
+						synth.SpeakAsyncCancelAll(); // Stop offline speech if API audio plays
+						// Ensure previous playback stops
+						mediaPlayer.Stop();
+						mediaPlayer.Open(new Uri(result));
+						playing = true;
+						mediaPlayer.Play();
+						
+						// Only trim cache probabilistically to save IO
+						if (_rng.Next(0, 10) == 0)
+						{
+							Task.Run(TrimCacheFolder);
+						}
+						
+						// Small buffer to prevent stutter if rapid fire
+						Thread.Sleep(50);
+					}
 				}
 				catch
 				{
@@ -275,11 +311,11 @@ namespace Spark
 		{
 			switch (speedIndex)
 			{
-				case 0: currentRate = 0.6f; break;
-				case 1: currentRate = 1.0f; break;
-				case 2: currentRate = 1.4f; break;
-				case 3: currentRate = 1.8f; break;
-				default: currentRate = 1.0f; break;
+				case 0: currentRate = 0.6f; synth.Rate = -4; break;
+				case 1: currentRate = 1.0f; synth.Rate = 0; break;
+				case 2: currentRate = 1.4f; synth.Rate = 4; break;
+				case 3: currentRate = 1.8f; synth.Rate = 8; break;
+				default: currentRate = 1.0f; synth.Rate = 0; break;
 			}
 			
 			currentRateString = currentRate.ToString("F1");
@@ -287,6 +323,11 @@ namespace Spark
 
 		public void SetOutputToDefaultAudioDevice()
 		{
+			try
+			{
+				synth.SetOutputToDefaultAudioDevice();
+			}
+			catch { }
 		}
 
 		public void SpeakAsync(string text)
@@ -367,6 +408,7 @@ namespace Spark
 				// Synchronous wait here is fine because we are already in Task.Run from SpeakAsync
 				// and we want to ensure the file is written before queueing
 				HttpResponseMessage response = FetchUtils.client.SendAsync(request).Result;
+				response.EnsureSuccessStatusCode();
 				byte[] bytes = response.Content.ReadAsByteArrayAsync().Result;
 			
 				if (bytes.Length > 0)
@@ -374,10 +416,15 @@ namespace Spark
 					File.WriteAllBytes(filePath, bytes);
 					ttsQueue.Add(filePath);
 				}
+				else
+				{
+					ttsQueue.Add("OFFLINE|" + text);
+				}
 			}
 			catch
 			{
-				// Ignore TTS generation errors
+				// Ignore TTS generation errors and fallback to offline
+				ttsQueue.Add("OFFLINE|" + text);
 			}
 		}
 

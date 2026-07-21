@@ -211,6 +211,10 @@
                                             <TextBlock x:Name="orangePlayerSpeedsSpeeds" Text="" VerticalAlignment="Top" Width="35" Padding="0,0,5,0" HorizontalAlignment="Right" Margin="10,0,0,0" />
                                             <TextBlock x:Name="orangePlayersSpeedsNames" Text="" VerticalAlignment="Top" Foreground="#ffd4941e" />
                                         </StackPanel>
+                                        <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
+                                            <TextBlock x:Name="spectatorPlayerSpeedsSpeeds" Text="" VerticalAlignment="Top" Width="35" Padding="0,0,5,0" HorizontalAlignment="Right" Margin="10,0,0,0" />
+                                            <TextBlock x:Name="spectatorPlayersSpeedsNames" Text="" VerticalAlignment="Top" Foreground="LightGray" />
+                                        </StackPanel>
                                     </StackPanel>
                                     <TextBlock x:Name="lastThrowStats" Margin="4,4,4,4" />
                                 </StackPanel>
@@ -227,6 +231,10 @@
                                     <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight">
                                         <TextBlock x:Name="orangePlayerPingsPings" Text="" VerticalAlignment="Top" Width="100" Padding="5,0,0,0" HorizontalAlignment="Right" Margin="10,0,0,0"/>
                                         <TextBlock x:Name="orangePlayerPingsNames" Text="" VerticalAlignment="Top" Foreground="#ffd4941e"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight">
+                                        <TextBlock x:Name="spectatorPlayerPingsPings" Text="" VerticalAlignment="Top" Width="100" Padding="5,0,0,0" HorizontalAlignment="Right" Margin="10,0,0,0"/>
+                                        <TextBlock x:Name="spectatorPlayerPingsNames" Text="" VerticalAlignment="Top" Foreground="LightGray"/>
                                     </StackPanel>
                                 </StackPanel>
                             </GroupBox>

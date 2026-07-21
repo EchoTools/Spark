@@ -8,7 +8,7 @@
 		<StartupObject>Spark.App</StartupObject>
     <ApplicationIcon>img\ignite_logo.ico</ApplicationIcon>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <Version>3.0.8</Version>
+    <Version>3.1.2</Version>
     <PackageProjectUrl>https://www.ignitevr.gg/spark</PackageProjectUrl>
     <Company>IgniteVR</Company>
     <Authors>NtsFranz, VTSxKING, iblowatsports</Authors>
@@ -19,8 +19,10 @@
     <AssemblyName>Spark</AssemblyName>
     <RootNamespace>Spark</RootNamespace>
     <LangVersion>14</LangVersion>
-    <PackageVersion>3.0.7</PackageVersion>
+    <PackageVersion>3.1.2</PackageVersion>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -240,6 +242,7 @@
     <PackageReference Include="obs-websocket-dotnet" Version="5.0.0.3" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.0" />
     <PackageReference Include="System.Management" Version="10.0.0" />
+    <PackageReference Include="System.Speech" Version="10.0.9" />
     <PackageReference Include="System.Text.Json" Version="10.0.5" />
     <PackageReference Include="Velopack" Version="0.0.1298" />
     <PackageReference Include="Vosk" Version="0.3.38" />
