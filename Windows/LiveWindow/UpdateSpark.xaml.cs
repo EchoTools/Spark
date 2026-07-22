@@ -74,7 +74,7 @@ private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
 
             // URL for the specific 'ignore' tag
             string latestReleaseUrl = "https://api.github.com/repos/heisthecat31/Spark/releases/tags/ignore";
-            
+
             // Download the JSON
             string json = await client.DownloadStringTaskAsync(latestReleaseUrl);
 
@@ -95,6 +95,22 @@ private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
             _latestVersion = titleName?.TrimStart('v') ?? "Unknown";
 
             LatestVersionText.Text = _latestVersion;
+
+            var latestMatch = System.Text.RegularExpressions.Regex.Match(_latestVersion, @"\d+\.\d+(\.\d+)?");
+            bool isNewer = latestMatch.Success &&
+                Version.TryParse(latestMatch.Value, out Version latestVer) &&
+                Version.TryParse(_currentVersion, out Version currentVer) &&
+                latestVer > currentVer;
+
+            if (!isNewer)
+            {
+                StatusText.Text = $"You're up to date (v{_currentVersion}).";
+                UpdateDetailsText.Text += $"[{DateTime.Now}] No update available. Latest: {_latestVersion}, Current: {_currentVersion}\n";
+                ColorVersionDropdown.IsEnabled = false;
+                DownloadUpdateButton.IsEnabled = false;
+                return;
+            }
+
             StatusText.Text = $"Version found: {_latestVersion}";
 
             string releaseNotes = release["body"]?.ToString();
@@ -112,9 +128,9 @@ private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
     {
         StatusText.Text = "Error: Tag not found or API error.";
         UpdateDetailsText.Text += $"[{DateTime.Now}] Error: {ex.Message}\n";
-        
+
         if (ex.Message.Contains("404")) {
-            UpdateDetailsText.Text += "Tip: Check that the tag 'ignore' exists in your GitHub Releases.\n";
+            UpdateDetailsText.Text += "Somehow a 404, Bad! Get Bryson!\n";
         }
         
         ColorVersionDropdown.IsEnabled = false;
@@ -764,7 +780,7 @@ exit
                     client.Headers.Add("Accept", "application/vnd.github.v3+json");
 
                     string latestReleaseUrl = "https://api.github.com/repos/heisthecat31/Spark/releases/tags/ignore";
-                    
+
                     string json = await client.DownloadStringTaskAsync(latestReleaseUrl);
 
                     var release = JObject.Parse(json);

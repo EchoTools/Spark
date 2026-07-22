@@ -96,6 +96,10 @@
 						<CheckBox x:Name="startMinimizedCheckbox" Content="{x:Static p:Resources.Start_Minimized}"
 									  IsChecked="{l:SettingBinding startMinimized}" HorizontalAlignment="Left"
 									  VerticalAlignment="Stretch" Margin="10,4,10,4" />
+						<CheckBox x:Name="closeButtonExitsAppCheckbox" Content="Closing Spark exits the app instead of asking to hide"
+									  IsChecked="{l:SettingBinding closeButtonExitsApp}" HorizontalAlignment="Left"
+									  VerticalAlignment="Stretch" Margin="10,4,10,4"
+									  ToolTip="When enabled, clicking the close button quits Spark immediately instead of showing the 'Are you sure?' hide/exit prompt." />
 						<StackPanel Orientation="Horizontal" Margin="10,4,10,4">
 							<Label Content="Interface Theme"/>
 							<ComboBox SelectedIndex="{Binding SetTheme}" Width="50">

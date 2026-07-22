@@ -1082,11 +1082,20 @@ namespace Spark
         {
             base.OnClosing(e);
 
-            // if not specifically a exit button press, hide
+            // if not specifically a exit button press, hide (unless the user has opted to always exit on close)
             if (isExplicitClose == false)
             {
                 e.Cancel = true;
-                Program.ToggleWindow(typeof(YouSureAboutClosing), null, this);
+
+                if (SparkSettings.instance.closeButtonExitsApp)
+                {
+                    isExplicitClose = true;
+                    Program.Quit();
+                }
+                else
+                {
+                    Program.ToggleWindow(typeof(YouSureAboutClosing), null, this);
+                }
             }
         }
 

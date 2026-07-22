@@ -45,6 +45,7 @@ namespace Spark
 
 		public bool startOnBoot { get; set; } = false;
 		public bool startMinimized { get; set; } = false;
+		public bool closeButtonExitsApp { get; set; } = false;
 		public bool autoRestart { get; set; } = false;
 		public bool capturevp2 { get; set; } = false;
 		public bool capturevp2VR { get; set; } = false;
