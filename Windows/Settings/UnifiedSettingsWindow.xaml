@@ -1106,7 +1106,8 @@
 							<Button x:Name="PresetPurpleBtn"     Content="🟣 Purple"      Style="{StaticResource SecondaryButtonStyle}" Width="100" Margin="0,0,8,8" Click="PresetPurple_Click"/>
 							<Button x:Name="PresetRedBtn"        Content="🔴 Red"         Style="{StaticResource SecondaryButtonStyle}" Width="100" Margin="0,0,8,8" Click="PresetRed_Click"/>
 							<Button x:Name="PresetYellowBtn"     Content="🌞 Yellow"      Style="{StaticResource SecondaryButtonStyle}" Width="100" Margin="0,0,8,8" Click="PresetYellow_Click"/>
-							<Button x:Name="PresetPinkBtn"       Content="🌸 Spark Pink"  Style="{StaticResource SecondaryButtonStyle}" Width="105" Margin="0,0,0,8" Click="PresetPink_Click"/>
+							<Button x:Name="PresetPinkBtn"       Content="🌸 Spark Pink"  Style="{StaticResource SecondaryButtonStyle}" Width="105" Margin="0,0,8,8" Click="PresetPink_Click"/>
+							<Button x:Name="PresetPVUBtn"        Content="🔵 PVU Blue"    Style="{StaticResource SecondaryButtonStyle}" Width="100" Margin="0,0,0,8" Click="PresetPVU_Click"/>
 						</WrapPanel>
 					</Border>
 
