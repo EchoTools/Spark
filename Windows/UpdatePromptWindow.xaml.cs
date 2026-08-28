@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Windows;
@@ -19,6 +18,14 @@ namespace Spark
         
         private readonly string _tempFolder;
         private readonly string _appFolder;
+        private bool _updateStarted;
+
+        /// <summary>
+        /// Fired when the window closes without the update having been started (Later, or the
+        /// window's own close button) — the caller uses this to surface a persistent footer badge
+        /// so the update isn't lost, since this window won't be shown again on its own.
+        /// </summary>
+        public event Action Dismissed;
 
         public UpdatePromptWindow(string latestVersion, string changelog, string downloadUrl, string zipFileName)
         {
@@ -40,6 +47,11 @@ namespace Spark
             CurrentVersionText.Text = "v" + GetCurrentVersion();
             LatestVersionText.Text = "v" + _latestVersion;
             ChangelogText.Text = string.IsNullOrWhiteSpace(_changelog) ? "No release notes provided." : _changelog;
+
+            Closed += (_, _) =>
+            {
+                if (!_updateStarted) Dismissed?.Invoke();
+            };
         }
 
         private string GetCurrentVersion()
@@ -80,9 +92,9 @@ namespace Spark
                     });
                 });
 
-                StatusText.Text = "Download complete. Extracting and installing...";
-                
-                await Task.Run(() => InstallUpdate(tempFilePath, _zipFileName));
+                StatusText.Text = "Download complete. Launching installer...";
+
+                LaunchInstaller(tempFilePath);
             }
             catch (Exception ex)
             {
@@ -94,135 +106,40 @@ namespace Spark
             }
         }
 
-        private void InstallUpdate(string zipFilePath, string originalFileName)
+        /// <summary>
+        /// Launches the downloaded .msi directly instead of hand-rolling a kill/replace/relaunch
+        /// batch script — the WiX installer already handles that via its MajorUpgrade element
+        /// (IgniteBot.Installer/Product.wxs), including an option to relaunch Spark on finish.
+        /// </summary>
+        private void LaunchInstaller(string msiPath)
         {
             try
             {
-                string extractPath = Path.Combine(_tempFolder, "Spark_Extracted");
-
-                if (Directory.Exists(extractPath))
-                    Directory.Delete(extractPath, true);
-
-                ZipFile.ExtractToDirectory(zipFilePath, extractPath);
-
-                string currentExe = Process.GetCurrentProcess().MainModule.FileName;
-                string targetFolder = Path.GetDirectoryName(currentExe);
-
-                string actualSourceFolder = FindActualSourceFolder(extractPath);
-                string batchFile = Path.Combine(_tempFolder, "update_spark.bat");
-
-                string batchContent = $@"
-@echo off
-setlocal enabledelayedexpansion
-title Spark Updater
-
-echo.
-echo ============================================================
-echo           SPARK UPDATE - {Path.GetFileNameWithoutExtension(originalFileName)}
-echo ============================================================
-echo.
-echo Current folder: {targetFolder}
-echo Source files:   {actualSourceFolder}
-echo.
-
-echo [1/4] Killing Spark...
-taskkill /f /im Spark.exe >nul 2>&1
-timeout /t 2 /nobreak >nul
-
-echo [2/4] Cleaning old files...
-cd /d ""{targetFolder}""
-if errorlevel 1 (
-    echo Error: Could not access target folder.
-    pause
-    exit
-)
-
-REM Delete all subdirectories except Temp (just in case)
-for /d %%i in (*) do (
-    if /i ""%%i"" neq ""Temp"" (
-        echo   Deleting folder: %%i
-        rmdir /s /q ""%%i"" >nul 2>&1
-    )
-)
-
-REM Delete all files
-echo   Deleting files...
-del /f /q /s * >nul 2>&1
-
-echo [3/4] Moving new files...
-robocopy ""{actualSourceFolder}"" ""{targetFolder}"" /E /MOVE /IS /IT /MT:8 /R:3 /W:1 >nul
-
-echo [4/4] Starting Spark...
-cd /d ""{targetFolder}""
-start """" Spark.exe
-
-echo.
-echo ============================================================
-echo UPDATE COMPLETE!
-echo ============================================================
-timeout /t 2 /nobreak >nul
-
-REM Delete this script and the temp extraction
-if exist ""{extractPath}"" rmdir /s /q ""{extractPath}""
-(goto) 2>nul & del ""%~f0""
-exit
-";
-
-                File.WriteAllText(batchFile, batchContent);
-
-                ProcessStartInfo psi = new ProcessStartInfo
+                Process.Start(new ProcessStartInfo
                 {
-                    FileName = batchFile,
-                    WindowStyle = ProcessWindowStyle.Normal,
-                    UseShellExecute = true,
-                    WorkingDirectory = _tempFolder
-                };
+                    FileName = msiPath,
+                    UseShellExecute = true
+                });
+                _updateStarted = true;
 
-                Dispatcher.Invoke(() =>
+                // Give the installer's own window a moment to come up before this process exits,
+                // since the installer needs Spark.exe to not be running to replace its files.
+                Task.Delay(500).ContinueWith(t =>
                 {
-                    Process.Start(psi);
-                    
-                    Task.Delay(500).ContinueWith(t =>
-                    {
-                        Dispatcher.Invoke(() =>
-                        {
-                            Process.GetCurrentProcess().Kill();
-                        });
-                    });
+                    Dispatcher.Invoke(() => Process.GetCurrentProcess().Kill());
                 });
             }
             catch (Exception ex)
             {
                 Dispatcher.Invoke(() =>
                 {
-                    System.Windows.MessageBox.Show($"Installation failed: {ex.Message}", "Installation Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    
+                    System.Windows.MessageBox.Show($"Failed to launch installer: {ex.Message}", "Installation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
                     ActionButtons.Visibility = Visibility.Visible;
                     ChangelogBorder.Visibility = Visibility.Visible;
                     ProgressArea.Visibility = Visibility.Collapsed;
                 });
             }
-        }
-
-        private string FindActualSourceFolder(string extractPath)
-        {
-            try
-            {
-                string[] files = Directory.GetFiles(extractPath, "Spark.exe", SearchOption.AllDirectories);
-                if (files.Length > 0)
-                {
-                    string folder = Path.GetDirectoryName(files[0]);
-                    if (!string.IsNullOrEmpty(folder))
-                    {
-                        return folder;
-                    }
-                }
-            }
-            catch
-            {
-            }
-
-            return extractPath;
         }
     }
 }

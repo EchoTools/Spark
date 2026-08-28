@@ -191,6 +191,13 @@ namespace Spark
 				}
 				lastRulesChangedTimer.Restart();
 			};
+			Program.LargePing += (frame, team, player) =>
+			{
+				if (SparkSettings.instance.pingSpikeTTS)
+				{
+					SpeakAsync($"{player.name}'s ping spiked to {player.ping}");
+				}
+			};
 		}
 
 		~TTSController()
@@ -378,7 +385,7 @@ namespace Spark
 				cleanText = cleanText.Substring(0, 50);
 			}
 			
-			string filePath = Path.Combine(CacheFolder, $"{currentRateString}_{SparkSettings.instance.languageIndex}_{SparkSettings.instance.useWavenetVoices}_{SparkSettings.instance.ttsVoice}_{cleanText}.mp3");
+			string filePath = Path.Combine(CacheFolder, $"v2_{currentRateString}_{SparkSettings.instance.languageIndex}_{SparkSettings.instance.ttsVoice}_{cleanText}.mp3");
 
 			if (File.Exists(filePath))
 			{
@@ -389,18 +396,20 @@ namespace Spark
 			// Run network request
 			try
 			{
+				string voiceName = SparkSettings.instance.ttsVoice == 1 ? "en-US-Wavenet-C" : "en-US-Wavenet-D";
+
 				string json = JsonConvert.SerializeObject(new Dictionary<string, object>
 				{
 					{"text", text},
-					{"language_code", voiceTypes[SparkSettings.instance.useWavenetVoices ? 0 : 1, SparkSettings.instance.languageIndex, SparkSettings.instance.ttsVoice]},
-					{"voice_name", voiceTypes[SparkSettings.instance.useWavenetVoices ? 0 : 1, SparkSettings.instance.languageIndex, SparkSettings.instance.ttsVoice]},
+					{"language_code", voiceName},
+					{"voice_name", voiceName},
 					{"speaking_rate", currentRate},
 				});
 				
 				HttpRequestMessage request = new HttpRequestMessage
 				{
 					Method = HttpMethod.Post,
-					RequestUri = new Uri($"{Program.APIURL}/tts"),
+					RequestUri = new Uri("https://sparkapi-production-e6df.up.railway.app/tts"),
 					Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json),
 				};
 				

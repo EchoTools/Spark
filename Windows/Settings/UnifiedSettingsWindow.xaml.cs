@@ -37,9 +37,22 @@ namespace Spark
 		private readonly System.Windows.Threading.DispatcherTimer _themeDebounceTimer;
 
 
+		/// <summary>
+		/// Set before opening this window (see <see cref="Program.ToggleWindow"/>, which only supports
+		/// a parameterless constructor) to land on the Change Theme tab instead of the default. Read
+		/// once in the constructor and reset immediately after.
+		/// </summary>
+		public static bool OpenToChangeTheme;
+
 		public UnifiedSettingsWindow()
 		{
 			InitializeComponent();
+
+			if (OpenToChangeTheme)
+			{
+				OpenToChangeTheme = false;
+				tabControl.SelectedItem = ChangeThemeTab;
+			}
 
 			_themeDebounceTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
 			_themeDebounceTimer.Tick += (s, ev) =>
@@ -47,6 +60,12 @@ namespace Spark
 				_themeDebounceTimer.Stop();
 				ThemesController.ApplyCustomTheme(_themeDark, _themeMid, _themeLight);
 			};
+		}
+
+		/// <summary>Selects the Change Theme tab on an already-open instance of this window.</summary>
+		public void JumpToChangeThemeTab()
+		{
+			tabControl.SelectedItem = ChangeThemeTab;
 		}
 
 		private void WindowLoad(object sender, RoutedEventArgs e)
@@ -199,7 +218,8 @@ namespace Spark
 			SpectatorNameInput.Text = SparkSettings.instance.client_name ?? "";
 			
 			AutoJoinCheckbox.IsChecked = SparkSettings.instance.questSpectatorAutoJoin;
-			
+			AnonymousModeCheckbox.IsChecked = SparkSettings.instance.questSpectatorAnonymous;
+
 			QuestSpectatorPopup.Visibility = Visibility.Visible;
 		}
 
@@ -223,6 +243,7 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 			SparkSettings.instance.followPlayerName = targetName;
 			SparkSettings.instance.client_name = spectatorName;
 			SparkSettings.instance.questSpectatorAutoJoin = AutoJoinCheckbox.IsChecked == true;
+			SparkSettings.instance.questSpectatorAnonymous = AnonymousModeCheckbox.IsChecked == true;
 			SparkSettings.instance.Save();
 
 			// 2. Set Camera Mode to 'Follow specific player' (Index 3)
@@ -264,7 +285,7 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 				catch (Exception) { /* Ignore initial error */ }
 
 				string args = "-spectatorstream";
-				if (SparkSettings.instance.spectatorStreamNoOVR) args += " -noovr";
+				if (SparkSettings.instance.questSpectatorAnonymous) args += " -noovr";
 				if (!string.IsNullOrEmpty(initialLobbyId)) args += $" -lobbyid {initialLobbyId}";
 
 				if (File.Exists(SparkSettings.instance.echoVRPath)) 
@@ -713,6 +734,20 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 			}
 		}
 
+		public static bool PingSpike
+		{
+			get => SparkSettings.instance.pingSpikeTTS;
+			set
+			{
+				SparkSettings.instance.pingSpikeTTS = value;
+
+				if (value)
+				{
+					Program.synth.SpeakAsync($"NtsFranz's ping spiked to 150");
+				}
+			}
+		}
+
 		public static bool TTSSpecificNumbers
 		{
 			get => SparkSettings.instance.ttsSpecific;
@@ -875,6 +910,7 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 					discholderFollowTeamCheckbox.Visibility = Visibility.Collapsed;
 					discholderFollowCameraModeLabel.Visibility = Visibility.Collapsed;
 					discholderFollowCameraModeDropdown.Visibility = Visibility.Collapsed;
+					goProCameraPanel.Visibility = Visibility.Collapsed;
 					break;
 				case 2:
 					followSpecificPlayerPanel.Visibility = Visibility.Collapsed;
@@ -883,6 +919,7 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 					discholderFollowTeamCheckbox.Visibility = Visibility.Collapsed;
 					discholderFollowCameraModeLabel.Visibility = Visibility.Collapsed;
 					discholderFollowCameraModeDropdown.Visibility = Visibility.Collapsed;
+					goProCameraPanel.Visibility = Visibility.Collapsed;
 					break;
 				case 3:
 					followSpecificPlayerPanel.Visibility = Visibility.Visible;
@@ -891,6 +928,7 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 					discholderFollowTeamCheckbox.Visibility = Visibility.Collapsed;
 					discholderFollowCameraModeLabel.Visibility = Visibility.Collapsed;
 					discholderFollowCameraModeDropdown.Visibility = Visibility.Collapsed;
+					goProCameraPanel.Visibility = Visibility.Collapsed;
 					break;
 				case 4:
 					followSpecificPlayerPanel.Visibility = Visibility.Collapsed;
@@ -899,6 +937,16 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 					discholderFollowTeamCheckbox.Visibility = Visibility.Visible;
 					discholderFollowCameraModeLabel.Visibility = Visibility.Visible;
 					discholderFollowCameraModeDropdown.Visibility = Visibility.Visible;
+					goProCameraPanel.Visibility = Visibility.Collapsed;
+					break;
+				case 5:
+					followSpecificPlayerPanel.Visibility = Visibility.Collapsed;
+					followCameraModeLabel.Visibility = Visibility.Collapsed;
+					followCameraModeDropdown.Visibility = Visibility.Collapsed;
+					discholderFollowTeamCheckbox.Visibility = Visibility.Collapsed;
+					discholderFollowCameraModeLabel.Visibility = Visibility.Collapsed;
+					discholderFollowCameraModeDropdown.Visibility = Visibility.Collapsed;
+					goProCameraPanel.Visibility = Visibility.Visible;
 					break;
 			}
 		}

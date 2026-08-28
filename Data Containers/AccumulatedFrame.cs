@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -34,6 +34,8 @@ namespace Spark
 		public float smoothedServerScore;
 
 		public List<Vector3> currentDiskTrajectory = new List<Vector3>();
+		
+		public LastKill lastKill = new LastKill();
 
 		/// <summary>
 		/// enum of all possible ways a game could have ended.
@@ -136,6 +138,8 @@ namespace Spark
 			{
 				frame.teams[i].team = newFrame.teams[i].team;
 			}
+			
+			lastKill = CombatDataParser.CurrentLastKill;
 
 			foreach (Team team in newFrame.teams)
 			{

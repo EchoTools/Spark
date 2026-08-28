@@ -39,6 +39,13 @@ namespace Spark
 		/// </summary>
 		public static bool running = true;
 
+		/// <summary>
+		/// Set by the -uipreview command-line flag. Populates the dashboard from a fixed sample match
+		/// so the layout can be worked on without a live game. Read-only: it never uploads, writes to
+		/// the database, or touches the real API.
+		/// </summary>
+		public static bool uiPreviewMode;
+
 		public enum ConnectionState {
 			NotConnected,
 			Menu,		// loading screen or menu - the response is not json
@@ -470,29 +477,6 @@ namespace Spark
 					SparkSettings.instance.firstTimeSetupShown = true;
 				}
 
-				if (!SparkSettings.instance.combatUpdatePopupShown)
-				{
-					Application.Current.Dispatcher.InvokeAsync(() =>
-					{
-						if (!string.IsNullOrEmpty(SparkSettings.instance.echoVRPath) && File.Exists(SparkSettings.instance.echoVRPath))
-						{
-							SparkSettings.instance.combatUpdatePopupShown = true;
-							SparkSettings.instance.Save();
-
-							var result = System.Windows.MessageBox.Show(
-								"A small Echo Combat patch is available which adds bullet trails to weapons missing them.\n\nWould you like to download and install the Combat Update now?",
-								"Combat Update Available",
-								MessageBoxButton.YesNo,
-								MessageBoxImage.Information);
-
-							if (result == MessageBoxResult.Yes)
-							{
-								_ = UpdateSparkControl.InstallCombatUpdateAsync();
-							}
-						}
-					});
-				}
-
 				// Check for command-line flags
 				if (args.Contains("-slowmode"))
 				{
@@ -507,6 +491,13 @@ namespace Spark
 				if (args.Contains("-showdatabaselog"))
 				{
 					SparkSettings.instance.showDatabaseLog = true;
+				}
+
+				// Fills the UI with a fixed sample match so the dashboard can be looked at and
+				// iterated on without a live game. Nothing is uploaded or written while it's on.
+				if (args.Contains("-uipreview"))
+				{
+					uiPreviewMode = true;
 				}
 
 
@@ -840,6 +831,18 @@ namespace Spark
 		{
 			fetchClient.Timeout = TimeSpan.FromSeconds(5);
 
+			// The preview holds a fixed frame, so the fetch loop would only overwrite it. Park here
+			// instead of polling an API we're deliberately not talking to.
+			if (uiPreviewMode)
+			{
+				lastFrame = UiPreviewData.BuildFrame();
+				UiPreviewData.PopulateRounds(lastFrame);
+				UiPreviewData.PopulateEventLog();
+				connectionState = ConnectionState.InGame;
+				while (running) await Task.Delay(250);
+				return;
+			}
+
 			DateTime lastFetch = DateTime.UtcNow;
 			while (running)
 			{
@@ -908,6 +911,7 @@ namespace Spark
 						});
 
 						// parse the API data
+						CombatDataParser.Parse(session);
 						Frame f = Frame.FromJSON(frameTime, session, bones);
 
 						if (f != null)

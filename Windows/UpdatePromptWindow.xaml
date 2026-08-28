@@ -5,90 +5,131 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Spark"
         mc:Ignorable="d"
-        Title="New Update Available" 
-        Width="520" 
-        Height="430"
+        Title="New Update Available"
+        Width="480"
+        SizeToContent="Height"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource BackgroundColour}"
-        BorderBrush="{DynamicResource ControlDefaultBorderBrush}"
+        Background="{DynamicResource SurfaceGround}"
+        BorderBrush="{DynamicResource SurfaceBorder}"
         BorderThickness="1"
         Icon="/img/ignite_logo.ico"
         FontSize="14">
-    <Grid Margin="20">
+    <Window.Resources>
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource SurfaceRaised}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="7">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource ControlMouseOverBackground}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="AccentButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource ControlAccent}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ControlAccentForeground}"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="7">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource ControlBrightDefaultBackground}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="22,20,22,20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,15">
-            <Label Content="Spark Update Available!" 
-                   FontSize="20" 
-                   FontWeight="Bold" 
-                   Foreground="{DynamicResource ControlPrimaryBrightDefaultBackground}" 
-                   Padding="0" 
-                   Margin="0,0,0,4"/>
-            <TextBlock Text="A newer version of Spark is ready for you. Review the changes below:" 
-                       TextWrapping="Wrap" 
-                       Foreground="{DynamicResource ControlDefaultForeground}" 
-                       FontSize="13" 
-                       Opacity="0.85"/>
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="Update available" FontSize="18" FontWeight="Bold"
+                       Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,4"/>
+            <TextBlock Text="A newer version of Spark is ready. Here's what changed:"
+                       TextWrapping="Wrap" Foreground="{DynamicResource TextDim}" FontSize="12.5"/>
         </StackPanel>
 
-        <Grid Grid.Row="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <Grid Grid.Row="0" Margin="0,0,0,10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal" Grid.Column="0">
-                    <TextBlock Text="Current Version: " Foreground="{DynamicResource ControlDefaultForeground}" FontWeight="SemiBold"/>
-                    <TextBlock x:Name="CurrentVersionText" Text="v1.0.0" Foreground="{DynamicResource ControlDefaultForeground}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Right">
-                    <TextBlock Text="New Version: " Foreground="{DynamicResource ControlPrimaryBrightDefaultBackground}" FontWeight="SemiBold"/>
-                    <TextBlock x:Name="LatestVersionText" Text="v1.0.1" Foreground="{DynamicResource ControlPrimaryBrightDefaultBackground}" FontWeight="Bold"/>
-                </StackPanel>
-            </Grid>
-
-            <Border x:Name="ChangelogBorder" 
-                    Grid.Row="1"
-                    BorderBrush="{DynamicResource ControlDefaultBorderBrush}" 
-                    BorderThickness="1" 
-                    CornerRadius="6" 
-                    Background="{DynamicResource ControlDarkerBackground}" 
-                    Padding="12" 
-                    Margin="0,0,0,10">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <TextBlock x:Name="ChangelogText" 
-                               Text="Changelog details go here..." 
-                               TextWrapping="Wrap" 
-                               Foreground="{DynamicResource ControlDefaultForeground}" 
-                               FontSize="12.5" 
-                               FontFamily="Consolas" 
-                               LineHeight="18"/>
-                </ScrollViewer>
-            </Border>
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Grid.Column="0">
+                <TextBlock Text="Current " Foreground="{DynamicResource TextFaint}" FontSize="11.5"/>
+                <TextBlock x:Name="CurrentVersionText" Text="v1.0.0" Foreground="{DynamicResource TextDim}"
+                           FontFamily="Consolas" FontSize="11.5"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Right">
+                <TextBlock Text="New " Foreground="{DynamicResource TextFaint}" FontSize="11.5"/>
+                <TextBlock x:Name="LatestVersionText" Text="v1.0.1" Foreground="{DynamicResource TextPrimary}"
+                           FontFamily="Consolas" FontSize="11.5" FontWeight="Bold"/>
+            </StackPanel>
         </Grid>
 
-        <Grid Grid.Row="2">
-            <StackPanel x:Name="ProgressArea" Visibility="Collapsed" VerticalAlignment="Center">
-                <TextBlock x:Name="StatusText" 
-                           Text="Downloading update..." 
-                           Foreground="{DynamicResource ControlDefaultForeground}" 
+        <Border x:Name="ChangelogBorder"
+                Grid.Row="2"
+                BorderBrush="{DynamicResource SurfaceBorder}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Background="{DynamicResource SurfaceCard}"
+                Padding="14"
+                Height="180"
+                Margin="0,0,0,16">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <TextBlock x:Name="ChangelogText"
+                           Text="Changelog details go here..."
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextDim}"
+                           FontSize="12"
+                           FontFamily="Consolas"
+                           LineHeight="17"/>
+            </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Row="3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel x:Name="ProgressArea" Grid.Row="0" Visibility="Collapsed" Margin="0,0,0,14">
+                <TextBlock x:Name="StatusText"
+                           Text="Downloading update..."
+                           Foreground="{DynamicResource TextPrimary}"
+                           FontSize="12"
                            FontWeight="SemiBold"
-                           Margin="0,0,0,8" 
-                           HorizontalAlignment="Center"/>
-                <ProgressBar x:Name="DownloadProgressBar" 
-                             Height="16" 
-                             Minimum="0" 
-                             Maximum="100" 
+                           Margin="0,0,0,8"/>
+                <ProgressBar x:Name="DownloadProgressBar"
+                             Height="8"
+                             Minimum="0"
+                             Maximum="100"
                              Value="0">
                     <ProgressBar.Style>
                         <Style TargetType="{x:Type ProgressBar}">
@@ -96,15 +137,12 @@
                                 <Setter.Value>
                                     <ControlTemplate TargetType="{x:Type ProgressBar}">
                                         <Grid x:Name="TemplateRoot" SnapsToDevicePixels="true">
-                                            <Border CornerRadius="4" 
-                                                    Background="{DynamicResource ControlDarkerBackground}" 
-                                                    BorderBrush="{DynamicResource ControlDefaultBorderBrush}" 
-                                                    BorderThickness="1"/>
-                                            <Border CornerRadius="3" 
-                                                    x:Name="PART_Indicator" 
-                                                    HorizontalAlignment="Left" 
-                                                    Background="{DynamicResource ControlPrimaryDefaultBackground}" 
-                                                    Margin="1"/>
+                                            <Border CornerRadius="4"
+                                                    Background="{DynamicResource SurfaceRaised}"/>
+                                            <Border CornerRadius="4"
+                                                    x:Name="PART_Indicator"
+                                                    HorizontalAlignment="Left"
+                                                    Background="{DynamicResource ControlAccent}"/>
                                         </Grid>
                                     </ControlTemplate>
                                 </Setter.Value>
@@ -114,35 +152,34 @@
                 </ProgressBar>
             </StackPanel>
 
-            <CheckBox x:Name="IgnoreUpdateCheckBox" 
-                      Content="Skip this update version" 
-                      Foreground="{DynamicResource ControlDefaultForeground}"
-                      VerticalAlignment="Center"
-                      HorizontalAlignment="Left"
-                      Margin="0,0,0,0"
-                      Visibility="{Binding ElementName=ActionButtons, Path=Visibility}"/>
+            <Grid Grid.Row="1">
+                <CheckBox x:Name="IgnoreUpdateCheckBox"
+                          Content="Skip this version"
+                          Foreground="{DynamicResource TextDim}"
+                          FontSize="12"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Left"
+                          Visibility="{Binding ElementName=ActionButtons, Path=Visibility}"/>
 
-            <StackPanel x:Name="ActionButtons" 
-                        Orientation="Horizontal" 
-                        HorizontalAlignment="Right" 
-                        VerticalAlignment="Center">
-                <Button x:Name="LaterButton" 
-                        Content="Later" 
-                        Width="100" 
-                        Height="34" 
-                        Margin="0,0,12,0" 
-                        Click="LaterButton_Click" 
-                        FontWeight="SemiBold"/>
-                <Button x:Name="UpdateButton" 
-                        Content="Update Now" 
-                        Width="130" 
-                        Height="34" 
-                        Click="UpdateButton_Click" 
-                        Background="{DynamicResource ControlPrimaryDefaultBackground}"
-                        BorderBrush="{DynamicResource ControlPrimaryDefaultBorderBrush}"
-                        Foreground="White"
-                        FontWeight="Bold"/>
-            </StackPanel>
+                <StackPanel x:Name="ActionButtons"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                    <Button x:Name="LaterButton"
+                            Content="Later"
+                            Width="90"
+                            Height="34"
+                            Margin="0,0,10,0"
+                            Click="LaterButton_Click"
+                            Style="{StaticResource SecondaryButtonStyle}"/>
+                    <Button x:Name="UpdateButton"
+                            Content="Update Now"
+                            Width="130"
+                            Height="34"
+                            Click="UpdateButton_Click"
+                            Style="{StaticResource AccentButtonStyle}"/>
+                </StackPanel>
+            </Grid>
         </Grid>
     </Grid>
 </Window>

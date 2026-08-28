@@ -29,6 +29,15 @@ namespace Spark
             StartBackgroundThreads();
         }
 
+        /// <summary>
+        /// Resolved once at build time, not a DynamicResource: the details panel is rebuilt from
+        /// scratch every time a server is selected, so it always picks up the current theme anyway.
+        /// </summary>
+        private static System.Windows.Media.Brush ThemeBrush(string key, System.Windows.Media.Brush fallback)
+        {
+            return Application.Current.TryFindResource(key) as System.Windows.Media.Brush ?? fallback;
+        }
+
         private static string IndexToRegion(int index)
         {
             return index switch
@@ -224,7 +233,7 @@ namespace Spark
             }
             
             public string StatusText => open ? "OPEN" : "LOCKED";
-            public string PlayerCountText => $"👥 {players?.Count ?? 0} players";
+            public string PlayerCountText => $"{players?.Count ?? 0} players";
             public int BlueScore => game_state?.blue_score ?? 0;
             public int OrangeScore => game_state?.orange_score ?? 0;
             
@@ -329,33 +338,44 @@ namespace Spark
             
             var serverId = server.id?.Split('.')[0]?.ToUpper() ?? "N/A";
             
+            System.Windows.Media.Brush textPrimary = ThemeBrush("TextPrimary", System.Windows.Media.Brushes.White);
+            System.Windows.Media.Brush textDim = ThemeBrush("TextDim", System.Windows.Media.Brushes.LightGray);
+            System.Windows.Media.Brush textFaint = ThemeBrush("TextFaint", System.Windows.Media.Brushes.Gray);
+            System.Windows.Media.Brush statusGood = ThemeBrush("StatusGood", System.Windows.Media.Brushes.Green);
+            System.Windows.Media.Brush statusBad = ThemeBrush("StatusBad", System.Windows.Media.Brushes.Red);
+            System.Windows.Media.Brush teamBlue = ThemeBrush("TeamBlue", System.Windows.Media.Brushes.CornflowerBlue);
+            System.Windows.Media.Brush teamOrange = ThemeBrush("TeamOrange", System.Windows.Media.Brushes.Orange);
+            System.Windows.Media.Brush surfaceRaised = ThemeBrush("SurfaceRaised", System.Windows.Media.Brushes.DimGray);
+            System.Windows.Media.Brush controlAccent = ThemeBrush("ControlAccent", System.Windows.Media.Brushes.SteelBlue);
+            System.Windows.Media.Brush controlAccentForeground = ThemeBrush("ControlAccentForeground", System.Windows.Media.Brushes.White);
+
             var titleLabel = new TextBlock
             {
                 Text = mode,
                 FontSize = 18,
                 FontWeight = FontWeights.Bold,
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = textPrimary,
                 Margin = new Thickness(0, 0, 0, 5)
             };
-            
+
             var idLabel = new TextBlock
             {
                 Text = $"ID: {serverId}",
                 FontSize = 11,
-                Foreground = System.Windows.Media.Brushes.LightGray,
+                Foreground = textDim,
                 Margin = new Thickness(0, 0, 0, 20)
             };
-            
+
             ServerDetailsPanel.Children.Add(titleLabel);
             ServerDetailsPanel.Children.Add(idLabel);
-            
+
             var statusFrame = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
             var statusTitle = new TextBlock
             {
                 Text = "Status:",
                 FontSize = 11,
                 FontWeight = FontWeights.Bold,
-                Foreground = System.Windows.Media.Brushes.LightGray,
+                Foreground = textDim,
                 VerticalAlignment = VerticalAlignment.Center
             };
             var statusValue = new TextBlock
@@ -363,14 +383,14 @@ namespace Spark
                 Text = server.open ? "OPEN" : "LOCKED",
                 FontSize = 11,
                 FontWeight = FontWeights.Bold,
-                Foreground = server.open ? System.Windows.Media.Brushes.Green : System.Windows.Media.Brushes.Red,
+                Foreground = server.open ? statusGood : statusBad,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(5, 0, 0, 0)
             };
             statusFrame.Children.Add(statusTitle);
             statusFrame.Children.Add(statusValue);
             ServerDetailsPanel.Children.Add(statusFrame);
-            
+
             var playerCount = server.players?.Count ?? 0;
             var playersFrame = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
             var playersTitle = new TextBlock
@@ -378,7 +398,7 @@ namespace Spark
                 Text = "Players:",
                 FontSize = 11,
                 FontWeight = FontWeights.Bold,
-                Foreground = System.Windows.Media.Brushes.LightGray,
+                Foreground = textDim,
                 VerticalAlignment = VerticalAlignment.Center
             };
             var playersValue = new TextBlock
@@ -386,49 +406,69 @@ namespace Spark
                 Text = $"{playerCount}/14",
                 FontSize = 11,
                 FontWeight = FontWeights.Bold,
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = textPrimary,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(5, 0, 0, 0)
             };
             playersFrame.Children.Add(playersTitle);
             playersFrame.Children.Add(playersValue);
             ServerDetailsPanel.Children.Add(playersFrame);
-            
+
             if (server.game_state != null)
             {
                 var blueScore = server.game_state.blue_score;
                 var orangeScore = server.game_state.orange_score;
-                
+
                 var scoreFrame = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 15) };
                 var scoreTitle = new TextBlock
                 {
                     Text = "Score:",
                     FontSize = 11,
                     FontWeight = FontWeights.Bold,
-                    Foreground = System.Windows.Media.Brushes.LightGray,
+                    Foreground = textDim,
                     VerticalAlignment = VerticalAlignment.Center
                 };
-                var scoreValue = new TextBlock
+                var scoreBlueValue = new TextBlock
                 {
-                    Text = $"🔵 {blueScore} - {orangeScore} 🟠",
+                    Text = blueScore.ToString(),
                     FontSize = 11,
+                    FontFamily = new System.Windows.Media.FontFamily("Consolas"),
                     FontWeight = FontWeights.Bold,
-                    Foreground = System.Windows.Media.Brushes.White,
+                    Foreground = teamBlue,
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(5, 0, 0, 0)
                 };
+                var scoreDash = new TextBlock
+                {
+                    Text = " - ",
+                    FontSize = 11,
+                    FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+                    Foreground = textFaint,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                var scoreOrangeValue = new TextBlock
+                {
+                    Text = orangeScore.ToString(),
+                    FontSize = 11,
+                    FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+                    FontWeight = FontWeights.Bold,
+                    Foreground = teamOrange,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
                 scoreFrame.Children.Add(scoreTitle);
-                scoreFrame.Children.Add(scoreValue);
+                scoreFrame.Children.Add(scoreBlueValue);
+                scoreFrame.Children.Add(scoreDash);
+                scoreFrame.Children.Add(scoreOrangeValue);
                 ServerDetailsPanel.Children.Add(scoreFrame);
             }
-            
+
             var buttonFrame = new StackPanel { Margin = new Thickness(0, 0, 0, 25) };
-            
+
             var spectateButton = new Button
             {
-                Content = "👁 SPECTATE",
-                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(35, 35, 35)),
-                Foreground = System.Windows.Media.Brushes.White,
+                Content = "SPECTATE",
+                Background = surfaceRaised,
+                Foreground = textPrimary,
                 FontSize = 12,
                 FontWeight = FontWeights.Bold,
                 Height = 40,
@@ -437,12 +477,12 @@ namespace Spark
                 Margin = new Thickness(0, 0, 0, 10)
             };
             spectateButton.Click += (s, e) => JoinServer(server);
-            
+
             var joinAsPlayerButton = new Button
             {
-                Content = "🎮 JOIN AS PLAYER",
-                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(59, 130, 246)),
-                Foreground = System.Windows.Media.Brushes.White,
+                Content = "JOIN AS PLAYER",
+                Background = controlAccent,
+                Foreground = controlAccentForeground,
                 FontSize = 12,
                 FontWeight = FontWeights.Bold,
                 Height = 40,
@@ -451,12 +491,12 @@ namespace Spark
                 Margin = new Thickness(0, 0, 0, 10)
             };
             joinAsPlayerButton.Click += (s, e) => ShowJoinAsPlayerPopup(server);
-            
+
             var copyButton = new Button
             {
-                Content = "📋 COPY LOBBY ID",
-                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100, 116, 139)),
-                Foreground = System.Windows.Media.Brushes.White,
+                Content = "COPY LOBBY ID",
+                Background = surfaceRaised,
+                Foreground = textPrimary,
                 FontSize = 12,
                 FontWeight = FontWeights.Bold,
                 Height = 40,
@@ -476,102 +516,102 @@ namespace Spark
                 Text = $"Players ({playerCount})",
                 FontSize = 12,
                 FontWeight = FontWeights.Bold,
-                Foreground = System.Windows.Media.Brushes.White,
+                Foreground = textPrimary,
                 VerticalAlignment = VerticalAlignment.Center
             };
             playerHeader.Children.Add(playerTitle);
             ServerDetailsPanel.Children.Add(playerHeader);
-            
+
             var playerScrollViewer = new ScrollViewer
             {
                 Height = 200,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto
             };
-            
+
             var playerContainer = new StackPanel();
-            
+
             if (server.players != null && server.players.Count > 0)
             {
                 var bluePlayers = server.players.Where(p => p.team == "blue").ToList();
                 var orangePlayers = server.players.Where(p => p.team == "orange").ToList();
                 var noTeamPlayers = server.players.Where(p => string.IsNullOrEmpty(p.team) || (p.team != "blue" && p.team != "orange")).ToList();
-                
+
                 if (bluePlayers.Count > 0)
                 {
                     var blueHeader = new TextBlock
                     {
-                        Text = "🔵 BLUE TEAM",
+                        Text = "BLUE TEAM",
                         FontSize = 10,
                         FontWeight = FontWeights.Bold,
-                        Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(96, 165, 250)),
+                        Foreground = teamBlue,
                         Margin = new Thickness(0, 0, 0, 5)
                     };
                     playerContainer.Children.Add(blueHeader);
-                    
+
                     foreach (var player in bluePlayers)
                     {
                         var playerLabel = new TextBlock
                         {
                             Text = $"• {player.display_name ?? "Unknown"}",
                             FontSize = 9,
-                            Foreground = System.Windows.Media.Brushes.White,
+                            Foreground = textPrimary,
                             Margin = new Thickness(10, 0, 0, 3)
                         };
                         playerContainer.Children.Add(playerLabel);
                     }
-                    
+
                     playerContainer.Children.Add(new Border { Height = 10 });
                 }
-                
+
                 if (orangePlayers.Count > 0)
                 {
                     var orangeHeader = new TextBlock
                     {
-                        Text = "🟠 ORANGE TEAM",
+                        Text = "ORANGE TEAM",
                         FontSize = 10,
                         FontWeight = FontWeights.Bold,
-                        Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(251, 146, 60)),
+                        Foreground = teamOrange,
                         Margin = new Thickness(0, 0, 0, 5)
                     };
                     playerContainer.Children.Add(orangeHeader);
-                    
+
                     foreach (var player in orangePlayers)
                     {
                         var playerLabel = new TextBlock
                         {
                             Text = $"• {player.display_name ?? "Unknown"}",
                             FontSize = 9,
-                            Foreground = System.Windows.Media.Brushes.White,
+                            Foreground = textPrimary,
                             Margin = new Thickness(10, 0, 0, 3)
                         };
                         playerContainer.Children.Add(playerLabel);
                     }
-                    
+
                     if (noTeamPlayers.Count > 0)
                     {
                         playerContainer.Children.Add(new Border { Height = 10 });
                     }
                 }
-                
+
                 if (noTeamPlayers.Count > 0)
                 {
                     var noTeamHeader = new TextBlock
                     {
-                        Text = "⚪ NO TEAM",
+                        Text = "NO TEAM",
                         FontSize = 10,
                         FontWeight = FontWeights.Bold,
-                        Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100, 116, 139)),
+                        Foreground = textFaint,
                         Margin = new Thickness(0, 0, 0, 5)
                     };
                     playerContainer.Children.Add(noTeamHeader);
-                    
+
                     foreach (var player in noTeamPlayers)
                     {
                         var playerLabel = new TextBlock
                         {
                             Text = $"• {player.display_name ?? "Unknown"}",
                             FontSize = 9,
-                            Foreground = System.Windows.Media.Brushes.White,
+                            Foreground = textPrimary,
                             Margin = new Thickness(10, 0, 0, 3)
                         };
                         playerContainer.Children.Add(playerLabel);
@@ -584,25 +624,28 @@ namespace Spark
                 {
                     Text = "No players in server",
                     FontSize = 10,
-                    Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100, 116, 139)),
+                    Foreground = textFaint,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
                     Margin = new Thickness(0, 20, 0, 0)
                 };
                 playerContainer.Children.Add(emptyLabel);
             }
-            
+
             playerScrollViewer.Content = playerContainer;
             ServerDetailsPanel.Children.Add(playerScrollViewer);
-            
-            spectateButton.MouseEnter += (s, e) => spectateButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(50, 50, 50));
-            spectateButton.MouseLeave += (s, e) => spectateButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(35, 35, 35));
-            
-            joinAsPlayerButton.MouseEnter += (s, e) => joinAsPlayerButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(37, 99, 235));
-            joinAsPlayerButton.MouseLeave += (s, e) => joinAsPlayerButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(59, 130, 246));
-            
-            copyButton.MouseEnter += (s, e) => copyButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(71, 85, 105));
-            copyButton.MouseLeave += (s, e) => copyButton.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100, 116, 139));
+
+            System.Windows.Media.Brush controlMouseOver = ThemeBrush("ControlMouseOverBackground", System.Windows.Media.Brushes.DimGray);
+            System.Windows.Media.Brush controlBright = ThemeBrush("ControlBrightDefaultBackground", System.Windows.Media.Brushes.SlateGray);
+
+            spectateButton.MouseEnter += (s, e) => spectateButton.Background = controlMouseOver;
+            spectateButton.MouseLeave += (s, e) => spectateButton.Background = surfaceRaised;
+
+            joinAsPlayerButton.MouseEnter += (s, e) => joinAsPlayerButton.Background = controlBright;
+            joinAsPlayerButton.MouseLeave += (s, e) => joinAsPlayerButton.Background = controlAccent;
+
+            copyButton.MouseEnter += (s, e) => copyButton.Background = controlMouseOver;
+            copyButton.MouseLeave += (s, e) => copyButton.Background = surfaceRaised;
         }
 
         private void ShowJoinAsPlayerPopup(ServerData server)
@@ -973,24 +1016,21 @@ namespace Spark
 
         private void UpdateApiStatus(bool connected)
         {
-            if (connected)
-            {
-                ApiStatusLabel.Text = "API: Connected";
-                ApiStatusLabel.Foreground = System.Windows.Media.Brushes.Green;
-                StatusIndicator.Fill = System.Windows.Media.Brushes.Green;
-            }
-            else
-            {
-                ApiStatusLabel.Text = "API: Disconnected";
-                ApiStatusLabel.Foreground = System.Windows.Media.Brushes.Red;
-                StatusIndicator.Fill = System.Windows.Media.Brushes.Red;
-            }
+            System.Windows.Media.Brush statusColor = ThemeBrush(
+                connected ? "StatusGood" : "StatusBad",
+                connected ? System.Windows.Media.Brushes.Green : System.Windows.Media.Brushes.Red);
+
+            ApiStatusLabel.Text = connected ? "API: Connected" : "API: Disconnected";
+            ApiStatusLabel.Foreground = statusColor;
+            StatusIndicator.Fill = statusColor;
         }
 
         private void UpdateStatus(bool success, string message)
         {
             StatusTextBlock.Text = message;
-            StatusIndicator.Fill = success ? System.Windows.Media.Brushes.Green : System.Windows.Media.Brushes.Red;
+            StatusIndicator.Fill = ThemeBrush(
+                success ? "StatusGood" : "StatusBad",
+                success ? System.Windows.Media.Brushes.Green : System.Windows.Media.Brushes.Red);
         }
 
         private string GetApiBaseUrl()

@@ -69,6 +69,10 @@ namespace Spark
 		public bool saveEventsToCSV { get; set; } = false;
 		public bool fetchBones { get; set; } = false;
 		public bool questSpectatorAutoJoin { get; set; } = true;
+		public bool questSpectatorAnonymous { get; set; } = true;
+
+		/// <summary>Cumulative wall-clock seconds Spark has been running across every past launch, not counting the current one — see LiveWindow.UpdateSessionCard.</summary>
+		public double totalPlaytimeSeconds { get; set; } = 0;
 
 		/// <summary>
 		/// Enable replay files
@@ -84,6 +88,7 @@ namespace Spark
 		public int whenToSplitReplays { get; set; } = 0;
 		public ButterFile.CompressionFormat butterCompressionFormat { get; set; } = ButterFile.CompressionFormat.gzip;
 		public bool saveButterFiles { get; set; } = false;
+		public bool saveTapeFiles { get; set; } = false;
 		public bool saveEchoreplayFiles { get; set; } = true;
 		public bool showConsoleOnStart { get; set; } = false;
 		public bool outputGameStateEvents { get; set; } = true;
@@ -134,6 +139,9 @@ namespace Spark
 		public bool hideEchoVRUI { get; set; } = false;
 		public int followPlayerCameraMode { get; set; } = 0;
 		public string followPlayerName { get; set; } = "";
+		public int goProTargetHand { get; set; } = 0;
+		public float goProWiderFov { get; set; } = 100f;
+		public string goProPlayerName { get; set; } = "";
 		public bool discHolderFollowRestrictTeam { get; set; } = false;
 		public int discHolderFollowCamMode { get; set; } = 0;
 		public bool toggleMinimapAfterGoals { get; set; } = false;
@@ -174,6 +182,7 @@ namespace Spark
 		public List<string> friendCodes { get; set; } = new List<string>();
 		public string ignoredUpdateVersion { get; set; } = "";
 		public bool combatUpdatePopupShown { get; set; } = false;
+		public bool combatAPIDismissed { get; set; } = false;
 
 
 
@@ -198,6 +207,7 @@ namespace Spark
 		public int ttsVoice { get; set; } = 0;
 		public string ttsCacheFolder { get; set; } = "";
 		public int ttsCacheSizeBytes { get; set; } = 100000000;
+		public bool pingSpikeTTS { get; set; } = false;
 		public bool ttsSpecific { get; set; } = false;
 
 		#endregion
