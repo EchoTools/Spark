@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
 namespace Spark
@@ -9,6 +10,23 @@ namespace Spark
         public static ConcurrentDictionary<long, CombatStats> CurrentCombatStats = new ConcurrentDictionary<long, CombatStats>();
         public static LastKill CurrentLastKill = new LastKill();
         public static object ParseLock = new object();
+
+        /// <summary>
+        /// Kills this session, newest first. The API only ever exposes the single most recent kill,
+        /// which it holds until the next one, so the feed is built by noticing when that value
+        /// changes — the same way the Arena side accumulates jousts out of per-frame events.
+        /// <para>
+        /// Read it under <see cref="ParseLock"/>: it is written from the frame-fetch thread and
+        /// read from the UI thread.
+        /// </para>
+        /// </summary>
+        public static readonly List<LastKill> KillFeed = new List<LastKill>();
+
+        /// <summary>How many kills to keep. The dashboard shows about six at a time.</summary>
+        private const int KillFeedLimit = 40;
+
+        /// <summary>Session the feed belongs to, so a new match starts from an empty one.</summary>
+        private static string killFeedSessionId;
 
         public static void Parse(string rawSessionJson)
         {

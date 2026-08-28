@@ -46,6 +46,9 @@ namespace Spark
 		/// </summary>
 		public static bool uiPreviewMode;
 
+		/// <summary>Set by -uipreviewcombat alongside -uipreview: same fixed-frame preview, but as an Echo Combat match so the Combat dashboard can be worked on too.</summary>
+		public static bool uiPreviewCombat;
+
 		public enum ConnectionState {
 			NotConnected,
 			Menu,		// loading screen or menu - the response is not json
@@ -498,6 +501,7 @@ namespace Spark
 				if (args.Contains("-uipreview"))
 				{
 					uiPreviewMode = true;
+					uiPreviewCombat = args.Contains("-uipreviewcombat");
 				}
 
 
@@ -838,6 +842,7 @@ namespace Spark
 				lastFrame = UiPreviewData.BuildFrame();
 				UiPreviewData.PopulateRounds(lastFrame);
 				UiPreviewData.PopulateEventLog();
+				if (uiPreviewCombat) UiPreviewData.PopulateCombatPreview(lastFrame);
 				connectionState = ConnectionState.InGame;
 				while (running) await Task.Delay(250);
 				return;

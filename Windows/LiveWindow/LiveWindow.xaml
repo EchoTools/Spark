@@ -812,232 +812,408 @@
 
                         <Grid x:Name="CombatDashboardGrid" Background="{DynamicResource SurfaceGround}" Visibility="Collapsed" Margin="8">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="292" />
                                 <RowDefinition Height="*" />
-                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
-                            <!-- Top Score Header -->
-                            <Grid Grid.Row="0" Margin="0,0,0,10">
+                            <!-- ROW 1: Match | Kill Feed | Network -->
+                            <Grid Grid.Row="0" Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="340"/>
+                                    <ColumnDefinition Width="216"/>
+                                    <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- Blue Score -->
-                                <Border Grid.Column="0" Background="{DynamicResource TeamBlueTint}" BorderBrush="{DynamicResource TeamBlueEdge}" BorderThickness="1" CornerRadius="8" Padding="14,10">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Rectangle Width="3" Height="16" RadiusX="2" RadiusY="2" Fill="{DynamicResource TeamBlue}" Margin="0,0,10,0"/>
-                                            <TextBlock Text="BLUE TEAM" Foreground="{DynamicResource TeamBlue}" FontWeight="Bold" FontSize="14" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                        <TextBlock Grid.Column="1" x:Name="CombatBlueScore" Text="0" Foreground="{DynamicResource TextPrimary}" FontWeight="Bold" FontSize="30" FontFamily="Consolas" VerticalAlignment="Center"/>
-                                    </Grid>
-                                </Border>
-
-                                <!-- VS -->
-                                <Border Grid.Column="1" Background="{DynamicResource SurfaceRaised}" CornerRadius="10" Padding="10,4" Margin="12,0" VerticalAlignment="Center">
-                                    <TextBlock Text="VS" Foreground="{DynamicResource TextFaint}" FontSize="12" FontWeight="Bold"/>
-                                </Border>
-
-                                <!-- Orange Score -->
-                                <Border Grid.Column="2" Background="{DynamicResource TeamOrangeTint}" BorderBrush="{DynamicResource TeamOrangeEdge}" BorderThickness="1" CornerRadius="8" Padding="14,10">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" x:Name="CombatOrangeScore" Text="0" Foreground="{DynamicResource TextPrimary}" FontWeight="Bold" FontSize="30" FontFamily="Consolas" VerticalAlignment="Center"/>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                            <TextBlock Text="ORANGE TEAM" Foreground="{DynamicResource TeamOrange}" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                            <Rectangle Width="3" Height="16" RadiusX="2" RadiusY="2" Fill="{DynamicResource TeamOrange}"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </Grid>
-
-                            <!-- Loadouts -->
-                            <Grid Grid.Row="1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Blue Loadouts -->
-                                <Border Grid.Column="0" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource SurfaceCard}">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="*"/>
-                                        </Grid.RowDefinitions>
-                                        <Border Background="{DynamicResource TeamBlueTint}" CornerRadius="7,7,0,0" Padding="8,6" BorderBrush="{DynamicResource TeamBlueEdge}" BorderThickness="0,0,0,1">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="1.6*"/>
-                                                    <ColumnDefinition Width="32"/>
-                                                    <ColumnDefinition Width="48"/>
-                                                    <ColumnDefinition Width="40"/>
-                                                    <ColumnDefinition Width="45"/>
-                                                    <ColumnDefinition Width="24"/>
-                                                    <ColumnDefinition Width="24"/>
-                                                    <ColumnDefinition Width="24"/>
-                                                    <ColumnDefinition Width="52"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Text="PLAYER" Foreground="{DynamicResource TeamBlue}" FontWeight="Bold" FontSize="9.5" VerticalAlignment="Center"/>
-                                                <TextBlock Text="PING" Grid.Column="1" Foreground="{DynamicResource TeamBlue}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                <TextBlock Text="WEP" Grid.Column="2" Foreground="{DynamicResource TeamBlue}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                <TextBlock Text="ORD" Grid.Column="3" Foreground="{DynamicResource TeamBlue}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                <TextBlock Text="TAC" Grid.Column="4" Foreground="{DynamicResource TeamBlue}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                <TextBlock Text="K" Grid.Column="5" Foreground="{DynamicResource TeamBlue}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Kills"/>
-                                                <TextBlock Text="D" Grid.Column="6" Foreground="{DynamicResource TeamBlue}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Deaths"/>
-                                                <TextBlock Text="A" Grid.Column="7" Foreground="{DynamicResource TeamBlue}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Assists"/>
-                                                <TextBlock Text="DMG" Grid.Column="8" Foreground="{DynamicResource TeamBlue}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0" ToolTip="Damage"/>
-                                            </Grid>
-                                        </Border>
-                                        <ItemsControl x:Name="BlueCombatLoadouts" Grid.Row="1" Margin="4">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border Background="{DynamicResource SurfaceRaised}" CornerRadius="5" Margin="0,2" Padding="5,6">
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="1.6*"/>
-                                                                <ColumnDefinition Width="32"/>
-                                                                <ColumnDefinition Width="48"/>
-                                                                <ColumnDefinition Width="40"/>
-                                                                <ColumnDefinition Width="45"/>
-                                                                <ColumnDefinition Width="24"/>
-                                                                <ColumnDefinition Width="24"/>
-                                                                <ColumnDefinition Width="24"/>
-                                                                <ColumnDefinition Width="52"/>
-                                                            </Grid.ColumnDefinitions>
-                                                            <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                                            <TextBlock Text="{Binding Ping}" Grid.Column="1" Foreground="{DynamicResource TextFaint}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{Binding Weapon}" Grid.Column="2" Foreground="{DynamicResource TextDim}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{Binding Ordnance}" Grid.Column="3" Foreground="{DynamicResource TextDim}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{Binding TacMod}" Grid.Column="4" Foreground="{DynamicResource TextDim}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-                                                            <TextBlock Text="{Binding Kills}" Grid.Column="5" Foreground="{DynamicResource TeamBlue}" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{Binding Deaths}" Grid.Column="6" Foreground="{DynamicResource StatusBad}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{Binding Assists}" Grid.Column="7" Foreground="{DynamicResource TextDim}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{Binding Damage}" Grid.Column="8" Foreground="{DynamicResource StatusGood}" FontWeight="Bold" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </Grid>
-                                </Border>
-
-                                <!-- Orange Loadouts -->
-                                <Border Grid.Column="2" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1" CornerRadius="8" Background="{DynamicResource SurfaceCard}">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="*"/>
-                                        </Grid.RowDefinitions>
-                                        <Border Background="{DynamicResource TeamOrangeTint}" CornerRadius="7,7,0,0" Padding="8,6" BorderBrush="{DynamicResource TeamOrangeEdge}" BorderThickness="0,0,0,1">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="1.6*"/>
-                                                    <ColumnDefinition Width="32"/>
-                                                    <ColumnDefinition Width="48"/>
-                                                    <ColumnDefinition Width="40"/>
-                                                    <ColumnDefinition Width="45"/>
-                                                    <ColumnDefinition Width="24"/>
-                                                    <ColumnDefinition Width="24"/>
-                                                    <ColumnDefinition Width="24"/>
-                                                    <ColumnDefinition Width="52"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Text="PLAYER" Foreground="{DynamicResource TeamOrange}" FontWeight="Bold" FontSize="9.5" VerticalAlignment="Center"/>
-                                                <TextBlock Text="PING" Grid.Column="1" Foreground="{DynamicResource TeamOrange}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                <TextBlock Text="WEP" Grid.Column="2" Foreground="{DynamicResource TeamOrange}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                <TextBlock Text="ORD" Grid.Column="3" Foreground="{DynamicResource TeamOrange}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                <TextBlock Text="TAC" Grid.Column="4" Foreground="{DynamicResource TeamOrange}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                <TextBlock Text="K" Grid.Column="5" Foreground="{DynamicResource TeamOrange}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Kills"/>
-                                                <TextBlock Text="D" Grid.Column="6" Foreground="{DynamicResource TeamOrange}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Deaths"/>
-                                                <TextBlock Text="A" Grid.Column="7" Foreground="{DynamicResource TeamOrange}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Assists"/>
-                                                <TextBlock Text="DMG" Grid.Column="8" Foreground="{DynamicResource TeamOrange}" FontWeight="Bold" FontSize="9.5" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0" ToolTip="Damage"/>
-                                            </Grid>
-                                        </Border>
-                                        <ItemsControl x:Name="OrangeCombatLoadouts" Grid.Row="1" Margin="4">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border Background="{DynamicResource SurfaceRaised}" CornerRadius="5" Margin="0,2" Padding="5,6">
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="1.6*"/>
-                                                                <ColumnDefinition Width="32"/>
-                                                                <ColumnDefinition Width="48"/>
-                                                                <ColumnDefinition Width="40"/>
-                                                                <ColumnDefinition Width="45"/>
-                                                                <ColumnDefinition Width="24"/>
-                                                                <ColumnDefinition Width="24"/>
-                                                                <ColumnDefinition Width="24"/>
-                                                                <ColumnDefinition Width="52"/>
-                                                            </Grid.ColumnDefinitions>
-                                                            <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                                            <TextBlock Text="{Binding Ping}" Grid.Column="1" Foreground="{DynamicResource TextFaint}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{Binding Weapon}" Grid.Column="2" Foreground="{DynamicResource TextDim}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{Binding Ordnance}" Grid.Column="3" Foreground="{DynamicResource TextDim}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{Binding TacMod}" Grid.Column="4" Foreground="{DynamicResource TextDim}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-                                                            <TextBlock Text="{Binding Kills}" Grid.Column="5" Foreground="{DynamicResource TeamOrange}" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{Binding Deaths}" Grid.Column="6" Foreground="{DynamicResource StatusBad}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{Binding Assists}" Grid.Column="7" Foreground="{DynamicResource TextDim}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{Binding Damage}" Grid.Column="8" Foreground="{DynamicResource StatusGood}" FontWeight="Bold" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </Grid>
-                                </Border>
-                            </Grid>
-
-                            <!-- Map & Objective & Killfeed -->
-                            <Grid Grid.Row="2" Margin="0,10,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="3*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="2*" />
-                                </Grid.ColumnDefinitions>
-
-                                <Border x:Name="CombatObjectiveBorder" Grid.Column="0" Background="{DynamicResource SurfaceCard}" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1.5" CornerRadius="8" Padding="12">
+                                <!-- MATCH card -->
+                                <Border Grid.Column="0" Margin="0,0,12,0" Background="{DynamicResource SurfaceCard}" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1" CornerRadius="6" Padding="12">
                                     <StackPanel>
-                                        <TextBlock x:Name="CombatMapName" Text="MAP: UNKNOWN" Foreground="{DynamicResource TextDim}" FontSize="15" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10" />
                                         <Grid>
+                                            <TextBlock Text="MATCH" FontSize="9.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" HorizontalAlignment="Left"/>
+                                            <TextBlock x:Name="CombatMapLabel" Text="--" FontSize="9.5" FontWeight="SemiBold" Foreground="{DynamicResource TextDim}" HorizontalAlignment="Right"/>
+                                        </Grid>
+
+                                        <Grid Margin="0,10,0,0">
                                             <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="92"/>
                                                 <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="92"/>
                                             </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                                                <TextBlock x:Name="CombatObjectiveLabel" Text="PAYLOAD" Foreground="{DynamicResource TextFaint}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                                                <TextBlock x:Name="CombatObjectiveValue" Text="0.0m" Foreground="{DynamicResource TextPrimary}" FontSize="22" FontWeight="Bold" FontFamily="Consolas" HorizontalAlignment="Center" />
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Bottom">
+                                                <TextBlock Text="BLUE" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TeamBlue}"/>
+                                                <TextBlock x:Name="CombatBlueScore" Text="0" FontFamily="Consolas" FontSize="30" FontWeight="Bold" Foreground="{DynamicResource TeamBlue}" Margin="0,3,0,0"/>
                                             </StackPanel>
-                                            <StackPanel Grid.Column="1" HorizontalAlignment="Center">
-                                                <TextBlock x:Name="CombatObjectiveSecondaryLabel" Text="SPEED" Foreground="{DynamicResource TextFaint}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                                                <TextBlock x:Name="CombatObjectiveSecondaryValue" Text="0.0 m/s" Foreground="{DynamicResource TextPrimary}" FontSize="22" FontWeight="Bold" FontFamily="Consolas" HorizontalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+                                                <TextBlock x:Name="CombatClockText" Text="--:--" FontFamily="Consolas" FontSize="16" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center"/>
+                                                <TextBlock x:Name="CombatRoundText" Text="No round" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                                                <TextBlock Text="ORANGE" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TeamOrange}" HorizontalAlignment="Right"/>
+                                                <TextBlock x:Name="CombatOrangeScore" Text="0" FontFamily="Consolas" FontSize="30" FontWeight="Bold" Foreground="{DynamicResource TeamOrange}" Margin="0,3,0,0" HorizontalAlignment="Right"/>
                                             </StackPanel>
                                         </Grid>
+
+                                        <Border Height="1" Background="{DynamicResource SurfaceBorderSoft}" Margin="0,12,0,12"/>
+
+                                        <!-- Capture point objective -->
+                                        <StackPanel x:Name="CombatCaptureObjectivePanel">
+                                            <Grid>
+                                                <TextBlock Text="CAPTURE POINT" FontSize="9.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}"/>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                    <Ellipse x:Name="CombatCaptureStateDot" Width="5" Height="5" Fill="{DynamicResource TextFaint}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                                    <TextBlock x:Name="CombatCaptureStateText" Text="--" FontSize="10" Foreground="{DynamicResource TextFaint}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Grid Height="11" Margin="0,9,0,0" VerticalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid Grid.Column="0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition x:Name="CombatBlueCaptureRest" Width="1*"/>
+                                                        <ColumnDefinition x:Name="CombatBlueCaptureFill" Width="0.001*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Grid.ColumnSpan="2" Height="7" CornerRadius="3,0,0,3" Background="{DynamicResource SurfaceTrack}" VerticalAlignment="Center"/>
+                                                    <Border Grid.Column="1" Height="7" CornerRadius="3,0,0,3" Background="{DynamicResource TeamBlue}" VerticalAlignment="Center"/>
+                                                </Grid>
+                                                <Border Grid.Column="1" Width="1" Height="11" Background="{DynamicResource TextFaint}"/>
+                                                <Grid Grid.Column="2">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition x:Name="CombatOrangeCaptureFill" Width="0.001*"/>
+                                                        <ColumnDefinition x:Name="CombatOrangeCaptureRest" Width="1*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Grid.ColumnSpan="2" Height="7" CornerRadius="0,3,3,0" Background="{DynamicResource SurfaceTrack}" VerticalAlignment="Center"/>
+                                                    <Border Grid.Column="0" Height="7" CornerRadius="0,3,3,0" Background="{DynamicResource TeamOrange}" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Grid>
+                                            <Grid Margin="0,6,0,0">
+                                                <TextBlock x:Name="CombatBluePctText" Text="--" FontFamily="Consolas" FontSize="11" Foreground="{DynamicResource TeamBlue}" HorizontalAlignment="Left"/>
+                                                <TextBlock Text="HOLD" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" HorizontalAlignment="Center"/>
+                                                <TextBlock x:Name="CombatOrangePctText" Text="--" FontFamily="Consolas" FontSize="11" Foreground="{DynamicResource TeamOrange}" HorizontalAlignment="Right"/>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <!-- Payload objective -->
+                                        <StackPanel x:Name="CombatPayloadObjectivePanel" Visibility="Collapsed">
+                                            <Grid>
+                                                <TextBlock Text="PAYLOAD" FontSize="9.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}"/>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                    <Ellipse x:Name="CombatPayloadStateDot" Width="5" Height="5" Fill="{DynamicResource TextFaint}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                                    <TextBlock x:Name="CombatPayloadStateText" Text="--" FontSize="10" Foreground="{DynamicResource TextFaint}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <Grid Height="11" Margin="0,9,0,0" VerticalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition x:Name="CombatPayloadFill" Width="0.001*"/>
+                                                    <ColumnDefinition x:Name="CombatPayloadRest" Width="1*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.ColumnSpan="2" Height="7" CornerRadius="3" Background="{DynamicResource SurfaceTrack}" VerticalAlignment="Center"/>
+                                                <Border Grid.Column="0" Height="7" CornerRadius="3,0,0,3" Background="{DynamicResource ControlAccent}" VerticalAlignment="Center"/>
+                                                <Border Grid.Column="0" Width="3" Height="11" CornerRadius="2" Background="{DynamicResource TextPrimary}" HorizontalAlignment="Right"/>
+                                            </Grid>
+                                            <Grid Margin="0,6,0,0">
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                                    <TextBlock Text="DISTANCE" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" Margin="0,0,6,0"/>
+                                                    <TextBlock x:Name="CombatDistanceText" Text="--" FontFamily="Consolas" FontSize="11.5" Foreground="{DynamicResource TextPrimary}"/>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                    <TextBlock Text="SPEED" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" Margin="0,0,6,0"/>
+                                                    <TextBlock x:Name="CombatSpeedText" Text="--" FontFamily="Consolas" FontSize="11.5" Foreground="{DynamicResource TextPrimary}"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <Border Height="1" Background="{DynamicResource SurfaceBorderSoft}" Margin="0,12,0,12"/>
+
+                                        <Grid Margin="0,0,0,7">
+                                            <TextBlock Text="TEAM TOTALS" FontSize="9.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}"/>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                <TextBlock Text="K" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" Width="30" TextAlignment="Right"/>
+                                                <TextBlock Text="DMG" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" Width="50" TextAlignment="Right"/>
+                                                <TextBlock Text="OBJ" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" Width="44" TextAlignment="Right"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <StackPanel>
+                                            <Border Background="{DynamicResource TeamBlueTint}" CornerRadius="4" Padding="7,5" Margin="0,0,0,3">
+                                                <Grid>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Rectangle Width="3" Height="11" RadiusX="2" RadiusY="2" Fill="{DynamicResource TeamBlue}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                        <TextBlock Text="BLUE" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TeamBlue}" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                        <TextBlock x:Name="CombatBlueTotalKills" Text="0" FontFamily="Consolas" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Width="30" TextAlignment="Right"/>
+                                                        <TextBlock x:Name="CombatBlueTotalDamage" Text="0" FontFamily="Consolas" FontSize="11.5" Foreground="{DynamicResource TextDim}" Width="50" TextAlignment="Right"/>
+                                                        <TextBlock x:Name="CombatBlueTotalObjective" Text="0:00" FontFamily="Consolas" FontSize="11.5" Foreground="{DynamicResource TextFaint}" Width="44" TextAlignment="Right"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                            <Border Background="{DynamicResource TeamOrangeTint}" CornerRadius="4" Padding="7,5">
+                                                <Grid>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Rectangle Width="3" Height="11" RadiusX="2" RadiusY="2" Fill="{DynamicResource TeamOrange}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                        <TextBlock Text="ORANGE" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TeamOrange}" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                        <TextBlock x:Name="CombatOrangeTotalKills" Text="0" FontFamily="Consolas" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Width="30" TextAlignment="Right"/>
+                                                        <TextBlock x:Name="CombatOrangeTotalDamage" Text="0" FontFamily="Consolas" FontSize="11.5" Foreground="{DynamicResource TextDim}" Width="50" TextAlignment="Right"/>
+                                                        <TextBlock x:Name="CombatOrangeTotalObjective" Text="0:00" FontFamily="Consolas" FontSize="11.5" Foreground="{DynamicResource TextFaint}" Width="44" TextAlignment="Right"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
 
-                                <Border Grid.Column="2" Background="{DynamicResource SurfaceCard}" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1" CornerRadius="8" Padding="12">
-                                    <StackPanel>
-                                        <TextBlock Text="LAST KILL" Foreground="{DynamicResource TextFaint}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,0,0,10" />
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <TextBlock x:Name="CombatKillerText" Text="--" Foreground="{DynamicResource TextPrimary}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" MaxWidth="110" />
-                                            <TextBlock Text=" vs " Foreground="{DynamicResource TextFaint}" FontSize="12" VerticalAlignment="Center" />
-                                            <TextBlock x:Name="CombatKilledText" Text="--" Foreground="{DynamicResource TextPrimary}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" MaxWidth="110" />
-                                        </StackPanel>
-                                        <TextBlock x:Name="CombatKilledWithText" Text="" Foreground="{DynamicResource TextFaint}" FontSize="11" HorizontalAlignment="Center" Margin="0,5,0,0" />
-                                    </StackPanel>
+                                <!-- KILL FEED card -->
+                                <Border Grid.Column="1" Margin="0,0,12,0" Background="{DynamicResource SurfaceCard}" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1" CornerRadius="6" Padding="12">
+                                    <DockPanel>
+                                        <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                                            <TextBlock Text="KILL FEED" FontSize="9.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}"/>
+                                            <TextBlock x:Name="CombatKillFeedCount" Text="0 total" FontFamily="Consolas" FontSize="10" Foreground="{DynamicResource TextFaint}" HorizontalAlignment="Right"/>
+                                        </Grid>
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                            <ItemsControl x:Name="CombatKillFeedList">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="{Binding RowBg}" CornerRadius="4" Padding="7,5" Margin="0,0,0,2">
+                                                            <StackPanel>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <Rectangle Width="3" Height="10" RadiusX="2" RadiusY="2" Fill="{Binding KillerColor}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                                    <TextBlock Text="{Binding Killer}" FontSize="11" Foreground="{Binding KillerColor}" MaxWidth="72" TextTrimming="CharacterEllipsis"/>
+                                                                    <TextBlock Text=" &#215; " FontSize="10" Foreground="{DynamicResource TextFaint}"/>
+                                                                    <TextBlock Text="{Binding Victim}" FontSize="11" Foreground="{Binding VictimColor}" TextTrimming="CharacterEllipsis"/>
+                                                                </StackPanel>
+                                                                <TextBlock Text="{Binding Weapon}" FontSize="9.5" Foreground="{DynamicResource TextFaint}" Margin="9,2,0,0"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </DockPanel>
+                                </Border>
+
+                                <!-- NETWORK card -->
+                                <Border Grid.Column="2" Background="{DynamicResource SurfaceCard}" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1" CornerRadius="6" Padding="12">
+                                    <DockPanel>
+                                        <Grid DockPanel.Dock="Top" Margin="0,0,0,10">
+                                            <TextBlock Text="NETWORK" FontSize="9.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}"/>
+                                            <Border Background="{DynamicResource SurfaceRaised}" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1" CornerRadius="10" Padding="8,3" HorizontalAlignment="Right">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Ellipse Width="5" Height="5" Fill="{DynamicResource TextFaint}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                    <TextBlock x:Name="CombatNetworkStatusText" Text="--" FontSize="10.5" Foreground="{DynamicResource TextDim}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+
+                                        <Grid DockPanel.Dock="Top" Margin="0,0,0,11">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" Background="{DynamicResource SurfaceRaised}" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1" CornerRadius="5" Padding="9,7">
+                                                <StackPanel>
+                                                    <TextBlock Text="AVG PING" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}"/>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                        <TextBlock x:Name="CombatAvgPingValue" Text="--" FontFamily="Consolas" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                                        <TextBlock Text=" ms" FontFamily="Consolas" FontSize="10" Foreground="{DynamicResource TextFaint}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Grid.Column="2" Background="{DynamicResource SurfaceRaised}" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1" CornerRadius="5" Padding="9,7">
+                                                <StackPanel>
+                                                    <TextBlock Text="LOSS" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}"/>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                        <TextBlock x:Name="CombatLossValue" Text="--" FontFamily="Consolas" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource StatusGood}"/>
+                                                        <TextBlock Text=" %" FontFamily="Consolas" FontSize="10" Foreground="{DynamicResource TextFaint}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+                                            <Border Grid.Column="4" Background="{DynamicResource SurfaceRaised}" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1" CornerRadius="5" Padding="9,7">
+                                                <StackPanel>
+                                                    <TextBlock Text="WORST" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}"/>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                        <TextBlock x:Name="CombatWorstPingValue" Text="--" FontFamily="Consolas" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                                        <TextBlock Text=" ms" FontFamily="Consolas" FontSize="10" Foreground="{DynamicResource TextFaint}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+
+                                        <Grid DockPanel.Dock="Bottom" Margin="0,9,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.ColumnSpan="3" BorderBrush="{DynamicResource SurfaceBorderSoft}" BorderThickness="0,1,0,0" Margin="0,-9,0,0"/>
+                                            <TextBlock Grid.Column="0" Text="SERVER SCORE" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" Margin="0,9,8,0" VerticalAlignment="Center"/>
+                                            <Border Grid.Column="1" Height="4" CornerRadius="2" Background="{DynamicResource SurfaceTrack}" Margin="0,9,8,0" VerticalAlignment="Center">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition x:Name="CombatServerScoreFill" Width="0.001*"/>
+                                                        <ColumnDefinition x:Name="CombatServerScoreRest" Width="1*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Grid.Column="0" Background="{DynamicResource ControlAccent}"/>
+                                                </Grid>
+                                            </Border>
+                                            <TextBlock Grid.Column="2" x:Name="CombatServerScoreText" Text="--" FontFamily="Consolas" FontSize="11" Foreground="{DynamicResource TextDim}" Margin="0,9,0,0" VerticalAlignment="Center"/>
+                                        </Grid>
+
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                            <StackPanel x:Name="CombatPingRowsBox"/>
+                                        </ScrollViewer>
+                                    </DockPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- ROW 2: rosters -->
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0" Margin="0,0,6,0" Background="{DynamicResource SurfaceCard}" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1" CornerRadius="6" Padding="12">
+                                    <DockPanel>
+                                        <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                                            <TextBlock Text="BLUE TEAM" FontSize="9.5" FontWeight="SemiBold" Foreground="{DynamicResource TeamBlue}"/>
+                                            <TextBlock x:Name="CombatBlueRosterSummary" Text="0 K &#183; 0 dmg" FontFamily="Consolas" FontSize="10.5" Foreground="{DynamicResource TextFaint}" HorizontalAlignment="Right"/>
+                                        </Grid>
+                                        <Grid DockPanel.Dock="Top" Margin="8,0,8,5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="20"/>
+                                                <ColumnDefinition Width="20"/>
+                                                <ColumnDefinition Width="20"/>
+                                                <ColumnDefinition Width="44"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="PLAYER" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}"/>
+                                            <TextBlock Grid.Column="1" Text="K" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" TextAlignment="Right"/>
+                                            <TextBlock Grid.Column="2" Text="A" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" TextAlignment="Right"/>
+                                            <TextBlock Grid.Column="3" Text="D" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" TextAlignment="Right"/>
+                                            <TextBlock Grid.Column="4" Text="DMG" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" TextAlignment="Right"/>
+                                        </Grid>
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                            <ItemsControl x:Name="BlueCombatLoadouts">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="{Binding RowBg}" CornerRadius="4" Padding="8,6" Margin="0,0,0,1">
+                                                            <StackPanel>
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="3"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="20"/>
+                                                                        <ColumnDefinition Width="20"/>
+                                                                        <ColumnDefinition Width="20"/>
+                                                                        <ColumnDefinition Width="44"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <Rectangle Grid.Column="0" Width="3" RadiusX="2" RadiusY="2" Fill="{DynamicResource TeamBlue}"/>
+                                                                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="11.5" Foreground="{DynamicResource TextPrimary}" Margin="8,0,0,0" TextTrimming="CharacterEllipsis"/>
+                                                                    <TextBlock Grid.Column="2" Text="{Binding Kills}" FontFamily="Consolas" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextAlignment="Right"/>
+                                                                    <TextBlock Grid.Column="3" Text="{Binding Assists}" FontFamily="Consolas" FontSize="11.5" Foreground="{DynamicResource TextDim}" TextAlignment="Right"/>
+                                                                    <TextBlock Grid.Column="4" Text="{Binding Deaths}" FontFamily="Consolas" FontSize="11.5" Foreground="{DynamicResource TextFaint}" TextAlignment="Right"/>
+                                                                    <TextBlock Grid.Column="5" Text="{Binding DamageText}" FontFamily="Consolas" FontSize="11.5" Foreground="{DynamicResource TextPrimary}" TextAlignment="Right"/>
+                                                                </Grid>
+                                                                <Grid Margin="11,3,0,0">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="52"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="70"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0" Text="{Binding Weapon}" FontSize="9.5" Foreground="{DynamicResource TextDim}" TextTrimming="CharacterEllipsis"/>
+                                                                    <TextBlock Grid.Column="1" Text="{Binding Mods}" FontSize="9.5" Foreground="{DynamicResource TextFaint}" TextTrimming="CharacterEllipsis" Margin="8,0,0,0"/>
+                                                                    <Border Grid.Column="2" Height="3" CornerRadius="1.5" Background="{DynamicResource SurfaceTrack}" VerticalAlignment="Center">
+                                                                        <Grid>
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="{Binding DmgFill}"/>
+                                                                                <ColumnDefinition Width="{Binding DmgRest}"/>
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <Border Grid.Column="0" Background="{DynamicResource TeamBlue}"/>
+                                                                        </Grid>
+                                                                    </Border>
+                                                                </Grid>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </DockPanel>
+                                </Border>
+
+                                <Border Grid.Column="1" Margin="6,0,0,0" Background="{DynamicResource SurfaceCard}" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1" CornerRadius="6" Padding="12">
+                                    <DockPanel>
+                                        <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                                            <TextBlock Text="ORANGE TEAM" FontSize="9.5" FontWeight="SemiBold" Foreground="{DynamicResource TeamOrange}"/>
+                                            <TextBlock x:Name="CombatOrangeRosterSummary" Text="0 K &#183; 0 dmg" FontFamily="Consolas" FontSize="10.5" Foreground="{DynamicResource TextFaint}" HorizontalAlignment="Right"/>
+                                        </Grid>
+                                        <Grid DockPanel.Dock="Top" Margin="8,0,8,5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="20"/>
+                                                <ColumnDefinition Width="20"/>
+                                                <ColumnDefinition Width="20"/>
+                                                <ColumnDefinition Width="44"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="PLAYER" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}"/>
+                                            <TextBlock Grid.Column="1" Text="K" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" TextAlignment="Right"/>
+                                            <TextBlock Grid.Column="2" Text="A" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" TextAlignment="Right"/>
+                                            <TextBlock Grid.Column="3" Text="D" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" TextAlignment="Right"/>
+                                            <TextBlock Grid.Column="4" Text="DMG" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource TextFaint}" TextAlignment="Right"/>
+                                        </Grid>
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                            <ItemsControl x:Name="OrangeCombatLoadouts">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="{Binding RowBg}" CornerRadius="4" Padding="8,6" Margin="0,0,0,1">
+                                                            <StackPanel>
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="3"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="20"/>
+                                                                        <ColumnDefinition Width="20"/>
+                                                                        <ColumnDefinition Width="20"/>
+                                                                        <ColumnDefinition Width="44"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <Rectangle Grid.Column="0" Width="3" RadiusX="2" RadiusY="2" Fill="{DynamicResource TeamOrange}"/>
+                                                                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="11.5" Foreground="{DynamicResource TextPrimary}" Margin="8,0,0,0" TextTrimming="CharacterEllipsis"/>
+                                                                    <TextBlock Grid.Column="2" Text="{Binding Kills}" FontFamily="Consolas" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextAlignment="Right"/>
+                                                                    <TextBlock Grid.Column="3" Text="{Binding Assists}" FontFamily="Consolas" FontSize="11.5" Foreground="{DynamicResource TextDim}" TextAlignment="Right"/>
+                                                                    <TextBlock Grid.Column="4" Text="{Binding Deaths}" FontFamily="Consolas" FontSize="11.5" Foreground="{DynamicResource TextFaint}" TextAlignment="Right"/>
+                                                                    <TextBlock Grid.Column="5" Text="{Binding DamageText}" FontFamily="Consolas" FontSize="11.5" Foreground="{DynamicResource TextPrimary}" TextAlignment="Right"/>
+                                                                </Grid>
+                                                                <Grid Margin="11,3,0,0">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="52"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="70"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0" Text="{Binding Weapon}" FontSize="9.5" Foreground="{DynamicResource TextDim}" TextTrimming="CharacterEllipsis"/>
+                                                                    <TextBlock Grid.Column="1" Text="{Binding Mods}" FontSize="9.5" Foreground="{DynamicResource TextFaint}" TextTrimming="CharacterEllipsis" Margin="8,0,0,0"/>
+                                                                    <Border Grid.Column="2" Height="3" CornerRadius="1.5" Background="{DynamicResource SurfaceTrack}" VerticalAlignment="Center">
+                                                                        <Grid>
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="{Binding DmgFill}"/>
+                                                                                <ColumnDefinition Width="{Binding DmgRest}"/>
+                                                                            </Grid.ColumnDefinitions>
+                                                                            <Border Grid.Column="0" Background="{DynamicResource TeamOrange}"/>
+                                                                        </Grid>
+                                                                    </Border>
+                                                                </Grid>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </DockPanel>
                                 </Border>
                             </Grid>
                         </Grid>

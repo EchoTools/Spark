@@ -1,0 +1,391 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  /* The window chrome, from the same design as the dashboard. One page renders one region;
+     which one is chosen by ?region= so all four share the palette code below. */
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; font-size: 13px; overflow: hidden; user-select: none;
+    font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+    background: var(--chrome); color: var(--text); -webkit-font-smoothing: antialiased;
+  }
+  .m { font-family: Consolas, 'Cascadia Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .cap { font-size: 9.5px; letter-spacing: 0.9px; text-transform: uppercase; font-weight: 600; color: var(--text-faint); white-space: nowrap; }
+  .row { display: flex; align-items: center; }
+  .grow { flex-grow: 1; min-width: 0; }
+  .ell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .region { display: none; height: 100%; }
+  .region.on { display: flex; }
+
+  .btn {
+    height: 30px; padding: 0 9px; border-radius: 5px; cursor: pointer;
+    background: var(--raised); border: 1px solid var(--border); color: var(--text);
+    display: flex; align-items: center; gap: 9px; font-size: 12px; font-family: inherit;
+    width: 100%; text-align: left; margin-bottom: 5px;
+  }
+  .btn:hover { background: var(--hover); }
+  .btn svg { flex-shrink: 0; }
+  .btn.sq { width: 30px; padding: 0; justify-content: center; margin-bottom: 0; }
+  .btn.sm { height: 26px; justify-content: center; margin-bottom: 0; }
+  .split { display: flex; gap: 4px; margin-bottom: 5px; }
+  .split .btn { margin-bottom: 0; }
+
+  .card { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
+  .card-head { padding: 7px 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .prow { display: flex; align-items: center; gap: 8px; padding: 6px 10px; cursor: pointer; }
+  .prow:hover { background: var(--hover); }
+  .prow + .prow { border-top: 1px solid var(--border-soft); }
+  .teambtn {
+    height: 20px; padding: 0 7px; border-radius: 4px; font-size: 10.5px; cursor: pointer;
+    color: var(--text); font-family: inherit; margin-right: 4px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<div class="region" id="r-header" style="align-items:center; gap:14px; padding:0 14px; border-bottom:1px solid var(--border);">
+  <div class="row" style="gap:9px;">
+    <svg width="17" height="17" viewBox="0 0 16 16"><path d="M8.6 1.4 3.2 9.1h3.6l-1.4 5.5 5.4-7.7H7.2l1.4-5.5Z" fill="var(--accent)"/></svg>
+    <div style="font-size:14px; font-weight:600;">Spark</div>
+  </div>
+
+  <div class="row" style="gap:6px; height:24px; padding:0 10px 0 8px; border-radius:12px; background:var(--raised); border:1px solid var(--border);">
+    <div id="statusDot" style="width:6px; height:6px; border-radius:3px; background:var(--bad);"></div>
+    <div id="statusText" style="font-size:11.5px;">Not Connected</div>
+    <a id="statusHelp" href="#" data-act="help" style="font-size:11.5px; color:var(--accent); margin-left:4px;">Help</a>
+  </div>
+
+  <div class="grow"></div>
+
+  <div class="row" style="height:36px; border:1px solid var(--border); border-radius:6px; overflow:hidden;">
+    <div class="row" style="width:28px; height:100%; justify-content:center; background:var(--orange-tint);">
+      <div class="cap" style="color:var(--orange); transform:rotate(-90deg); letter-spacing:1.2px;">ORN</div>
+    </div>
+    <div class="m row" id="orangeScore" style="width:54px; height:100%; justify-content:center; background:var(--orange); color:var(--on-orange); font-size:21px; font-weight:700;">0</div>
+    <div style="width:120px; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--raised);">
+      <div class="m" id="clock" style="font-size:16px; font-weight:600; letter-spacing:0.6px;">00:00</div>
+      <div class="cap" id="roundStatus" style="font-size:9px; margin-top:1px;"></div>
+    </div>
+    <div class="m row" id="blueScore" style="width:54px; height:100%; justify-content:center; background:var(--blue); color:var(--on-blue); font-size:21px; font-weight:700;">0</div>
+    <div class="row" style="width:28px; height:100%; justify-content:center; background:var(--blue-tint);">
+      <div class="cap" style="color:var(--blue); transform:rotate(-90deg); letter-spacing:1.2px;">BLU</div>
+    </div>
+  </div>
+
+  <div class="grow"></div>
+
+  <button class="btn" data-act="ServerLocationButtonClicked" style="width:auto; height:28px; margin:0;">
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--text-dim)" stroke-width="1.4"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2a9 9 0 0 1 0 12A9 9 0 0 1 8 2Z"/></svg>
+    <span id="serverLocation" class="ell" style="font-size:11.5px; color:var(--text-dim); max-width:180px;">Server IP:</span>
+    <span class="m" id="serverPing" style="font-size:10.5px; color:var(--text-faint); padding-left:4px; border-left:1px solid var(--border);"></span>
+  </button>
+
+  <button class="btn" data-act="LoginWindowButtonClicked" style="width:auto; height:28px; margin:0; padding:0 10px 0 4px;">
+    <img id="avatar" style="width:20px; height:20px; border-radius:10px; display:none;">
+    <span id="username" class="ell" style="font-size:11.5px; max-width:130px;">Discord Login</span>
+  </button>
+</div>
+
+<!-- ══════════ LEFT RAIL ══════════ -->
+<div class="region" id="r-left" style="flex-direction:column; padding:12px; border-right:1px solid var(--border);">
+  <div style="background:var(--raised); border:1px solid var(--border); border-radius:6px; padding:9px 10px; margin-bottom:10px;">
+    <div class="row" style="justify-content:space-between; margin-bottom:6px;">
+      <div class="cap">Join link</div>
+      <button class="btn sm" data-act="CopyIgniteJoinLink" style="width:auto; height:20px; padding:0 7px; font-size:10.5px;">Copy</button>
+    </div>
+    <div class="m ell" id="joinLink" style="font-size:11px; color:var(--accent);">--</div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" id="blueHead" style="background:var(--blue-tint); border-bottom-color:var(--blue-edge); flex-wrap:wrap;">
+      <div style="width:3px; height:12px; border-radius:2px; background:var(--blue);"></div>
+      <img id="blueLogo" style="width:16px; height:16px; display:none;">
+      <div class="cap grow" style="color:var(--blue);">Blue</div>
+      <div class="m" id="blueCount" style="font-size:11px; color:var(--blue-edge);">0</div>
+      <div id="blueActions" style="display:none; width:100%; margin-top:5px;">
+        <button class="teambtn" data-act="BlueTeamPauseClick"   id="bluePause"   style="background:var(--blue-edge);">Pause</button>
+        <button class="teambtn" data-act="BlueTeamReadyClick"   style="background:var(--blue-edge);">Ready</button>
+        <button class="teambtn" data-act="BlueTeamRestartClick" style="background:var(--blue-edge);">Restart</button>
+      </div>
+    </div>
+    <div id="blueRoster" style="background:var(--card);"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" style="background:var(--orange-tint); border-bottom-color:var(--orange-edge); flex-wrap:wrap;">
+      <div style="width:3px; height:12px; border-radius:2px; background:var(--orange);"></div>
+      <img id="orangeLogo" style="width:16px; height:16px; display:none;">
+      <div class="cap grow" style="color:var(--orange);">Orange</div>
+      <div class="m" id="orangeCount" style="font-size:11px; color:var(--orange-edge);">0</div>
+      <div id="orangeActions" style="display:none; width:100%; margin-top:5px;">
+        <button class="teambtn" data-act="OrangeTeamPauseClick"   id="orangePause" style="background:var(--orange-edge);">Pause</button>
+        <button class="teambtn" data-act="OrangeTeamReadyClick"   style="background:var(--orange-edge);">Ready</button>
+        <button class="teambtn" data-act="OrangeTeamRestartClick" style="background:var(--orange-edge);">Restart</button>
+      </div>
+    </div>
+    <div id="orangeRoster" style="background:var(--card);"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" style="background:var(--raised);">
+      <div style="width:3px; height:12px; border-radius:2px; background:var(--text-faint);"></div>
+      <div class="cap grow">Spectators</div>
+    </div>
+    <div id="specRoster" style="background:var(--card);"></div>
+  </div>
+
+  <div class="grow"></div>
+
+  <button class="btn" data-act="showOverlay_Click" style="height:32px; margin:0;">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--text-dim)" stroke-width="1.4"><rect x="1.5" y="3" width="13" height="9" rx="1.5"/><path d="M5.5 14.5h5"/></svg>
+    <span class="grow" style="font-size:12px;">Spectator overlay</span>
+    <span class="cap" id="overlayState">Off</span>
+  </button>
+</div>
+
+<!-- ══════════ RIGHT RAIL ══════════ -->
+<div class="region" id="r-right" style="flex-direction:column; padding:12px; border-left:1px solid var(--border); overflow-y:auto;">
+  <div id="casterTools" style="display:none;">
+    <div class="cap" style="margin-bottom:7px;">Caster tools</div>
+    <button class="btn" data-act="RestartAsSpectatorClick">Restart as Spectator</button>
+    <button class="btn" data-act="FindAllQuests">Find All Quests</button>
+    <button class="btn" data-act="PasteLinkInLive">Paste link in .live</button>
+    <button class="btn" data-act="LeagueOverlaysClick">League Overlays</button>
+    <button class="btn" data-act="MatchSetupClick">Match Setup Page</button>
+  </div>
+
+  <div class="cap" style="margin-bottom:7px;">Tools</div>
+
+  <button class="btn" id="updateBtn" data-act="updateButton_Click" style="display:none; background:#8B3434; border-color:#8B3434; justify-content:center;">Download Update</button>
+  <button class="btn" id="enableApiBtn" data-act="enableAPIButton_Click" style="display:none; justify-content:center;">Enable API in Settings</button>
+
+  <div class="split">
+    <button class="btn" data-act="StartSpectatorStreamClick">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--text)" stroke-width="1.4"><path d="M2 4.5h12v8H2z"/><path d="M6.5 8 9.5 9.8 6.5 11.6z" fill="var(--text)" stroke="none"/></svg>
+      <span class="ell">Spectator stream</span>
+    </button>
+    <button class="btn sq" data-act="CombatSpectatorstreamClick" title="Spectatorstream for Echo Combat">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--text)" stroke-width="1.4"><path d="M4 13c0-4 2-7 5-8M8 5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg>
+    </button>
+  </div>
+
+  <button class="btn" data-act="chooseServerRegion_Click">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--text)" stroke-width="1.4"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2a9 9 0 0 1 0 12A9 9 0 0 1 8 2Z"/></svg>
+    <span class="ell">Server region</span>
+  </button>
+
+  <button class="btn" id="playspaceBtn" data-act="playspaceButton_Click" style="display:none;">Show Playspace</button>
+
+  <button class="btn" data-act="LoneEchoSubtitlesClick">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--text)" stroke-width="1.4"><rect x="1.5" y="3.5" width="13" height="9" rx="1.5"/><path d="M4 10h3M9 10h3"/></svg>
+    <span class="ell">Lone Echo subs</span>
+  </button>
+
+  <button class="btn" data-act="ACIIECHO_Click">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--text)" stroke-width="1.4"><path d="M2 12.5 8 3l6 9.5z"/></svg>
+    <span class="ell" style="font-family:'Cascadia Mono',Consolas,monospace;">ASCIIECHO</span>
+  </button>
+
+  <div class="split">
+    <button class="btn" data-act="ReplayViewer_Click">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--text)" stroke-width="1.4"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9"/><path d="M13.5 2v3.2h-3.2"/></svg>
+      <span class="ell">Replay viewer</span>
+    </button>
+    <button class="btn sq" data-act="ReplayViewerVR_Click" style="width:34px; font-size:10.5px;">VR</button>
+  </div>
+
+  <button class="btn" id="speedometerBtn" data-act="OpenSpeedometer" style="display:none;">Speedometer</button>
+
+  <div class="split">
+    <button class="btn" data-act="OpenOverlays">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--text)" stroke-width="1.4"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M1.5 6h13"/></svg>
+      <span class="ell">Overlays</span>
+    </button>
+    <button class="btn sq" data-act="DefaultMatchSetupClick">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--text)" stroke-width="1.4"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M12.6 3.4l-1.4 1.4M4.8 11.2l-1.4 1.4"/></svg>
+    </button>
+  </div>
+
+  <button class="btn" id="highlightsBtn" data-act="showHighlights_Click" style="display:none;">No clips available</button>
+
+  <button class="btn" id="spectateMeBtn" data-act="SpectateMeClicked" style="display:none; height:34px;">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--text)" stroke-width="1.4"><circle cx="8" cy="8" r="4.5"/><circle cx="8" cy="8" r="1.6"/></svg>
+    <span class="grow">Spectate Me</span>
+    <span class="cap" id="spectateMeState">Off</span>
+  </button>
+
+  <div class="cap" style="margin:12px 0 8px;">Session</div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px 8px;">
+    <div><div style="font-size:10px; color:var(--text-faint);">Goals</div><div class="m" id="sGoals" style="font-size:14px;">0</div></div>
+    <div><div style="font-size:10px; color:var(--text-faint);">Saves</div><div class="m" id="sSaves" style="font-size:14px;">0</div></div>
+    <div><div style="font-size:10px; color:var(--text-faint);">Fastest disc</div><div class="m" id="sFastest" style="font-size:14px;">--</div></div>
+    <div><div style="font-size:10px; color:var(--text-faint);">Playtime</div><div class="m" id="sPlaytime" style="font-size:14px;">0m</div></div>
+  </div>
+
+  <div class="grow"></div>
+  <div class="split" style="margin-top:10px;">
+    <button class="btn sm" data-act="OpenWikiClick">Wiki</button>
+    <button class="btn sm" data-act="OpenDiscordClick">Discord</button>
+  </div>
+</div>
+
+<!-- ══════════ FOOTER ══════════ -->
+<div class="region" id="r-footer" style="align-items:center; gap:12px; padding:0 14px; border-top:1px solid var(--border);">
+  <div class="row" style="gap:6px;">
+    <div style="width:5px; height:5px; border-radius:3px; background:var(--good);"></div>
+    <div style="font-size:11px; color:var(--text-dim);">Mode:</div>
+    <div id="mode" style="font-size:11px; color:var(--text-dim);">Personal</div>
+  </div>
+  <div style="width:1px; height:12px; background:var(--border);"></div>
+  <div class="m" id="version" style="font-size:11px; color:var(--text-faint);"></div>
+  <div id="downloading" style="display:none; font-size:11px; color:var(--text-faint);">Downloading overlays...</div>
+
+  <div class="grow"></div>
+
+  <button class="btn" id="rejoinBtn" data-act="RejoinClicked" style="display:none; width:auto; height:26px; margin:0; background:#6E2F2F; border-color:#6E2F2F; justify-content:center; padding:0 12px;">Rejoin</button>
+  <button class="btn" data-act="SettingsButtonClicked" style="width:auto; height:26px; margin:0; padding:0 11px;">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--text)" stroke-width="1.4"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M12.6 3.4l-1.4 1.4M4.8 11.2l-1.4 1.4"/></svg>
+    <span style="font-size:11.5px;">Settings</span>
+  </button>
+  <button class="btn" data-act="CloseButtonClicked" style="width:66px; height:26px; margin:0; justify-content:center; font-size:11.5px;">Hide</button>
+  <button class="btn" data-act="QuitButtonClicked" style="width:66px; height:26px; margin:0; justify-content:center; font-size:11.5px; background:var(--bad-tint); border-color:var(--bad-edge); color:var(--bad);">Exit</button>
+</div>
+
+<script>
+/* palette — identical derivation to ThemesController and the dashboard page */
+const INK_LIGHT=[236,236,236], INK_DARK=[20,22,26];
+const toRgb=h=>{h=String(h||'').trim().replace('#','');if(h.length===8)h=h.slice(2);
+  return h.length===6?[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]:[21,21,21];};
+const toHex=c=>'#'+c.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+const lin=v=>{const s=v/255;return s<=0.03928?s/12.92:Math.pow((s+0.055)/1.055,2.4);};
+const lum=c=>0.2126*lin(c[0])+0.7152*lin(c[1])+0.0722*lin(c[2]);
+const mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+const contrast=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);};
+function inkOn(c){const d=contrast(INK_DARK,c),l=contrast(INK_LIGHT,c),pd=d>=l;
+  if(Math.max(d,l)>=4.5)return pd?INK_DARK:INK_LIGHT;return pd?[0,0,0]:[255,255,255];}
+
+function applyTheme(darkHex, midHex, lightHex) {
+  const dark=toRgb(darkHex), mid=toRgb(midHex), light=toRgb(lightHex);
+  const ink=inkOn(dark), deep=lum(ink)<0.5, away=deep?[0,0,0]:[255,255,255];
+  const step=t=>toHex(mix(dark,away,t));
+  let accent=light;
+  for(let i=0;i<8&&contrast(accent,dark)<3.5;i++) accent=mix(accent,ink,0.3);
+  const blue=deep?[49,80,122]:[110,147,214], orange=deep?[140,92,42]:[212,148,30];
+  const good=deep?[58,96,66]:[126,158,94], bad=deep?[138,46,46]:[192,122,74];
+  const s=document.documentElement.style;
+  s.setProperty('--ground',toHex(dark));
+  s.setProperty('--chrome',step(0.045));
+  s.setProperty('--card',step(0.075));
+  s.setProperty('--raised',toHex(mid));
+  s.setProperty('--hover',step(0.19));
+  s.setProperty('--border',step(0.17));
+  s.setProperty('--border-soft',step(0.10));
+  s.setProperty('--text',toHex(ink));
+  s.setProperty('--text-dim',toHex(mix(ink,dark,0.34)));
+  s.setProperty('--text-faint',toHex(mix(ink,dark,0.55)));
+  s.setProperty('--accent',toHex(accent));
+  s.setProperty('--blue',toHex(blue));
+  s.setProperty('--blue-tint',toHex(mix(blue,dark,0.84)));
+  s.setProperty('--blue-edge',toHex(mix(blue,dark,0.62)));
+  s.setProperty('--on-blue',toHex(inkOn(blue)));
+  s.setProperty('--orange',toHex(orange));
+  s.setProperty('--orange-tint',toHex(mix(orange,dark,0.84)));
+  s.setProperty('--orange-edge',toHex(mix(orange,dark,0.62)));
+  s.setProperty('--on-orange',toHex(inkOn(orange)));
+  s.setProperty('--good',toHex(good));
+  s.setProperty('--bad',toHex(bad));
+  s.setProperty('--bad-tint',toHex(mix(bad,dark,0.84)));
+  s.setProperty('--bad-edge',toHex(mix(bad,dark,0.62)));
+}
+
+const $=id=>document.getElementById(id);
+const set=(id,v)=>{const e=$(id); if(e&&e.textContent!==v) e.textContent=v;};
+const show=(id,on)=>{const e=$(id); if(e) e.style.display = on ? '' : 'none';};
+const pingVar=p=>p<=0?'var(--text-faint)':p<70?'var(--good)':p<110?'var(--warn,#c9a227)':'var(--bad)';
+
+const post = msg => window.chrome?.webview?.postMessage(msg);
+
+// Every button carries its C# handler name; one listener forwards them all.
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  e.preventDefault();
+  post({ type: 'action', action: el.getAttribute('data-act') });
+});
+
+function roster(list) {
+  if (!list || !list.length) return '<div style="padding:9px 10px;font-size:11.5px;color:var(--text-faint);">None</div>';
+  return list.map(p => `<div class="prow" data-name="${p.name}">
+      <div class="grow ell" style="font-size:12px;">${p.name}</div>
+      <div class="m" style="font-size:10.5px;color:${pingVar(p.ping)};">${p.ping>0?p.ping:'--'}</div>
+    </div>`).join('');
+}
+
+function applyData(d) {
+  // header
+  set('statusText', d.status || '');
+  $('statusDot').style.background = d.statusColor || 'var(--bad)';
+  show('statusHelp', !!d.showHelp);
+  set('orangeScore', String(d.orangeScore ?? 0));
+  set('blueScore', String(d.blueScore ?? 0));
+  set('clock', d.clock || '00:00');
+  set('roundStatus', d.roundStatus || '');
+  set('serverLocation', d.serverLocation || '');
+  set('username', d.username || 'Discord Login');
+  if (d.avatar) { $('avatar').src = d.avatar; $('avatar').style.display = ''; }
+  else if ($('avatar')) $('avatar').style.display = 'none';
+
+  // left rail
+  set('joinLink', d.joinLink || '--');
+  if (d.blue) { $('blueRoster').innerHTML = roster(d.blue); set('blueCount', String(d.blue.length)); }
+  if (d.orange) { $('orangeRoster').innerHTML = roster(d.orange); set('orangeCount', String(d.orange.length)); }
+  if (d.spectators) $('specRoster').innerHTML = roster(d.spectators);
+  show('blueActions', !!d.teamActions);
+  show('orangeActions', !!d.teamActions);
+  if (d.bluePauseText) set('bluePause', d.bluePauseText);
+  if (d.orangePauseText) set('orangePause', d.orangePauseText);
+  if (d.blueLogo) { $('blueLogo').src = d.blueLogo; $('blueLogo').style.display=''; }
+  if (d.orangeLogo) { $('orangeLogo').src = d.orangeLogo; $('orangeLogo').style.display=''; }
+  set('overlayState', d.overlayState || 'Off');
+
+  // right rail
+  show('casterTools', !!d.casterTools);
+  show('updateBtn', !!d.updateAvailable);
+  show('enableApiBtn', !!d.apiDisabled);
+  show('playspaceBtn', !!d.showPlayspace);
+  show('speedometerBtn', !!d.showSpeedometer);
+  show('highlightsBtn', !!d.showHighlights);
+  if (d.highlightsText) set('highlightsBtn', d.highlightsText);
+  show('spectateMeBtn', !!d.showSpectateMe);
+  set('spectateMeState', d.spectateMeState || 'Off');
+  set('sGoals', String(d.sessionGoals ?? 0));
+  set('sSaves', String(d.sessionSaves ?? 0));
+  set('sFastest', d.sessionFastest || '--');
+  set('sPlaytime', d.sessionPlaytime || '0m');
+
+  // footer
+  set('mode', d.mode || '');
+  set('version', d.version || '');
+  show('downloading', !!d.downloading);
+  show('rejoinBtn', !!d.showRejoin);
+}
+
+// roster rows open the player card
+document.addEventListener('click', e => {
+  const row = e.target.closest('.prow[data-name]');
+  if (row) post({ type: 'player', name: row.getAttribute('data-name') });
+});
+
+const region = new URLSearchParams(location.search).get('region') || 'header';
+document.getElementById('r-' + region)?.classList.add('on');
+
+applyTheme('#151515', '#363636', '#3E3E3E');
+window.applyTheme = applyTheme;
+window.applyData = applyData;
+</script>
+</body>
+</html>

@@ -45,6 +45,31 @@ namespace Spark
         public int Assists { get; set; }
         public int Deaths { get; set; }
         public int Damage { get; set; }
+
+        /// <summary>Ordnance and TacMod combined onto one line ("Arc Mine · Barrier"), the way the roster row shows them.</summary>
+        public string Mods => string.IsNullOrEmpty(Ordnance) || Ordnance == "N/A"
+            ? (string.IsNullOrEmpty(TacMod) || TacMod == "N/A" ? "" : TacMod)
+            : (string.IsNullOrEmpty(TacMod) || TacMod == "N/A" ? Ordnance : $"{Ordnance} · {TacMod}");
+
+        public string DamageText => Damage.ToString("N0");
+
+        /// <summary>Highlights the local player's own row in the roster.</summary>
+        public Brush RowBg { get; set; } = Brushes.Transparent;
+
+        /// <summary>This player's damage against the match's single highest damage figure, so both rosters read on the same scale.</summary>
+        public GridLength DmgFill { get; set; } = new GridLength(0.001, GridUnitType.Star);
+        public GridLength DmgRest { get; set; } = new GridLength(1, GridUnitType.Star);
+    }
+
+    /// <summary>One row in the combat Kill Feed card.</summary>
+    public class CombatKillFeedItem
+    {
+        public string Killer { get; set; }
+        public string Victim { get; set; }
+        public string Weapon { get; set; }
+        public Brush KillerColor { get; set; }
+        public Brush VictimColor { get; set; }
+        public Brush RowBg { get; set; } = Brushes.Transparent;
     }
 
     /// <summary>
@@ -235,13 +260,9 @@ namespace Spark
 
             Program.NewMatch += frame =>
             {
-                Dispatcher.Invoke(() =>
-                {
-                    // ip stuff
-                    serverLocationLabel.Content = "Server IP: " + frame.sessionip;
-                    _ = GetServerLocation(frame.sessionip);
-                    RefreshPlayerList(frame);
-                });
+                // Server IP / location is now resolved from the per-tick watchdog below (see its
+                // comment) since this one-shot event can fire before sessionip is populated.
+                Dispatcher.Invoke(() => { RefreshPlayerList(frame); });
             };
 
             Program.PlayerJoined += (frame, team, arg3) => { Dispatcher.Invoke(() => { RefreshPlayerList(frame); }); };
@@ -468,8 +489,7 @@ namespace Spark
         {
             try
             {
-                SparkSettings.instance.totalPlaytimeSeconds =
-                    allTimePlaytimeBaseSeconds + (DateTime.UtcNow - sessionStarted).TotalSeconds;
+                SparkSettings.instance.totalPlaytimeSeconds = allTimePlaytimeBaseSeconds + sessionPlaySeconds;
                 SparkSettings.instance.Save();
 
                 KillSpeakerSystem();
@@ -610,6 +630,19 @@ namespace Spark
                         // session ID
                         sessionIdTextBox.Text = Program.CurrentSparkLink(Program.lastFrame.sessionid);
 
+                        // Server IP / location. NewMatch below only fires once per sessionid change,
+                        // and for combat private matches sessionip is sometimes still blank on that
+                        // first frame (server not fully allocated yet) — Arena's InLobby gating skips
+                        // that premature frame, but combat's doesn't, so the one-shot NewMatch handler
+                        // was firing with an empty IP and never getting a chance to retry. Checking
+                        // every tick instead means it just resolves as soon as the IP actually shows up.
+                        if (!string.IsNullOrEmpty(Program.lastFrame.sessionip) &&
+                            Program.lastFrame.sessionip != lastResolvedSessionIp)
+                        {
+                            lastResolvedSessionIp = Program.lastFrame.sessionip;
+                            serverLocationLabel.Content = "Server IP: " + lastResolvedSessionIp;
+                            _ = GetServerLocation(lastResolvedSessionIp);
+                        }
 
                         UpdateLastThrowCard(Program.lastFrame.last_throw);
                         UpdateStatRows(Program.lastFrame);
@@ -666,122 +699,7 @@ namespace Spark
                             {
                                 if (!string.IsNullOrEmpty(Program.lastJSON))
                                 {
-                                    JObject jsonObj = JObject.Parse(Program.lastJSON);
-
-                                    // Use round scores for the top header if available, otherwise fallback to points (e.g. for payload or older API)
-                                    string blueScore = jsonObj["blue_round_score"]?.ToString() ?? jsonObj["blue_points"]?.ToString() ?? "0";
-                                    string orangeScore = jsonObj["orange_round_score"]?.ToString() ?? jsonObj["orange_points"]?.ToString() ?? "0";
-                                    
-                                    CombatBlueScore.Text = blueScore;
-                                    CombatOrangeScore.Text = orangeScore;
-
-                                    var blueLoadouts = new List<CombatLoadout>();
-                                    var orangeLoadouts = new List<CombatLoadout>();
-
-                                    var teamsArray = jsonObj["teams"] as JArray;
-
-                                    for (int t = 0; t < 3; t++)
-                                    {
-                                        if (t >= Program.lastFrame.teams.Count) continue;
-                                        var apiTeam = Program.lastFrame.teams[t];
-                                        var jsonTeam = teamsArray != null && teamsArray.Count > t ? teamsArray[t] : null;
-                                        var jsonPlayers = jsonTeam?["players"] as JArray;
-
-                                        for (int pIndex = 0; pIndex < apiTeam.players.Count; pIndex++)
-                                        {
-                                            var apiPlayer = apiTeam.players[pIndex];
-                                            var jsonPlayer = jsonPlayers != null && jsonPlayers.Count > pIndex ? jsonPlayers[pIndex] : null;
-
-                                            // Fallbacks to handle casing and nested data
-                                            string weapon = jsonPlayer?["Weapon"]?.ToString() ?? jsonPlayer?["weapon"]?.ToString() ?? "N/A";
-                                            string ordnance = jsonPlayer?["Ordnance"]?.ToString() ?? jsonPlayer?["ordnance"]?.ToString() ?? "N/A";
-                                            string tacmod = jsonPlayer?["TacMod"]?.ToString() ?? jsonPlayer?["tacmod"]?.ToString() ?? "N/A";
-
-                                            var combatStats = CombatDataParser.GetCombatStats(apiPlayer.userid);
-
-                                            var loadout = new CombatLoadout
-                                            {
-                                                Name = apiPlayer.name,
-                                                Ping = apiPlayer.ping,
-                                                Weapon = weapon,
-                                                Ordnance = ordnance,
-                                                TacMod = tacmod,
-                                                Kills = combatStats.kills,
-                                                Assists = combatStats.assists,
-                                                Deaths = combatStats.deaths,
-                                                Damage = (int)combatStats.damage
-                                            };
-
-                                            if (t == 0) blueLoadouts.Add(loadout);
-                                            else if (t == 1) orangeLoadouts.Add(loadout);
-                                        }
-                                    }
-
-                                    BlueCombatLoadouts.ItemsSource = blueLoadouts;
-                                    OrangeCombatLoadouts.ItemsSource = orangeLoadouts;
-
-                                    string mapName = jsonObj["map_name"]?.ToString();
-                                    CombatMapName.Text = $"MAP: {mapName?.ToUpper()}";
-
-                                    if (mapName == "mpl_combat_fission" || mapName == "mpl_combat_gauss")
-                                    {
-                                        CombatObjectiveBorder.BorderBrush = CombatThemeBrush("SurfaceBorder");
-                                        var payload = jsonObj["payload"];
-                                        if (payload != null)
-                                        {
-                                            CombatObjectiveLabel.Text = "PAYLOAD DISTANCE";
-                                            CombatObjectiveValue.Text = $"{payload["distance"]?.ToObject<float>() ?? 0:N1}m";
-                                            CombatObjectiveSecondaryLabel.Text = "SPEED";
-                                            CombatObjectiveSecondaryValue.Text = $"{payload["speed"]?.ToObject<float>() ?? 0:N2} m/s";
-                                        }
-                                    }
-                                    else
-                                    {
-                                        // Capture point or other maps
-                                        bool isContested = jsonObj["contested"]?.ToObject<bool>() ?? false;
-                                        float blueProgress = jsonObj["blue_points"]?.ToObject<float>() ?? 0;
-                                        float orangeProgress = jsonObj["orange_points"]?.ToObject<float>() ?? 0;
-
-                                        CombatObjectiveLabel.Text = "CAPTURE POINT";
-                                        
-                                        if (isContested)
-                                        {
-                                            CombatObjectiveBorder.BorderBrush = CombatThemeBrush("StatusBad");
-                                            CombatObjectiveValue.Text = "CONTESTED";
-                                        }
-                                        else if (blueProgress > orangeProgress)
-                                        {
-                                            CombatObjectiveBorder.BorderBrush = CombatThemeBrush("TeamBlue");
-                                            CombatObjectiveValue.Text = "BLUE OWNS";
-                                        }
-                                        else if (orangeProgress > blueProgress)
-                                        {
-                                            CombatObjectiveBorder.BorderBrush = CombatThemeBrush("TeamOrange");
-                                            CombatObjectiveValue.Text = "ORANGE OWNS";
-                                        }
-                                        else
-                                        {
-                                            CombatObjectiveBorder.BorderBrush = CombatThemeBrush("SurfaceBorder");
-                                            CombatObjectiveValue.Text = "NEUTRAL";
-                                        }
-
-                                        CombatObjectiveSecondaryLabel.Text = "PROGRESS";
-                                        CombatObjectiveSecondaryValue.Text = $"{Math.Max(blueProgress, orangeProgress):N0}%";
-                                    }
-
-                                    var lastKill = CombatDataParser.CurrentLastKill;
-                                    if (!string.IsNullOrEmpty(lastKill.killer) || !string.IsNullOrEmpty(lastKill.killed))
-                                    {
-                                        CombatKillerText.Text = string.IsNullOrEmpty(lastKill.killer) ? "Self" : lastKill.killer;
-                                        CombatKilledText.Text = string.IsNullOrEmpty(lastKill.killed) ? "Unknown" : lastKill.killed;
-                                        CombatKilledWithText.Text = string.IsNullOrEmpty(lastKill.killed_with) ? "" : $"with {lastKill.killed_with}";
-                                    }
-                                    else
-                                    {
-                                        CombatKillerText.Text = "--";
-                                        CombatKilledText.Text = "--";
-                                        CombatKilledWithText.Text = "";
-                                    }
+                                    UpdateCombatDashboard(JObject.Parse(Program.lastJSON), Program.lastFrame);
                                 }
                             }
                             catch (Exception ex)
@@ -869,6 +787,20 @@ namespace Spark
 
                         UpdateJoustTimes();
                         UpdateDiscSpeedHistory(Program.lastFrame.disc.velocity.ToVector3().Length());
+                    }
+                    else if (Program.lastFrame?.match_type != null &&
+                        Program.lastFrame.match_type.StartsWith("Echo_Combat", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Combat has no disc, but the header score strip still reads as "stuck at 0-0"
+                        // if it's left on the XAML placeholder — show the round score there instead.
+                        discSpeedLabel.Text = "--";
+                        SetDiscSpeedTint(-1);
+                        OrangePoints.Text = Program.lastFrame.orange_round_score.ToString();
+                        BluePoints.Text = Program.lastFrame.blue_round_score.ToString();
+                        GameClock.Text = Program.lastFrame.game_clock_display?.Length > 3
+                            ? Program.lastFrame.game_clock_display[..^3]
+                            : Program.lastFrame.game_clock_display;
+                        RoundStatusLabel.Text = FormatRoundStatus(Program.lastFrame.game_status);
                     }
                     else
                     {
@@ -972,6 +904,9 @@ namespace Spark
         private readonly List<StatRow> pingRows = new List<StatRow>();
         private readonly List<StatRow> speedRows = new List<StatRow>();
         private string lastRosterSignature = string.Empty;
+
+        private readonly List<StatRow> combatPingRows = new List<StatRow>();
+        private string lastCombatRosterSignature = string.Empty;
 
         private float lastThrowTotal = float.NaN;
         private float lastThrowArm = float.NaN;
@@ -1276,10 +1211,16 @@ namespace Spark
         private int sessionGoals;
         private int sessionSaves;
         private float sessionFastestThrow;
-        private readonly DateTime sessionStarted = DateTime.UtcNow;
+        private string lastResolvedSessionIp = "";
 
-        // Snapshotted once at launch, before this session's elapsed time is added on top — the sum
-        // of every previous launch's playtime, persisted so the All-Time figure survives restarts.
+        // Banked only for ticks where Echo is actually connected — Session/All-Time Playtime used
+        // to be wall-clock time since this window opened, so leaving Spark running in the
+        // background (or with Echo closed entirely) silently counted as played time.
+        private double sessionPlaySeconds;
+        private DateTime lastPlaytimeTick = DateTime.UtcNow;
+
+        // Snapshotted once at launch, before this session's playtime is added on top — the sum of
+        // every previous launch's playtime, persisted so the All-Time figure survives restarts.
         private readonly double allTimePlaytimeBaseSeconds = SparkSettings.instance.totalPlaytimeSeconds;
         private DateTime lastPlaytimePersist = DateTime.UtcNow;
 
@@ -1294,19 +1235,32 @@ namespace Spark
             SessionSavesLabel.Text = sessionSaves.ToString();
             SessionFastestDiscLabel.Text = sessionFastestThrow > 0 ? sessionFastestThrow.ToString("N2") : "--";
 
-            TimeSpan elapsed = DateTime.UtcNow - sessionStarted;
-            SessionPlaytimeLabel.Text = elapsed.TotalHours >= 1
-                ? $"{(int)elapsed.TotalHours}h {elapsed.Minutes}m"
-                : $"{elapsed.Minutes}m";
+            DateTime now = DateTime.UtcNow;
+            double delta = (now - lastPlaytimeTick).TotalSeconds;
+            lastPlaytimeTick = now;
 
-            double allTimeSeconds = allTimePlaytimeBaseSeconds + elapsed.TotalSeconds;
+            // Only bank time while Echo is actually connected. The upper bound discards the delta
+            // after a sleep/resume or debugger pause instead of crediting the gap as playtime.
+            bool echoConnected = Program.connectionState != Program.ConnectionState.NotConnected &&
+                Program.connectionState != Program.ConnectionState.NoAPI;
+            if (echoConnected && delta > 0 && delta < 30)
+            {
+                sessionPlaySeconds += delta;
+            }
+
+            TimeSpan sessionPlayed = TimeSpan.FromSeconds(sessionPlaySeconds);
+            SessionPlaytimeLabel.Text = sessionPlayed.TotalHours >= 1
+                ? $"{(int)sessionPlayed.TotalHours}h {sessionPlayed.Minutes}m"
+                : $"{sessionPlayed.Minutes}m";
+
+            double allTimeSeconds = allTimePlaytimeBaseSeconds + sessionPlaySeconds;
             AllTimePlaytimeLabel.Text = FormatAllTimePlaytime(allTimeSeconds);
 
             // Persist periodically (not every tick) so a crash only loses a minute of credit, not
             // the whole session's worth.
-            if ((DateTime.UtcNow - lastPlaytimePersist).TotalSeconds >= 60)
+            if ((now - lastPlaytimePersist).TotalSeconds >= 60)
             {
-                lastPlaytimePersist = DateTime.UtcNow;
+                lastPlaytimePersist = now;
                 SparkSettings.instance.totalPlaytimeSeconds = allTimeSeconds;
                 SparkSettings.instance.Save();
             }
@@ -1964,6 +1918,260 @@ namespace Spark
         private static void OpenExternalLink(string url)
         {
             Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+
+        /// <summary>
+        /// Fills every card in the Combat dashboard: Match (score/clock/objective/team totals),
+        /// Kill Feed, Network, and the two roster cards. Mirrors the Arena dashboard's own cards
+        /// (same data, same anatomy) so the two match types read as one product.
+        /// </summary>
+        private void UpdateCombatDashboard(JObject jsonObj, Frame frame)
+        {
+            // Use round scores for the top header if available, otherwise fallback to points (e.g. for payload or older API)
+            string blueScore = jsonObj["blue_round_score"]?.ToString() ?? jsonObj["blue_points"]?.ToString() ?? "0";
+            string orangeScore = jsonObj["orange_round_score"]?.ToString() ?? jsonObj["orange_points"]?.ToString() ?? "0";
+            CombatBlueScore.Text = blueScore;
+            CombatOrangeScore.Text = orangeScore;
+
+            CombatClockText.Text = frame.game_clock_display?.Length > 3 ? frame.game_clock_display[..^3] : frame.game_clock_display;
+
+            int roundsPlayed = (int)(jsonObj["blue_round_score"]?.ToObject<float>() ?? 0) + (int)(jsonObj["orange_round_score"]?.ToObject<float>() ?? 0);
+            int totalRounds = jsonObj["total_round_count"]?.ToObject<int>() ?? frame.total_round_count;
+            CombatRoundText.Text = totalRounds > 0 ? $"Round {Math.Min(roundsPlayed + 1, totalRounds)} of {totalRounds}" : "No round";
+
+            string mapName = jsonObj["map_name"]?.ToString();
+            CombatMapLabel.Text = CombatMapDisplayName(mapName);
+
+            // ── Loadouts / rosters ──────────────────────────────────────────────
+            var blueLoadouts = new List<CombatLoadout>();
+            var orangeLoadouts = new List<CombatLoadout>();
+            var teamsArray = jsonObj["teams"] as JArray;
+            Brush raisedBrush = CombatThemeBrush("SurfaceRaised");
+            Brush blueBrush = CombatThemeBrush("TeamBlue");
+            Brush orangeBrush = CombatThemeBrush("TeamOrange");
+            var nameColors = new Dictionary<string, Brush>();
+
+            for (int t = 0; t < 2 && t < frame.teams.Count; t++)
+            {
+                Team apiTeam = frame.teams[t];
+                JToken jsonTeam = teamsArray != null && teamsArray.Count > t ? teamsArray[t] : null;
+                JArray jsonPlayers = jsonTeam?["players"] as JArray;
+                Brush teamBrush = t == 0 ? blueBrush : orangeBrush;
+
+                for (int pIndex = 0; pIndex < apiTeam.players.Count; pIndex++)
+                {
+                    Player apiPlayer = apiTeam.players[pIndex];
+                    JToken jsonPlayer = jsonPlayers != null && jsonPlayers.Count > pIndex ? jsonPlayers[pIndex] : null;
+
+                    string weapon = jsonPlayer?["Weapon"]?.ToString() ?? jsonPlayer?["weapon"]?.ToString() ?? "N/A";
+                    string ordnance = jsonPlayer?["Ordnance"]?.ToString() ?? jsonPlayer?["ordnance"]?.ToString() ?? "N/A";
+                    string tacmod = jsonPlayer?["TacMod"]?.ToString() ?? jsonPlayer?["tacmod"]?.ToString() ?? "N/A";
+                    CombatStats stats = CombatDataParser.GetCombatStats(apiPlayer.userid);
+
+                    CombatLoadout loadout = new CombatLoadout
+                    {
+                        Name = apiPlayer.name,
+                        Ping = apiPlayer.ping,
+                        Weapon = weapon,
+                        Ordnance = ordnance,
+                        TacMod = tacmod,
+                        Kills = stats.kills,
+                        Assists = stats.assists,
+                        Deaths = stats.deaths,
+                        Damage = (int)stats.damage,
+                        RowBg = apiPlayer.name == frame.client_name ? raisedBrush : Brushes.Transparent
+                    };
+
+                    if (t == 0) blueLoadouts.Add(loadout); else orangeLoadouts.Add(loadout);
+                    nameColors[apiPlayer.name] = teamBrush;
+                }
+            }
+
+            int peakDamage = Math.Max(1, blueLoadouts.Concat(orangeLoadouts).DefaultIfEmpty().Max(l => l?.Damage ?? 0));
+            foreach (CombatLoadout loadout in blueLoadouts.Concat(orangeLoadouts))
+            {
+                double pct = Math.Clamp((double)loadout.Damage / peakDamage, 0.0, 1.0);
+                loadout.DmgFill = new GridLength(Math.Max(0.001, pct), GridUnitType.Star);
+                loadout.DmgRest = new GridLength(Math.Max(0.001, 1.0 - pct), GridUnitType.Star);
+            }
+
+            BlueCombatLoadouts.ItemsSource = blueLoadouts;
+            OrangeCombatLoadouts.ItemsSource = orangeLoadouts;
+
+            int blueKills = blueLoadouts.Sum(l => l.Kills), orangeKills = orangeLoadouts.Sum(l => l.Kills);
+            int blueDamage = blueLoadouts.Sum(l => l.Damage), orangeDamage = orangeLoadouts.Sum(l => l.Damage);
+            CombatBlueRosterSummary.Text = $"{blueKills} K · {blueDamage:N0} dmg";
+            CombatOrangeRosterSummary.Text = $"{orangeKills} K · {orangeDamage:N0} dmg";
+
+            // ── Team totals (Match card) ────────────────────────────────────────
+            CombatBlueTotalKills.Text = blueKills.ToString();
+            CombatOrangeTotalKills.Text = orangeKills.ToString();
+            CombatBlueTotalDamage.Text = blueDamage.ToString("N0");
+            CombatOrangeTotalDamage.Text = orangeDamage.ToString("N0");
+            CombatBlueTotalObjective.Text = FormatObjectiveTime(SumObjectiveTime(frame.teams.Count > 0 ? frame.teams[0] : null));
+            CombatOrangeTotalObjective.Text = FormatObjectiveTime(SumObjectiveTime(frame.teams.Count > 1 ? frame.teams[1] : null));
+
+            // ── Objective (Capture point vs Payload) ────────────────────────────
+            bool isPayload = mapName == "mpl_combat_fission" || mapName == "mpl_combat_gauss";
+            CombatCaptureObjectivePanel.Visibility = isPayload ? Visibility.Collapsed : Visibility.Visible;
+            CombatPayloadObjectivePanel.Visibility = isPayload ? Visibility.Visible : Visibility.Collapsed;
+
+            if (isPayload)
+            {
+                JToken payload = jsonObj["payload"];
+                float distance = payload?["distance"]?.ToObject<float>() ?? 0;
+                float speed = payload?["speed"]?.ToObject<float>() ?? 0;
+                float pct = payload?["progress"]?.ToObject<float>() ?? payload?["percentage"]?.ToObject<float>() ?? Math.Clamp(distance / 200f, 0f, 1f);
+
+                bool isMoving = speed > 0.05f;
+                CombatPayloadStateText.Text = isMoving ? "MOVING" : "STOPPED";
+                Brush stateBrush = CombatThemeBrush(isMoving ? "StatusGood" : "TextFaint");
+                CombatPayloadStateDot.Fill = stateBrush;
+                CombatPayloadStateText.Foreground = stateBrush;
+
+                CombatPayloadFill.Width = new GridLength(Math.Max(0.001, pct), GridUnitType.Star);
+                CombatPayloadRest.Width = new GridLength(Math.Max(0.001, 1.0 - pct), GridUnitType.Star);
+                CombatDistanceText.Text = $"{distance:N1} m";
+                CombatSpeedText.Text = $"{speed:N2} m/s";
+            }
+            else
+            {
+                bool isContested = jsonObj["contested"]?.ToObject<bool>() ?? false;
+                float blueProgress = jsonObj["blue_points"]?.ToObject<float>() ?? 0;
+                float orangeProgress = jsonObj["orange_points"]?.ToObject<float>() ?? 0;
+
+                string stateText; Brush stateBrush;
+                if (isContested) { stateText = "CONTESTED"; stateBrush = CombatThemeBrush("StatusBad"); }
+                else if (blueProgress > orangeProgress) { stateText = "BLUE HOLDS"; stateBrush = blueBrush; }
+                else if (orangeProgress > blueProgress) { stateText = "ORANGE HOLDS"; stateBrush = orangeBrush; }
+                else { stateText = "NEUTRAL"; stateBrush = CombatThemeBrush("TextFaint"); }
+
+                CombatCaptureStateText.Text = stateText;
+                CombatCaptureStateDot.Fill = stateBrush;
+                CombatCaptureStateText.Foreground = stateBrush;
+
+                double bluePct = Math.Clamp(blueProgress / 100.0, 0.0, 1.0);
+                double orangePct = Math.Clamp(orangeProgress / 100.0, 0.0, 1.0);
+                CombatBlueCaptureFill.Width = new GridLength(Math.Max(0.001, bluePct), GridUnitType.Star);
+                CombatBlueCaptureRest.Width = new GridLength(Math.Max(0.001, 1.0 - bluePct), GridUnitType.Star);
+                CombatOrangeCaptureFill.Width = new GridLength(Math.Max(0.001, orangePct), GridUnitType.Star);
+                CombatOrangeCaptureRest.Width = new GridLength(Math.Max(0.001, 1.0 - orangePct), GridUnitType.Star);
+                CombatBluePctText.Text = $"{blueProgress:N0}%";
+                CombatOrangePctText.Text = $"{orangeProgress:N0}%";
+            }
+
+            // ── Kill feed ────────────────────────────────────────────────────────
+            List<CombatKillFeedItem> feed;
+            lock (CombatDataParser.ParseLock)
+            {
+                feed = CombatDataParser.KillFeed.Select((k, i) => new CombatKillFeedItem
+                {
+                    Killer = string.IsNullOrEmpty(k.killer) ? "Self" : k.killer,
+                    Victim = string.IsNullOrEmpty(k.killed) ? "Unknown" : k.killed,
+                    Weapon = k.killed_with,
+                    KillerColor = nameColors.TryGetValue(k.killer ?? "", out Brush kc) ? kc : CombatThemeBrush("TextDim"),
+                    VictimColor = nameColors.TryGetValue(k.killed ?? "", out Brush vc) ? vc : CombatThemeBrush("TextDim"),
+                    RowBg = i == 0 ? raisedBrush : Brushes.Transparent
+                }).ToList();
+            }
+            CombatKillFeedList.ItemsSource = feed;
+            CombatKillFeedCount.Text = $"{feed.Count} total";
+
+            // ── Network ──────────────────────────────────────────────────────────
+            CombatNetworkStatusText.Text = FormatServerScore();
+
+            string combatRosterSignature = RosterSignature2(frame);
+            if (combatRosterSignature != lastCombatRosterSignature)
+            {
+                lastCombatRosterSignature = combatRosterSignature;
+                CombatPingRowsBox.Children.Clear();
+                combatPingRows.Clear();
+
+                for (int t = 0; t < 2 && t < frame.teams.Count; t++)
+                {
+                    string teamBrushKey = t == 0 ? "TeamBlue" : "TeamOrange";
+                    foreach (Player player in frame.teams[t].players)
+                    {
+                        CombatPingRowsBox.Children.Add(CreateStatRow(player.name, teamBrushKey, 40, out StatRow row));
+                        combatPingRows.Add(row);
+                    }
+                }
+            }
+
+            int idx = 0, pingTotal = 0, pingCount = 0, worstPing = 0;
+            float lossTotal = 0f;
+            for (int t = 0; t < 2 && t < frame.teams.Count; t++)
+            {
+                foreach (Player player in frame.teams[t].players)
+                {
+                    if (player.ping > 0)
+                    {
+                        pingTotal += player.ping;
+                        pingCount++;
+                        worstPing = Math.Max(worstPing, player.ping);
+                    }
+                    lossTotal += player.packetlossratio;
+
+                    if (idx >= combatPingRows.Count) break;
+                    StatRow row = combatPingRows[idx];
+                    row.Value.Text = player.ping > 0 ? player.ping.ToString() : "--";
+                    row.Value.SetResourceReference(TextBlock.ForegroundProperty, PingQualityBrushKey(player.ping));
+                    row.BarFill.SetResourceReference(Border.BackgroundProperty, PingQualityBrushKey(player.ping));
+                    SetBarFraction(row, player.ping / 200f);
+                    idx++;
+                }
+            }
+
+            CombatAvgPingValue.Text = pingCount > 0 ? (pingTotal / pingCount).ToString() : "--";
+            CombatWorstPingValue.Text = worstPing > 0 ? worstPing.ToString() : "--";
+            CombatWorstPingValue.SetResourceReference(TextBlock.ForegroundProperty, PingQualityBrushKey(worstPing));
+            float lossPercent = idx > 0 ? lossTotal / idx * 100f : 0f;
+            CombatLossValue.Text = idx > 0 ? lossPercent.ToString("N1") : "--";
+            CombatLossValue.SetResourceReference(TextBlock.ForegroundProperty,
+                lossPercent < 1f ? "StatusGood" : lossPercent < 3f ? "StatusWarn" : "StatusBad");
+
+            double serverScorePct = Math.Clamp(Program.CurrentRound.smoothedServerScore / 150.0, 0.0, 1.0);
+            CombatServerScoreFill.Width = new GridLength(Math.Max(0.001, serverScorePct), GridUnitType.Star);
+            CombatServerScoreRest.Width = new GridLength(Math.Max(0.001, 1.0 - serverScorePct), GridUnitType.Star);
+            CombatServerScoreText.Text = Program.CurrentRound.serverScore > 0 ? Program.CurrentRound.smoothedServerScore.ToString("N1") : "--";
+        }
+
+        private static float SumObjectiveTime(Team team)
+        {
+            if (team?.players == null) return 0f;
+            return team.players.Sum(p => CombatDataParser.GetCombatStats(p.userid).objective_time);
+        }
+
+        private static string FormatObjectiveTime(float seconds)
+        {
+            TimeSpan span = TimeSpan.FromSeconds(Math.Max(0, seconds));
+            return $"{(int)span.TotalMinutes}:{span.Seconds:D2}";
+        }
+
+        private static string CombatMapDisplayName(string mapName)
+        {
+            return mapName switch
+            {
+                "mpl_combat_dyson" => "DYSON",
+                "mpl_combat_combustion" => "COMBUSTION",
+                "mpl_combat_fission" => "FISSION",
+                "mpl_combat_gauss" => "SURGE",
+                _ => "--"
+            };
+        }
+
+        /// <summary>Same idea as <see cref="RosterSignature"/> but scoped to blue/orange only (no spectators) for the combat ping list.</summary>
+        private static string RosterSignature2(Frame frame)
+        {
+            StringBuilder signature = new StringBuilder();
+            for (int team = 0; team < 2 && team < frame.teams.Count; team++)
+            {
+                foreach (Player player in frame.teams[team].players)
+                {
+                    signature.Append(team).Append(':').Append(player.name).Append('|');
+                }
+            }
+            return signature.ToString();
         }
 
         private static string PingQualityBrushKey(int ping)

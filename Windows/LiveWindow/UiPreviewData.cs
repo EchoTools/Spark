@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using EchoVRAPI;
+using Newtonsoft.Json.Linq;
 using static Logger;
 
 namespace Spark
@@ -178,6 +179,92 @@ namespace Spark
 			}
 
 			Program.rounds.Enqueue(round);
+		}
+
+		/// <summary>
+		/// Turns the sample frame into an Echo Combat match (-uipreviewcombat) so the Combat
+		/// dashboard has something real to render: assigns userids, fills in kills/deaths/damage
+		/// via CombatDataParser (the same store the live combat API feed writes to), and builds the
+		/// raw session JSON UpdateCombatDashboard reads loadouts and the objective from.
+		/// </summary>
+		public static void PopulateCombatPreview(Frame frame)
+		{
+			frame.match_type = "Echo_Combat_Private";
+			frame.map_name = "mpl_combat_dyson";
+			frame.client_name = "he_is_the_cat";
+			frame.blue_round_score = 1;
+			frame.orange_round_score = 0;
+			frame.total_round_count = 5;
+
+			(string weapon, string ordnance, string tacmod, int kills, int assists, int deaths, int damage, float objTime)[] blueLoadouts =
+			{
+				("Comet", "Arc Mine", "Barrier", 12, 4, 7, 3120, 84f),
+				("Pulsar", "Detonator", "Heal", 9, 6, 5, 2480, 61f)
+			};
+			(string weapon, string ordnance, string tacmod, int kills, int assists, int deaths, int damage, float objTime)[] orangeLoadouts =
+			{
+				("Comet", "Detonator", "Barrier", 11, 5, 8, 2960, 58f),
+				("Meteor", "Arc Mine", "Repair", 8, 2, 10, 2610, 45f),
+				("Pulsar", "Stun", "Heal", 7, 9, 6, 2050, 33f)
+			};
+
+			JArray teamsJson = new JArray();
+			long nextUserId = 1001;
+
+			void ApplyTeam(Team.TeamColor color, (string weapon, string ordnance, string tacmod, int kills, int assists, int deaths, int damage, float objTime)[] loadouts)
+			{
+				Team team = frame.teams[(int)color];
+				JArray playersJson = new JArray();
+
+				for (int i = 0; i < team.players.Count; i++)
+				{
+					Player player = team.players[i];
+					player.userid = nextUserId++;
+
+					var loadout = i < loadouts.Length ? loadouts[i] : loadouts[loadouts.Length - 1];
+					CombatDataParser.CurrentCombatStats[player.userid] = new CombatStats
+					{
+						kills = loadout.kills,
+						assists = loadout.assists,
+						deaths = loadout.deaths,
+						damage = loadout.damage,
+						objective_time = loadout.objTime
+					};
+
+					playersJson.Add(new JObject
+					{
+						["Weapon"] = loadout.weapon,
+						["Ordnance"] = loadout.ordnance,
+						["TacMod"] = loadout.tacmod
+					});
+				}
+
+				teamsJson.Add(new JObject { ["players"] = playersJson });
+			}
+
+			ApplyTeam(Team.TeamColor.blue, blueLoadouts);
+			ApplyTeam(Team.TeamColor.orange, orangeLoadouts);
+
+			JObject json = new JObject
+			{
+				["blue_round_score"] = frame.blue_round_score,
+				["orange_round_score"] = frame.orange_round_score,
+				["total_round_count"] = frame.total_round_count,
+				["map_name"] = frame.map_name,
+				["contested"] = false,
+				["blue_points"] = 62,
+				["orange_points"] = 38,
+				["teams"] = teamsJson
+			};
+			Program.lastJSON = json.ToString();
+
+			CombatDataParser.KillFeed.Clear();
+			CombatDataParser.KillFeed.AddRange(new[]
+			{
+				new LastKill { killer = "he_is_the_cat", killed = "BagOchips", killed_with = "Comet" },
+				new LastKill { killer = "GOJIRA", killed = "Hollow-", killed_with = "Pulsar" },
+				new LastKill { killer = "Aqua", killed = "he_is_the_cat", killed_with = "Comet" }
+			});
 		}
 
 		private static Team BuildTeam(Team.TeamColor color, (string name, int ping, float loss, float speed)[] roster)
