@@ -1309,6 +1309,7 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 		private void PresetRed_Click       (object s, RoutedEventArgs e) => ApplyPreset("#b70004", "#df0005", "#ff7174");
 		private void PresetYellow_Click    (object s, RoutedEventArgs e) => ApplyPreset("#fab011", "#fcc520", "#fcde64");
 		private void PresetPink_Click      (object s, RoutedEventArgs e) => ApplyPreset("#c32b61", "#ea6192", "#ffaac9");
+		private void PresetPVU_Click      (object s, RoutedEventArgs e) => ApplyPreset("#022432", "#011720", "#ADD8E6");
 
 		// ─── Apply / Reset ──────────────────────────────────────────────────────
 		private void ApplyTheme_Click(object sender, RoutedEventArgs e)
