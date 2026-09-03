@@ -291,10 +291,10 @@
 								          Style="{StaticResource ThemedCheckBox}"
 								          IsChecked="{l:SettingBinding lowFrequencyMode}" HorizontalAlignment="Left" />
 								<CheckBox x:Name="enableAutoFocusCheckbox" Content="{x:Static p:Resources.Autofocus_EchoVR}" Style="{StaticResource ThemedCheckBox}" IsChecked="{l:SettingBinding isAutofocusEnabled}" ToolTip="{x:Static p:Resources.enableAutoFocusCheckbox_ToolTip}"/>
-								<CheckBox x:Name="shareGlobalPlaytimeCheckbox" Content="Contribute my playtime to the community total"
+								<CheckBox x:Name="shareGlobalPlaytimeCheckbox" Content="Contribute my playtime to the community total and leaderboard"
 								          Style="{StaticResource ThemedCheckBox}" Margin="0"
 								          IsChecked="{l:SettingBinding shareGlobalPlaytime}" HorizontalAlignment="Left"
-								          ToolTip="Adds your hours to the 'Everyone on Spark' figure on the Session card.&#10;Sends an anonymous per-install ID and a seconds count once a minute — nothing else, no username and no match data.&#10;The community total still shows when this is off." />
+								          ToolTip="Adds your hours to the 'Everyone on Spark' figure on the Session card, and puts your name on the public playtime leaderboard.&#10;Sends your Discord name — or your EchoVR name if you're not logged in to Discord — plus an anonymous per-install ID and a seconds count, once a minute. No match data.&#10;The community total still shows when this is off." />
 							</StackPanel>
 						</Border>
 

@@ -76,9 +76,10 @@ namespace Spark
 
 		/// <summary>
 		/// Contribute <see cref="totalPlaytimeSeconds"/> to the community-wide playtime total shown
-		/// on the Session card. Sends an anonymous per-install hash and a seconds count, nothing
-		/// else — see Program.ReportPlaytime. Turning this off stops reporting but still shows the
-		/// global figure.
+		/// on the Session card, and to the public leaderboard. Sends the Discord name (falling back
+		/// to <see cref="client_name"/> when not logged in), an anonymous per-install hash and a
+		/// seconds count — see Program.LeaderboardDisplayName and Program.ReportPlaytime. Turning
+		/// this off stops reporting but still shows the global figure.
 		/// </summary>
 		public bool shareGlobalPlaytime { get; set; } = true;
 

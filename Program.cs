@@ -771,6 +771,40 @@ namespace Spark
 		}
 
 		/// <summary>
+		/// The name this install appears under on the playtime leaderboard: the Discord identity
+		/// when the user is logged in, otherwise their EchoVR name. Null when neither is set, in
+		/// which case the install still contributes to the community total but gets no board row.
+		/// <para>
+		/// Discord is preferred because it's the one of the two the user can't casually retype —
+		/// <see cref="SparkSettings.client_name"/> is a free-text field in Settings, so it makes a
+		/// weak claim to an identity. Reads global_name (Discord's display name) ahead of the
+		/// username handle, matching what the rest of the app shows.
+		/// </para>
+		/// </summary>
+		private static string LeaderboardDisplayName()
+		{
+			// IsLoggedIn only checks for a token; the profile fetch that fills discordUserData can
+			// still have failed, so both are checked — same guard the player card uses.
+			if (DiscordOAuth.IsLoggedIn && DiscordOAuth.discordUserData != null)
+			{
+				if (DiscordOAuth.discordUserData.TryGetValue("global_name", out string globalName) &&
+					!string.IsNullOrWhiteSpace(globalName))
+				{
+					return globalName;
+				}
+
+				if (DiscordOAuth.discordUserData.TryGetValue("username", out string username) &&
+					!string.IsNullOrWhiteSpace(username))
+				{
+					return username;
+				}
+			}
+
+			string echoName = SparkSettings.instance.client_name;
+			return string.IsNullOrWhiteSpace(echoName) ? null : echoName;
+		}
+
+		/// <summary>
 		/// Contributes this install's lifetime playtime to the global pool, on the CCU heartbeat
 		/// that already runs every 60 seconds.
 		/// <para>
@@ -795,11 +829,14 @@ namespace Spark
 
 			try
 			{
+				string displayName = LeaderboardDisplayName();
+
 				string body = JsonConvert.SerializeObject(new
 				{
 					device_id = deviceId,
 					seconds,
 					version = AppVersionString(),
+					display_name = displayName,
 				});
 				using StringContent content = new StringContent(body, Encoding.UTF8, "application/json");
 				using HttpResponseMessage response =
