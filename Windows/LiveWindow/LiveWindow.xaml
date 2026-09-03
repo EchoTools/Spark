@@ -1840,12 +1840,21 @@
 
                 <Border Background="{DynamicResource SurfaceCard}" BorderBrush="{DynamicResource SurfaceBorder}"
                         BorderThickness="1" CornerRadius="6" Padding="10,9,10,9" Margin="0,7,0,0">
-                    <DockPanel>
-                        <TextBlock DockPanel.Dock="Left" Text="All-Time Playtime" FontSize="11.5" Foreground="{DynamicResource TextDim}"/>
-                        <TextBlock x:Name="AllTimePlaytimeLabel" DockPanel.Dock="Right" Text="0h" FontSize="12.5"
-                                   FontWeight="SemiBold" FontFamily="Consolas" HorizontalAlignment="Right"
-                                   Foreground="{DynamicResource TextPrimary}"/>
-                    </DockPanel>
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Left" Text="All-Time Playtime" FontSize="11.5" Foreground="{DynamicResource TextDim}"/>
+                            <TextBlock x:Name="AllTimePlaytimeLabel" DockPanel.Dock="Right" Text="0h" FontSize="12.5"
+                                       FontWeight="SemiBold" FontFamily="Consolas" HorizontalAlignment="Right"
+                                       Foreground="{DynamicResource TextPrimary}"/>
+                        </DockPanel>
+                        <DockPanel Margin="0,7,0,0"
+                                   ToolTip="Total playtime across everyone running Spark. Contribute yours from Settings.">
+                            <TextBlock DockPanel.Dock="Left" Text="Everyone on Spark" FontSize="11.5" Foreground="{DynamicResource TextDim}"/>
+                            <TextBlock x:Name="GlobalPlaytimeLabel" DockPanel.Dock="Right" Text="--" FontSize="12.5"
+                                       FontWeight="SemiBold" FontFamily="Consolas" HorizontalAlignment="Right"
+                                       Foreground="{DynamicResource TextPrimary}"/>
+                        </DockPanel>
+                    </StackPanel>
                 </Border>
 
                 </StackPanel>

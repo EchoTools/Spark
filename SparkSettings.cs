@@ -75,6 +75,14 @@ namespace Spark
 		public double totalPlaytimeSeconds { get; set; } = 0;
 
 		/// <summary>
+		/// Contribute <see cref="totalPlaytimeSeconds"/> to the community-wide playtime total shown
+		/// on the Session card. Sends an anonymous per-install hash and a seconds count, nothing
+		/// else — see Program.ReportPlaytime. Turning this off stops reporting but still shows the
+		/// global figure.
+		/// </summary>
+		public bool shareGlobalPlaytime { get; set; } = true;
+
+		/// <summary>
 		/// Enable replay files
 		/// </summary>
 		public bool enableFullLogging { get; set; } = false;

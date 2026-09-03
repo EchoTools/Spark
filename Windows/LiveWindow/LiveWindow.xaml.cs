@@ -576,6 +576,11 @@ namespace Spark
                         unusedFileCache.Clear();
                     }
 
+                    // Banked before the visibility gate below: playing with Spark minimised to the
+                    // tray is the normal case, and while this sat with the rest of the Session card
+                    // that time was never credited to either the local or the global total.
+                    BankPlaytime();
+
                     // Everything past this point only writes to controls the user can't see while
                     // the window is hidden to the tray or minimised, so skip it entirely. The log
                     // above still drains so its backlog doesn't build up while we're away.
@@ -1235,6 +1240,26 @@ namespace Spark
             SessionSavesLabel.Text = sessionSaves.ToString();
             SessionFastestDiscLabel.Text = sessionFastestThrow > 0 ? sessionFastestThrow.ToString("N2") : "--";
 
+            TimeSpan sessionPlayed = TimeSpan.FromSeconds(sessionPlaySeconds);
+            SessionPlaytimeLabel.Text = sessionPlayed.TotalHours >= 1
+                ? $"{(int)sessionPlayed.TotalHours}h {sessionPlayed.Minutes}m"
+                : $"{sessionPlayed.Minutes}m";
+
+            AllTimePlaytimeLabel.Text =
+                FormatAllTimePlaytime(allTimePlaytimeBaseSeconds + sessionPlaySeconds);
+
+            GlobalPlaytimeLabel.Text = Program.GlobalPlaytimeSeconds.HasValue
+                ? FormatGlobalPlaytime(Program.GlobalPlaytimeSeconds.Value)
+                : "--";
+        }
+
+        /// <summary>
+        /// Accrues playtime and persists it. Split out of <see cref="UpdateSessionCard"/> and
+        /// called ahead of the visibility gate, because the clock has to keep running while the
+        /// window is minimised or in the tray — the labels are the only part that doesn't.
+        /// </summary>
+        private void BankPlaytime()
+        {
             DateTime now = DateTime.UtcNow;
             double delta = (now - lastPlaytimeTick).TotalSeconds;
             lastPlaytimeTick = now;
@@ -1248,22 +1273,40 @@ namespace Spark
                 sessionPlaySeconds += delta;
             }
 
-            TimeSpan sessionPlayed = TimeSpan.FromSeconds(sessionPlaySeconds);
-            SessionPlaytimeLabel.Text = sessionPlayed.TotalHours >= 1
-                ? $"{(int)sessionPlayed.TotalHours}h {sessionPlayed.Minutes}m"
-                : $"{sessionPlayed.Minutes}m";
-
-            double allTimeSeconds = allTimePlaytimeBaseSeconds + sessionPlaySeconds;
-            AllTimePlaytimeLabel.Text = FormatAllTimePlaytime(allTimeSeconds);
-
             // Persist periodically (not every tick) so a crash only loses a minute of credit, not
             // the whole session's worth.
             if ((now - lastPlaytimePersist).TotalSeconds >= 60)
             {
                 lastPlaytimePersist = now;
-                SparkSettings.instance.totalPlaytimeSeconds = allTimeSeconds;
+                SparkSettings.instance.totalPlaytimeSeconds = allTimePlaytimeBaseSeconds + sessionPlaySeconds;
                 SparkSettings.instance.Save();
             }
+
+            // The community-wide figure. Moves in hours per minute across all installs, so there's
+            // nothing to gain from refreshing it on the 150 ms UI tick.
+            if ((now - lastGlobalPlaytimeFetch).TotalMinutes >= 5)
+            {
+                lastGlobalPlaytimeFetch = now;
+                _ = Program.RefreshGlobalPlaytime();
+            }
+        }
+
+        // Far enough in the past that the first tick fetches immediately.
+        private DateTime lastGlobalPlaytimeFetch = DateTime.MinValue;
+
+        /// <summary>
+        /// Formats the community total, which is in a different league from one person's — this is
+        /// every install's hours summed, so it reaches millions and needs to stay narrow enough for
+        /// the card. Falls back to a plain grouped hour count below 10k.
+        /// </summary>
+        private static string FormatGlobalPlaytime(double totalSeconds)
+        {
+            double hours = totalSeconds / 3600;
+            // Thresholds account for the rounding that follows, so 999,999 h reads "1.0M h"
+            // rather than rolling up into a nonsensical "1,000.0k h".
+            if (hours >= 999_950) return $"{hours / 1_000_000:N1}M h";
+            if (hours >= 9_999.5) return $"{hours / 1_000:N1}k h";
+            return $"{hours:N0} h";
         }
 
         /// <summary>

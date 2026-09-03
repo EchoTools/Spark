@@ -65,6 +65,12 @@ namespace Spark
 		// public const string APIURL = "http://127.0.0.1:8000";
 		public const string WRITE_API_URL = "http://127.0.0.1:6723/";
 
+		/// <summary>
+		/// The Railway backend that actually answers. Was hardcoded inline in TTSController and
+		/// DiscordOAuth; APIURL above still points at api.ignitevr.gg, which no longer responds.
+		/// </summary>
+		public const string SPARK_API_URL = "https://sparkapi-production-e6df.up.railway.app";
+
 		// public static string currentAccessCodeUsername = "";
 		public static string InstalledSpeakerSystemVersion = "";
 		public static bool IsSpeakerSystemUpdateAvailable;
@@ -736,6 +742,96 @@ namespace Spark
 		private static void CCUCounter(object state)
 		{
 			_ = FetchUtils.client.PostAsync($"/spark_is_open?hw_id={DeviceId}&client_name={SparkSettings.instance.client_name}", null);
+			_ = ReportPlaytime();
+		}
+
+		private static string anonymousDeviceIdVal;
+
+		/// <summary>
+		/// An opaque, stable per-install id: SHA-256 of the MAC address, truncated to 32 hex chars.
+		/// <para>
+		/// Deliberately not <see cref="Logger.DeviceId"/> itself, which is the raw MAC. The global
+		/// playtime pool needs to tell installs apart so it can de-duplicate and rate-limit them —
+		/// it does not need to know whose they are, and a hash gives the first without the second.
+		/// </para>
+		/// </summary>
+		public static string AnonymousDeviceId
+		{
+			get
+			{
+				if (anonymousDeviceIdVal != null) return anonymousDeviceIdVal;
+
+				string mac = DeviceId;
+				if (string.IsNullOrEmpty(mac)) return null;
+
+				byte[] hash = System.Security.Cryptography.SHA256.HashData(
+					Encoding.UTF8.GetBytes("spark-playtime-v1:" + mac));
+				return anonymousDeviceIdVal = Convert.ToHexString(hash)[..32].ToLowerInvariant();
+			}
+		}
+
+		/// <summary>
+		/// Contributes this install's lifetime playtime to the global pool, on the CCU heartbeat
+		/// that already runs every 60 seconds.
+		/// <para>
+		/// Sends the running total rather than a delta since the last report, which makes the call
+		/// idempotent: a dropped response, a retry or a duplicate costs nothing, and an install
+		/// that was closed for a week simply catches up on its next report. The server keeps the
+		/// larger of what it holds and what arrives, capped by the wall-clock time since that
+		/// install last reported.
+		/// </para>
+		/// </summary>
+		private static async Task ReportPlaytime()
+		{
+			if (!SparkSettings.instance.shareGlobalPlaytime) return;
+
+			string deviceId = AnonymousDeviceId;
+			if (deviceId == null) return;
+
+			// Written to settings every 60s by LiveWindow.UpdateSessionCard, on the same cadence
+			// as this heartbeat, so it is at most one tick behind the live figure.
+			double seconds = SparkSettings.instance.totalPlaytimeSeconds;
+			if (seconds <= 0) return;
+
+			try
+			{
+				string body = JsonConvert.SerializeObject(new
+				{
+					device_id = deviceId,
+					seconds,
+					version = AppVersionString(),
+				});
+				using StringContent content = new StringContent(body, Encoding.UTF8, "application/json");
+				using HttpResponseMessage response =
+					await FetchUtils.client.PostAsync($"{SPARK_API_URL}/playtime", content);
+			}
+			catch (Exception)
+			{
+				// Best effort. A missed report costs nothing: the next one carries the same total.
+			}
+		}
+
+		/// <summary>
+		/// Global playtime across every install that reports in, or null if it hasn't been fetched
+		/// yet (or the server is unreachable). Refreshed by <see cref="RefreshGlobalPlaytime"/>.
+		/// </summary>
+		public static double? GlobalPlaytimeSeconds { get; private set; }
+
+		public static async Task RefreshGlobalPlaytime()
+		{
+			try
+			{
+				string json = await FetchUtils.GetRequestAsync($"{SPARK_API_URL}/playtime/total");
+				if (string.IsNullOrEmpty(json)) return;
+
+				JObject parsed = JObject.Parse(json);
+				double? total = (double?)parsed["total_seconds"];
+				if (total.HasValue) GlobalPlaytimeSeconds = total.Value;
+			}
+			catch (Exception)
+			{
+				// Leave the last known value in place rather than blanking the label on a blip.
+			}
 		}
 
 		/// <summary>
