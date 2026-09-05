@@ -214,10 +214,10 @@
 								</StackPanel>
 								<Label x:Name="FindQuestStatusLabel" Visibility="Hidden" Content="{x:Static p:Resources.Searching_for_Quest}"
 								       Foreground="{DynamicResource TextFaint}" Margin="0,4,0,0" FontSize="10" FontStyle="Italic" />
-								<Button Content="Quest Spectator Mode" Style="{StaticResource SecondaryButtonStyle}"
+								<Button Content="Simple Spectate Mode" Style="{StaticResource SecondaryButtonStyle}"
 								        Margin="0,10,0,0" HorizontalAlignment="Left"
 								        Click="OpenQuestSpectatorPopup"
-								        ToolTip="Open the Quest Spectator Launcher."/>
+								        ToolTip="Open Simple Spectate Mode, which follows another player with a spectator client on this PC."/>
 							</StackPanel>
 						</Border>
 
@@ -1136,29 +1136,49 @@
 			<Border Background="{DynamicResource SurfaceGround}" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1"
 					HorizontalAlignment="Center" VerticalAlignment="Center" Padding="22" CornerRadius="12" Width="450">
 				<StackPanel>
-					<TextBlock Text="Quest Spectator Launcher" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"
-							   HorizontalAlignment="Center" Margin="0,0,0,18"/>
+					<TextBlock Text="Simple Spectate Mode" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"
+							   HorizontalAlignment="Center" Margin="0,0,0,6"/>
+					<TextBlock Text="Spectate anyone. Follows them from match to match automatically, into private matches and lobbies too."
+							   Foreground="{DynamicResource TextDim}" FontSize="11" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,16"/>
 
-					<Label Content="Your PC Username (Spectator Client)" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
-					<TextBox x:Name="SpectatorNameInput" Style="{StaticResource ThemedTextBox}" Margin="0,0,0,4"/>
+					<Label Content="Who to spectate" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
+					<RadioButton x:Name="FollowFriendRadio" GroupName="QuestSpectatorTarget" Content="Anyone, by name"
+								 Foreground="{DynamicResource TextPrimary}" FontSize="12.5" Margin="0,0,0,6" IsChecked="True"
+								 Checked="QuestSpectatorModeChanged"
+								 ToolTip="Checks your Friends list first, then falls back to searching public matches by name."/>
+					<RadioButton x:Name="FollowSelfRadio" GroupName="QuestSpectatorTarget" Content="Myself, on my other PC"
+								 Foreground="{DynamicResource TextPrimary}" FontSize="12.5" Margin="0,0,0,10"
+								 Checked="QuestSpectatorModeChanged"
+								 ToolTip="Log into Discord on both PCs. This client follows whatever session the playing PC reports."/>
 
-					<TextBlock Text="Safeguard: Spark will NOT join if this user is already in the match."
-							   Foreground="{DynamicResource TextFaint}" FontSize="10.5" FontStyle="Italic" Margin="0,0,0,14"/>
+					<StackPanel x:Name="QuestSpectatorNamePanel">
+						<Label Content="Name" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
+						<TextBox x:Name="TargetNameInput" Style="{StaticResource ThemedTextBox}" Margin="0,0,0,4"/>
+						<TextBlock Text="Their Echo VR or Discord name. Anyone can be followed into public matches; add them as a friend and you can follow them into private matches and lobbies as well."
+								   Foreground="{DynamicResource TextFaint}" FontSize="10.5" FontStyle="Italic" TextWrapping="Wrap" Margin="0,0,0,14"/>
+					</StackPanel>
 
-					<Label Content="Quest Player to Spectate" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
-					<TextBox x:Name="TargetNameInput" Style="{StaticResource ThemedTextBox}" Margin="0,0,0,14"/>
+					<StackPanel x:Name="QuestSpectatorSelfPanel" Visibility="Collapsed">
+						<TextBlock Text="Log into Discord in Spark on both PCs. The playing PC publishes the session it is in and this one follows it, private matches and lobbies included."
+								   Foreground="{DynamicResource TextFaint}" FontSize="10.5" FontStyle="Italic" TextWrapping="Wrap" Margin="0,0,0,14"/>
+					</StackPanel>
 
 					<CheckBox x:Name="AnonymousModeCheckbox" Content="Use anonymous mode" Style="{StaticResource ThemedCheckBox}"
 							  IsChecked="True"
 							  ToolTip="Launches EchoVR with -noovr so this spectator client uses an anonymous account instead of your real one."/>
 
-					<CheckBox x:Name="AutoJoinCheckbox" Content="Auto-join target player's match" Style="{StaticResource ThemedCheckBox}" Margin="0,0,0,4"
+					<CheckBox x:Name="AutoJoinCheckbox" Content="Keep following them between sessions" Style="{StaticResource ThemedCheckBox}" Margin="0,0,0,4"
 							  IsChecked="True"
-							  ToolTip="If checked, Spark will continuously search for the target player and join their match automatically."/>
+							  ToolTip="If checked, Spark keeps watching where they are and moves this spectator client whenever they change session."/>
+
+					<TextBlock x:Name="QuestSpectatorStatusText" Text="" Foreground="{DynamicResource TextDim}" FontSize="11"
+							   TextWrapping="Wrap" Margin="0,10,0,0" Visibility="Collapsed"/>
 
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
-						<Button Content="Cancel" Style="{StaticResource SecondaryButtonStyle}" Click="CloseSpectatorPopup" Margin="0,0,10,0" Padding="16,7"/>
-						<Button Content="Launch Spectator" Style="{StaticResource AccentButtonStyle}" Click="LaunchQuestSpectator" Padding="16,7"/>
+						<Button x:Name="StopQuestSpectatorButton" Content="Stop Following" Style="{StaticResource SecondaryButtonStyle}"
+								Click="StopQuestSpectator" Margin="0,0,10,0" Padding="16,7" Visibility="Collapsed"/>
+						<Button Content="Close" Style="{StaticResource SecondaryButtonStyle}" Click="CloseSpectatorPopup" Margin="0,0,10,0" Padding="16,7"/>
+						<Button x:Name="LaunchQuestSpectatorButton" Content="Launch Spectator" Style="{StaticResource AccentButtonStyle}" Click="LaunchQuestSpectator" Padding="16,7"/>
 					</StackPanel>
 				</StackPanel>
 			</Border>

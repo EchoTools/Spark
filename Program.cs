@@ -173,6 +173,7 @@ namespace Spark
 		public static Medal medal;
 		private static OverlayServer overlayServer;
 		public static SpectateMeController spectateMeController;
+		public static SimpleSpectateController simpleSpectateController;
 		public static UploadController uploadController;
 		public static LocalDatabase localDatabase;
 		public static NetMQEvents netMQEvents;
@@ -595,6 +596,7 @@ namespace Spark
 				speechRecognizer = new SpeechRecognition();
 				loggerEvents = new LoggerEvents();
 				spectateMeController = new SpectateMeController();
+				simpleSpectateController = new SimpleSpectateController();
 				uploadController = new UploadController();
 				localDatabase = new LocalDatabase();
 				cameraController = new CameraController();
@@ -714,7 +716,7 @@ namespace Spark
 		private static void OnLeftGame(Frame obj)
 		{
 			// Tell the Friends bot the user is now in the menu/transitioning
-			try { _ = FriendsTab.PushLobbyUpdate(null, null, "In Menu"); }
+			try { FriendsPresence.PushMenu(); }
 			catch (Exception e) { Console.WriteLine("Friends menu push error: " + e.Message); }
 		}
 
@@ -1098,13 +1100,13 @@ namespace Spark
 					switch (connectionState)
 					{
 						case ConnectionState.Menu:
-							_ = FriendsTab.PushLobbyUpdate(null, null, "In Menu");
+							FriendsPresence.PushMenu();
 							break;
 						case ConnectionState.InLobby:
-							_ = FriendsTab.PushLobbyUpdate(null, null, "In Lobby");
+							FriendsPresence.PushLobby();
 							break;
 						case ConnectionState.NotConnected:
-							_ = FriendsTab.PushOffline();
+							FriendsPresence.PushOffline();
 							break;
 					}
 				}
@@ -2688,7 +2690,7 @@ namespace Spark
 					}
 				}
 
-				_ = FriendsTab.PushLobbyUpdate(lobbyId, team, mode);
+				FriendsPresence.PushMatch(lobbyId, team, mode);
 			}
 			catch (Exception e)
 			{
@@ -3955,7 +3957,7 @@ namespace Spark
 			running = false;
 			
 			SparkClosing?.Invoke();
-			try { _ = FriendsTab.PushOffline(); } catch { }
+			try { FriendsPresence.PushOffline(); } catch { }
 			SparkSettings.instance.Save();
 			
 			if (closingWindow != null)

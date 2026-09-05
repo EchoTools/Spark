@@ -76,15 +76,20 @@ namespace Spark
 				autoFollowTimer.Elapsed += (sender, e) => AutoFollowPlayer();
 				autoFollowTimer.AutoReset = true;
 				autoFollowTimer.Start();
-				LogRow(LogType.File, "Started auto-follow timer for player: " + SparkSettings.instance.followPlayerName);
+				LogRow(LogType.File, SimpleSpectateController.LogFile,
+					"Started auto-follow timer for player: " + SparkSettings.instance.followPlayerName);
 			}
 		}
+
+		/// <summary>Who the last "Auto-following" line named, so the 2s timer doesn't repeat itself.</summary>
+		private static string lastAutoFollowLogged;
 
 		private static void StopAutoFollowTimer()
 		{
 			autoFollowTimer?.Stop();
 			autoFollowTimer?.Dispose();
 			autoFollowTimer = null;
+			lastAutoFollowLogged = null;
 		}
 
 		private static void AutoFollowPlayer()
@@ -95,7 +100,15 @@ namespace Spark
 			if (SparkSettings.instance.spectatorCamera == 3 && 
 				!string.IsNullOrEmpty(SparkSettings.instance.followPlayerName))
 			{
-				LogRow(LogType.File, "Auto-following player: " + SparkSettings.instance.followPlayerName);
+				// This runs every two seconds, so only say something when the target actually
+				// changes — otherwise it buries everything else in the log.
+				if (lastAutoFollowLogged != SparkSettings.instance.followPlayerName)
+				{
+					lastAutoFollowLogged = SparkSettings.instance.followPlayerName;
+					LogRow(LogType.File, SimpleSpectateController.LogFile,
+						"Auto-following player: " + SparkSettings.instance.followPlayerName);
+				}
+
 				SpectatorCamFindPlayer(SparkSettings.instance.followPlayerName, null, true);
 			}
 			else
