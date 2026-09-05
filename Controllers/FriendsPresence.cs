@@ -239,12 +239,12 @@ namespace Spark
 				{
 					await EnsureRegisteredAsync();
 					using HttpRequestMessage req = MakeRequest(HttpMethod.Post, "/friends/offline");
-					await http.SendAsync(req);
-					Logger.LogRow(Logger.LogType.File, SimpleSpectateController.LogFile, "Friends presence: publishing offline.");
+					using HttpResponseMessage resp = await http.SendAsync(req);
+					Report("offline", null, resp.IsSuccessStatusCode ? null : $"HTTP {(int)resp.StatusCode}");
 				}
 				catch (Exception e)
 				{
-					Console.WriteLine("FriendsPresence: offline push failed: " + e.Message);
+					Report("offline", null, e.Message);
 				}
 			});
 		}
@@ -279,23 +279,6 @@ namespace Spark
 		{
 			if (!Configured || SuppressPresencePush) return;
 
-			// Only when what we're advertising actually changes — the heartbeat re-sends the same
-			// thing every 30s and logging that would bury the log file. This is the one place you
-			// can see whether the *publishing* half of a two-PC setup is doing its job.
-			string signature = $"{sessionType}|{sessionId}";
-			bool changed;
-			lock (stateLock)
-			{
-				changed = signature != lastLoggedSignature;
-				if (changed) lastLoggedSignature = signature;
-			}
-
-			if (changed)
-			{
-				Logger.LogRow(Logger.LogType.File, SimpleSpectateController.LogFile,
-					$"Friends presence: publishing {sessionType} session {sessionId ?? "(none)"}.");
-			}
-
 			Task.Run(async () =>
 			{
 				try
@@ -308,13 +291,46 @@ namespace Spark
 						mode,
 						session_type = sessionType,
 					});
-					await http.SendAsync(req);
+					using HttpResponseMessage resp = await http.SendAsync(req);
+					Report(sessionType, sessionId, resp.IsSuccessStatusCode ? null : $"HTTP {(int)resp.StatusCode}");
 				}
 				catch (Exception e)
 				{
-					Console.WriteLine("FriendsPresence: lobby push failed: " + e.Message);
+					Report(sessionType, sessionId, e.Message);
 				}
 			});
+		}
+
+		/// <summary>
+		/// Logs the *outcome* of a push, not the attempt.
+		///
+		/// This used to log before the request was even sent, so a rejected push — an expired Discord
+		/// token, the bot down — looked exactly like a successful one, which is worse than silence
+		/// when you're trying to work out why a friend can't see you. Successes are logged only when
+		/// what we advertise changes, since the heartbeat repeats itself every 30s; failures are
+		/// always logged.
+		/// </summary>
+		private static void Report(string sessionType, string sessionId, string error)
+		{
+			string what = $"{sessionType} session {sessionId ?? "(none)"}";
+
+			if (error != null)
+			{
+				lock (stateLock) { lastLoggedSignature = null; }
+				Logger.LogRow(Logger.LogType.File, SimpleSpectateController.LogFile,
+					$"Friends presence: FAILED to publish {what} — {error}");
+				return;
+			}
+
+			string signature = $"{sessionType}|{sessionId}";
+			lock (stateLock)
+			{
+				if (signature == lastLoggedSignature) return;
+				lastLoggedSignature = signature;
+			}
+
+			Logger.LogRow(Logger.LogType.File, SimpleSpectateController.LogFile,
+				$"Friends presence: published {what}.");
 		}
 
 		/// <summary>
