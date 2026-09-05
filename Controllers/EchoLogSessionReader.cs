@@ -12,32 +12,37 @@ namespace Spark
 	///
 	/// The /session API only answers once you're in a *match*: a social lobby comes back as error
 	/// code -6 with no session id at all, so a friend sitting in a lobby has nothing joinable to
-	/// advertise and nobody can drop in on them. The client does log the id of every session it
-	/// enters, lobbies included:
+	/// advertise and nobody can drop in on them. The client does record every room it's in, as an
+	/// Oculus room data-store update:
 	///
-	///     [NSLOBBY] requesting 1 player session in game session {B6B4E0BC-3185-4684-85BF-C6920268E19B}
+	///     {"category":"social","provider":"ovr","message":"ovr_Room_UpdateDataStore",
+	///      "data":{"seqid":8,"lobbyid":"B6B4E0BC-3185-4684-85BF-C6920268E19B", ...}}
 	///
-	/// so tailing the log fills the gap the API leaves. Matches still take their id from the API —
-	/// that's authoritative and already correct — and this only covers the lobby case.
+	/// The most recent "lobbyid" is the room you're in now, and the client writes the all-zero guid
+	/// when you leave. Matches still take their id from the API — that's authoritative and already
+	/// correct — and this only covers the lobby case.
+	///
+	/// Checked against 62 real logs. Two other markers look usable and are not:
+	///
+	///  - "[NSLOBBY] requesting N player session in game session {guid}" is only written when the
+	///    client actively matchmakes a session, not when it's placed in one or rejoins. It was
+	///    absent entirely in 34 of the 62 logs where lobbyid had the right answer, and stale in
+	///    one more. There was no log where it knew something lobbyid didn't.
+	///  - "lobby_id" (underscore) inside ovr_RichPresence_Set lines is frequently the all-zero
+	///    guid *while you're in a room*, so matching it loosely would wipe the real value. The
+	///    pattern below is deliberately strict about the key name.
 	/// </summary>
 	public static class EchoLogSessionReader
 	{
-		private static readonly Regex sessionRegex = new Regex(
-			@"in game session\s*\{?([0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12})\}?",
+		private static readonly Regex lobbyIdRegex = new Regex(
+			@"""lobbyid""\s*:\s*""([0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12})""",
 			RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		private static readonly Regex httpPortRegex = new Regex(
 			@"Bound HTTP listener to\s+[0-9.]+:(\d+)",
 			RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-		/// <summary>Anything that means the client has dropped out of the session it was in.</summary>
-		private static readonly string[] endMarkers =
-		{
-			"ending session",
-			"leaving session",
-			"canceling pending session",
-		};
-
+		/// <summary>What the client writes for lobbyid once you've left the room.</summary>
 		private const string NullSessionId = "00000000-0000-0000-0000-000000000000";
 
 		/// <summary>Beyond this the first read is capped to the tail, to keep startup off a huge log.</summary>
@@ -45,6 +50,13 @@ namespace Spark
 
 		/// <summary>Most a single poll will pull in, so one slow catch-up can't stall the caller.</summary>
 		private const long MaxChunkBytes = 4 * 1024 * 1024;
+
+		/// <summary>
+		/// Skip anything longer than this. Room updates measured 325-370 characters across the real
+		/// logs, so this leaves generous headroom while still skipping the profile dumps, which are
+		/// the only genuinely large lines.
+		/// </summary>
+		private const int MaxScannedLineLength = 2048;
 
 		private static readonly object stateLock = new object();
 		private static string currentLogPath;
@@ -198,42 +210,30 @@ namespace Spark
 				}
 
 				string found = null;
-				bool sawEnd = false;
+				bool sawLobbyId = false;
 				foreach (string line in text.Split('\n'))
 				{
-					// Only the short status lines are interesting; the profile JSON the client dumps
-					// runs to hundreds of KB on one line and can't contain either pattern.
-					if (line.Length > 512) continue;
+					// The room updates run to a few hundred characters; the profile JSON the client
+					// dumps runs to hundreds of KB on a single line and can't hold this pattern.
+					if (line.Length > MaxScannedLineLength) continue;
 
-					Match m = sessionRegex.Match(line);
-					if (m.Success)
-					{
-						string id = m.Groups[1].Value.ToUpperInvariant();
-						if (id != NullSessionId)
-						{
-							found = id;
-							sawEnd = false;
-						}
-						continue;
-					}
+					Match m = lobbyIdRegex.Match(line);
+					if (!m.Success) continue;
 
-					foreach (string marker in endMarkers)
-					{
-						if (line.IndexOf(marker, StringComparison.OrdinalIgnoreCase) >= 0)
-						{
-							sawEnd = true;
-							break;
-						}
-					}
+					// Last one in the chunk wins — including the all-zero guid, which is how the
+					// client says you've left rather than moved.
+					string id = m.Groups[1].Value.ToUpperInvariant();
+					sawLobbyId = true;
+					found = id == NullSessionId ? null : id;
 				}
 
 				lock (stateLock)
 				{
 					readPosition = startAt + consumed;
-					// An end marker with nothing after it means we're out of the session; a join later
-					// in the same batch wins, which is why `sawEnd` clears above.
-					if (found != null) sessionId = found;
-					else if (sawEnd) sessionId = null;
+
+					// Only overwrite when this chunk actually said something about the room; a chunk
+					// with no lobbyid line at all means "no news", not "you've left".
+					if (sawLobbyId) sessionId = found;
 				}
 			}
 			catch (IOException)
