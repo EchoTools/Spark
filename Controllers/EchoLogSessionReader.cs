@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Spark
 {
@@ -58,27 +59,62 @@ namespace Spark
 		/// </summary>
 		private const int MaxScannedLineLength = 2048;
 
+		/// <summary>How often the background watcher re-reads the log.</summary>
+		private const int PollIntervalMs = 1000;
+
 		private static readonly object stateLock = new object();
+		private static bool watching;
 		private static string currentLogPath;
 		private static long readPosition;
 		private static string sessionId;
-		private static DateTime lastPoll = DateTime.MinValue;
 		private static DateTime lastDirScan = DateTime.MinValue;
 
 		/// <summary>
-		/// The session the local client is in according to its log, or null when it has left. Polls
-		/// the log at most once a second, so this is cheap to call from a loop.
+		/// The room the local client is in according to its log, or null when it has left.
+		///
+		/// This is a cached read — the file work happens on the background watcher started by the
+		/// first caller — so it's safe to call from the UI thread every frame.
 		/// </summary>
 		public static string CurrentSessionId
 		{
 			get
 			{
-				Poll();
+				EnsureWatching();
 				lock (stateLock)
 				{
 					return sessionId;
 				}
 			}
+		}
+
+		/// <summary>
+		/// Starts the background watcher if it isn't already going. Reading the log means hitting
+		/// the disk, which mustn't happen on the UI thread, so the value is refreshed off-thread and
+		/// callers only ever read what it last found.
+		/// </summary>
+		private static void EnsureWatching()
+		{
+			lock (stateLock)
+			{
+				if (watching) return;
+				watching = true;
+			}
+
+			Task.Run(async () =>
+			{
+				try
+				{
+					while (Program.running)
+					{
+						Poll();
+						await Task.Delay(PollIntervalMs);
+					}
+				}
+				finally
+				{
+					lock (stateLock) { watching = false; }
+				}
+			});
 		}
 
 		/// <summary>The log folder that goes with the configured echovr.exe, or null if unset/missing.</summary>
@@ -125,19 +161,12 @@ namespace Spark
 				currentLogPath = null;
 				readPosition = 0;
 				sessionId = null;
-				lastPoll = DateTime.MinValue;
 				lastDirScan = DateTime.MinValue;
 			}
 		}
 
 		private static void Poll()
 		{
-			lock (stateLock)
-			{
-				if ((DateTime.UtcNow - lastPoll).TotalMilliseconds < 1000) return;
-				lastPoll = DateTime.UtcNow;
-			}
-
 			if (!WatchingLocalGame)
 			{
 				lock (stateLock) { sessionId = null; }
