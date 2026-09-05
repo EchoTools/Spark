@@ -629,12 +629,14 @@ namespace Spark
                     // PushFrame already no-ops on a null frame, so this is safe to call always.
                     PushDashboard();
 
+                    // Session ID. Deliberately outside the lastFrame check below: in a social lobby
+                    // the API reports no frame at all, and that's exactly when the link has to come
+                    // from the log instead.
+                    UpdateJoinLink();
+
                     // update the other labels in the stats box
                     if (Program.lastFrame != null) // 'mpl_lobby_b2' may change in the future
                     {
-                        // session ID
-                        sessionIdTextBox.Text = Program.CurrentSparkLink(Program.lastFrame.sessionid);
-
                         // Server IP / location. NewMatch below only fires once per sessionid change,
                         // and for combat private matches sessionip is sometimes still blank on that
                         // first frame (server not fully allocated yet) — Arena's InLobby gating skips
@@ -830,10 +832,7 @@ namespace Spark
 
                     hostMatchButton.IsEnabled = Program.lastFrame != null && Program.lastFrame.private_match;
 
-                    if (Program.lastFrame != null)
-                    {
-                        joinLink.Text = Program.CurrentSparkLink(Program.lastFrame.sessionid);
-                    }
+                    UpdateJoinLink();
 
                     // if we're trying to show the window
                     if (tryingToShowGameOverlay)
@@ -3391,10 +3390,38 @@ namespace Spark
 
         private void RefreshCurrentLink()
         {
-            if (Program.lastFrame != null)
+            UpdateJoinLink();
+        }
+
+        /// <summary>Shown in the join-link boxes when there's no session to share.</summary>
+        private const string SessionIdPlaceholder = "********-****-****-****-************";
+
+        /// <summary>
+        /// The session worth sharing right now.
+        ///
+        /// In a match it's the one the game API reports. In a social lobby the API answers error -6
+        /// with no session id at all, so the link would sit on its placeholder and a lobby could
+        /// never be shared — the client's own log records the room it's in, and that fills the gap.
+        /// </summary>
+        private static string CurrentJoinableSessionId()
+        {
+            if (Program.connectionState == Program.ConnectionState.InLobby)
             {
-                joinLink.Text = Program.CurrentSparkLink(Program.lastFrame.sessionid);
+                return EchoLogSessionReader.CurrentSessionId;
             }
+
+            return Program.lastFrame?.sessionid;
+        }
+
+        private void UpdateJoinLink()
+        {
+            string sessionId = CurrentJoinableSessionId();
+            string link = string.IsNullOrEmpty(sessionId)
+                ? SessionIdPlaceholder
+                : Program.CurrentSparkLink(sessionId);
+
+            if (sessionIdTextBox != null && sessionIdTextBox.Text != link) sessionIdTextBox.Text = link;
+            if (joinLink != null && joinLink.Text != link) joinLink.Text = link;
         }
 
         private void CopyMainLinkToClipboard(object sender, RoutedEventArgs e)
