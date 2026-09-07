@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -42,6 +42,9 @@ namespace Spark
 			currentStats = player.stats;
 			cachedStats = new Stats();
 			oldRoundStats = new Stats();
+			currentCombatStats = new CombatStats();
+			cachedCombatStats = new CombatStats();
+			oldRoundCombatStats = new CombatStats();
 			PlayTime = 0;
 			InvertedTime = 0;
 			GoalsNum = 0;
@@ -67,6 +70,9 @@ namespace Spark
 			currentStats = matchPlayer.currentStats;
 			cachedStats = matchPlayer.cachedStats;
 			oldRoundStats = matchPlayer.oldRoundStats;
+			currentCombatStats = matchPlayer.currentCombatStats;
+			cachedCombatStats = matchPlayer.cachedCombatStats;
+			oldRoundCombatStats = matchPlayer.oldRoundCombatStats;
 			PlayTime = matchPlayer.PlayTime;
 			InvertedTime = matchPlayer.InvertedTime;
 			GoalsNum = matchPlayer.GoalsNum;
@@ -110,6 +116,18 @@ namespace Spark
 				{ "blocks", Blocks },
 				{ "interceptions", Interceptions },
 				{ "assists", Assists },
+				{ "combat_kills", CombatKills },
+				{ "combat_assists", CombatAssists },
+				{ "combat_deaths", CombatDeaths },
+				{ "combat_damage", CombatDamage },
+				{ "combat_damage_taken", CombatDamageTaken },
+				{ "combat_damage_taken_raw", CombatDamageTakenRaw },
+				{ "combat_eliminations", CombatEliminations },
+				{ "combat_objective_eliminations", CombatObjectiveEliminations },
+				{ "combat_objective_time", CombatObjectiveTime },
+				{ "combat_objective_damage", CombatObjectiveDamage },
+				{ "combat_hill_captures", CombatHillCaptures },
+				{ "combat_hill_defends", CombatHillDefends },
 				// { "turnovers", Turnovers }, // TODO enable once the db supports it
 				{ "average_speed", averageSpeed[0] },
 				{ "average_speed_lhand", averageSpeed[1] },
@@ -136,6 +154,10 @@ namespace Spark
 		public Stats currentStats = new Stats();
 		public Stats cachedStats = new Stats();
 		public Stats oldRoundStats = new Stats();
+
+		public CombatStats currentCombatStats = new CombatStats();
+		public CombatStats cachedCombatStats = new CombatStats();
+		public CombatStats oldRoundCombatStats = new CombatStats();
 
 		public float PossessionTime
 		{
@@ -200,6 +222,78 @@ namespace Spark
 		{
 			get => Math.Clamp(cachedStats.assists + currentStats.assists - oldRoundStats.assists, MINCLAMP, int.MaxValue);
 			set => currentStats.assists = value;
+		}
+
+		public int CombatKills
+		{
+			get => Math.Clamp(cachedCombatStats.kills + currentCombatStats.kills - oldRoundCombatStats.kills, MINCLAMP, int.MaxValue);
+			set => currentCombatStats.kills = value;
+		}
+
+		public int CombatAssists
+		{
+			get => Math.Clamp(cachedCombatStats.assists + currentCombatStats.assists - oldRoundCombatStats.assists, MINCLAMP, int.MaxValue);
+			set => currentCombatStats.assists = value;
+		}
+
+		public int CombatDeaths
+		{
+			get => Math.Clamp(cachedCombatStats.deaths + currentCombatStats.deaths - oldRoundCombatStats.deaths, MINCLAMP, int.MaxValue);
+			set => currentCombatStats.deaths = value;
+		}
+
+		public float CombatDamage
+		{
+			get => Math.Max(MINCLAMP, cachedCombatStats.damage + currentCombatStats.damage - oldRoundCombatStats.damage);
+			set => currentCombatStats.damage = value;
+		}
+
+		public float CombatDamageTaken
+		{
+			get => Math.Max(MINCLAMP, cachedCombatStats.damage_taken + currentCombatStats.damage_taken - oldRoundCombatStats.damage_taken);
+			set => currentCombatStats.damage_taken = value;
+		}
+
+		public float CombatDamageTakenRaw
+		{
+			get => Math.Max(MINCLAMP, cachedCombatStats.damage_taken_raw + currentCombatStats.damage_taken_raw - oldRoundCombatStats.damage_taken_raw);
+			set => currentCombatStats.damage_taken_raw = value;
+		}
+
+		public int CombatEliminations
+		{
+			get => Math.Clamp(cachedCombatStats.eliminations + currentCombatStats.eliminations - oldRoundCombatStats.eliminations, MINCLAMP, int.MaxValue);
+			set => currentCombatStats.eliminations = value;
+		}
+
+		public int CombatObjectiveEliminations
+		{
+			get => Math.Clamp(cachedCombatStats.objective_eliminations + currentCombatStats.objective_eliminations - oldRoundCombatStats.objective_eliminations, MINCLAMP, int.MaxValue);
+			set => currentCombatStats.objective_eliminations = value;
+		}
+
+		public float CombatObjectiveTime
+		{
+			get => Math.Max(MINCLAMP, cachedCombatStats.objective_time + currentCombatStats.objective_time - oldRoundCombatStats.objective_time);
+			set => currentCombatStats.objective_time = value;
+		}
+
+		public float CombatObjectiveDamage
+		{
+			get => Math.Max(MINCLAMP, cachedCombatStats.objective_damage + currentCombatStats.objective_damage - oldRoundCombatStats.objective_damage);
+			set => currentCombatStats.objective_damage = value;
+		}
+
+		public int CombatHillCaptures
+		{
+			get => Math.Clamp(cachedCombatStats.hill_captures + currentCombatStats.hill_captures - oldRoundCombatStats.hill_captures, MINCLAMP, int.MaxValue);
+			set => currentCombatStats.hill_captures = value;
+		}
+
+		public int CombatHillDefends
+		{
+			get => Math.Clamp(cachedCombatStats.hill_defends + currentCombatStats.hill_defends - oldRoundCombatStats.hill_defends, MINCLAMP, int.MaxValue);
+			set => currentCombatStats.hill_defends = value;
 		}
 
 		public float DistanceBetweenHands
@@ -270,8 +364,8 @@ namespace Spark
 		public void AddRecentVelocity(float vel)
 		{
 			recentVelocities.Add(vel);
-			// anything older than 10s at 60hz
-			while (recentVelocities.Count > Program.StatsIntervalMs * 10)
+			// anything older than 10s
+			while (recentVelocities.Count > (1000f / Program.StatsIntervalMs) * 10)
 			{
 				recentVelocities.RemoveAt(0);
 			}
@@ -286,7 +380,6 @@ namespace Spark
 			int maxVelIndex = recentVelocities.IndexOf(maxVel);
 			if (maxVel < boostVelCutoff)
 			{
-				var asdf = 1;
 			}
 
 			if (reset)
@@ -294,12 +387,12 @@ namespace Spark
 				recentVelocities.Clear();
 			}
 
-			return (maxVel, (float)(recentVelocities.Count - maxVelIndex) / Program.StatsIntervalMs);
+			return (maxVel, (recentVelocities.Count - maxVelIndex) * (Program.StatsIntervalMs / 1000f));
 		}
 
 		public float GetSmoothedVelocity(float smoothTime = 1)
 		{
-			int N = (int)(smoothTime * Program.StatsIntervalMs);
+			int N = (int)(smoothTime * (1000f / Program.StatsIntervalMs));
 			if (N > recentVelocities.Count - 1)
 			{
 				return recentVelocities.Average();
@@ -325,6 +418,7 @@ namespace Spark
 			}
 
 			cachedStats += currentStats;
+			cachedCombatStats += currentCombatStats;
 		}
 
 		/// <summary>
@@ -336,6 +430,9 @@ namespace Spark
 			// TODO this looks wrong
 			oldRoundStats = lastPlayer.oldRoundStats;
 			oldRoundStats = cachedStats + currentStats;
+			
+			oldRoundCombatStats = lastPlayer.oldRoundCombatStats;
+			oldRoundCombatStats = cachedCombatStats + currentCombatStats;
 		}
 
 		public static MatchPlayer operator +(MatchPlayer a, MatchPlayer b)
@@ -350,6 +447,9 @@ namespace Spark
 				currentStats = a.currentStats + b.currentStats,
 				cachedStats = a.cachedStats + b.cachedStats,
 				oldRoundStats = a.oldRoundStats + b.oldRoundStats,
+				currentCombatStats = a.currentCombatStats + b.currentCombatStats,
+				cachedCombatStats = a.cachedCombatStats + b.cachedCombatStats,
+				oldRoundCombatStats = a.oldRoundCombatStats + b.oldRoundCombatStats,
 				PlayTime = a.PlayTime + b.PlayTime,
 				InvertedTime = a.InvertedTime + b.InvertedTime,
 				GoalsNum = a.GoalsNum + b.GoalsNum,
@@ -379,6 +479,8 @@ namespace Spark
 			// }
 
 			currentStats = player.stats;
+			
+			currentCombatStats = CombatDataParser.GetCombatStats(player.userid);
 		}
 	}
 }

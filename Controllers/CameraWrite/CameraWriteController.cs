@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,6 +18,7 @@ namespace Spark
 		private static string BaseUrl => "http://127.0.0.1:" + (Program.spectateMeController.spectateMe ? SpectateMeController.SPECTATEME_PORT : "6721") + "/";
 		private static Dictionary<string, int> playerCameraIndices = new Dictionary<string, int>();
 		private static System.Timers.Timer autoFollowTimer;
+		public static GoProCamera goProCamera = new GoProCamera();
 		
 		public const float Deg2Rad = 1 / 57.29578f;
 		public const float Rad2Deg = 57.29578f;
@@ -75,15 +76,20 @@ namespace Spark
 				autoFollowTimer.Elapsed += (sender, e) => AutoFollowPlayer();
 				autoFollowTimer.AutoReset = true;
 				autoFollowTimer.Start();
-				LogRow(LogType.File, "Started auto-follow timer for player: " + SparkSettings.instance.followPlayerName);
+				LogRow(LogType.File, SimpleSpectateController.LogFile,
+					"Started auto-follow timer for player: " + SparkSettings.instance.followPlayerName);
 			}
 		}
+
+		/// <summary>Who the last "Auto-following" line named, so the 2s timer doesn't repeat itself.</summary>
+		private static string lastAutoFollowLogged;
 
 		private static void StopAutoFollowTimer()
 		{
 			autoFollowTimer?.Stop();
 			autoFollowTimer?.Dispose();
 			autoFollowTimer = null;
+			lastAutoFollowLogged = null;
 		}
 
 		private static void AutoFollowPlayer()
@@ -94,7 +100,15 @@ namespace Spark
 			if (SparkSettings.instance.spectatorCamera == 3 && 
 				!string.IsNullOrEmpty(SparkSettings.instance.followPlayerName))
 			{
-				LogRow(LogType.File, "Auto-following player: " + SparkSettings.instance.followPlayerName);
+				// This runs every two seconds, so only say something when the target actually
+				// changes — otherwise it buries everything else in the log.
+				if (lastAutoFollowLogged != SparkSettings.instance.followPlayerName)
+				{
+					lastAutoFollowLogged = SparkSettings.instance.followPlayerName;
+					LogRow(LogType.File, SimpleSpectateController.LogFile,
+						"Auto-following player: " + SparkSettings.instance.followPlayerName);
+				}
+
 				SpectatorCamFindPlayer(SparkSettings.instance.followPlayerName, null, true);
 			}
 			else
@@ -138,7 +152,11 @@ namespace Spark
 						StopAutoFollowTimer();
 						FollowDischolder(null, SparkSettings.instance.discHolderFollowCamMode == 1, SparkSettings.instance.discHolderFollowRestrictTeam);
 						break;
+					case 5:
+						StopAutoFollowTimer();
+						break;
 				}
+				goProCamera.Enabled = SparkSettings.instance.spectatorCamera == 5;
 			}
 			catch (Exception ex)
 			{

@@ -39,6 +39,16 @@ namespace Spark
 		/// </summary>
 		public static bool running = true;
 
+		/// <summary>
+		/// Set by the -uipreview command-line flag. Populates the dashboard from a fixed sample match
+		/// so the layout can be worked on without a live game. Read-only: it never uploads, writes to
+		/// the database, or touches the real API.
+		/// </summary>
+		public static bool uiPreviewMode;
+
+		/// <summary>Set by -uipreviewcombat alongside -uipreview: same fixed-frame preview, but as an Echo Combat match so the Combat dashboard can be worked on too.</summary>
+		public static bool uiPreviewCombat;
+
 		public enum ConnectionState {
 			NotConnected,
 			Menu,		// loading screen or menu - the response is not json
@@ -54,6 +64,12 @@ namespace Spark
 		public const string APIURL = "https://api.ignitevr.gg";
 		// public const string APIURL = "http://127.0.0.1:8000";
 		public const string WRITE_API_URL = "http://127.0.0.1:6723/";
+
+		/// <summary>
+		/// The Railway backend that actually answers. Was hardcoded inline in TTSController and
+		/// DiscordOAuth; APIURL above still points at api.ignitevr.gg, which no longer responds.
+		/// </summary>
+		public const string SPARK_API_URL = "https://sparkapi-production-e6df.up.railway.app";
 
 		// public static string currentAccessCodeUsername = "";
 		public static string InstalledSpeakerSystemVersion = "";
@@ -94,7 +110,6 @@ namespace Spark
 		static List<UserAtTime[]> stunningMatchedPairs = new List<UserAtTime[]>();
 		private const float stunMatchingTimeout = 4f;
 
-		public static string lastDateTimeString;
 		public static string lastJSON;
 		public static string lastBonesJSON;
 		public static ulong fetchFrameIndex = 0;
@@ -116,11 +131,10 @@ namespace Spark
 		/// <summary>
 		/// Not actually Hz. 1/Hz.
 		/// </summary>
-		public static float StatsIntervalMs => statsDeltaTimes[SparkSettings.instance.lowFrequencyMode ? 1 : 0];
-		private static bool? lastLowFreqMode = null;
+		public static float StatsIntervalMs => statsDeltaTimes[SparkSettings.instance.lowFrequencyMode ? 2 : 0];
 
-		// 30 or 15 hz main fetch speed
-		private static readonly List<float> statsDeltaTimes = new List<float> { 33.3333333f, 66.6666666f };
+		// 60, 30 or 15 hz main fetch speed
+		private static readonly List<float> statsDeltaTimes = new List<float> { 16.6666666f, 33.3333333f, 66.6666666f };
 
 
 		public static LiveWindow liveWindow;
@@ -159,6 +173,7 @@ namespace Spark
 		public static Medal medal;
 		private static OverlayServer overlayServer;
 		public static SpectateMeController spectateMeController;
+		public static SimpleSpectateController simpleSpectateController;
 		public static UploadController uploadController;
 		public static LocalDatabase localDatabase;
 		public static NetMQEvents netMQEvents;
@@ -167,8 +182,6 @@ namespace Spark
 		private static readonly Stopwatch fetchSw = new Stopwatch();
 		private static Timer ccuCounter;
 		public static CameraController cameraController;
-
-		public static CoreWebView2Environment webView2Environment;
 
 
 		#region Event Callbacks
@@ -192,7 +205,7 @@ namespace Spark
 		/// <summary>
 		/// Called when a frame is finished with conversion and it is an Echo Combat frame
 		/// </summary>
-		public static Action<Frame> NewCombatFrame;
+		public static event Action<Frame> NewCombatFrame;
 		/// <summary>
 		/// Called when connectedToGame state changes.
 		/// This could be on loading screen or lobby
@@ -225,8 +238,8 @@ namespace Spark
 		public static Action<Frame> NewRound;
 		
 
-		public static Action<Frame> JoinedLobby;
-		public static Action<Frame> LeftLobby;
+		public static Action<Frame> JoinedLobby = delegate { };
+		public static Action<Frame> LeftLobby = delegate { };
 
 		public static Action<Frame, Team, Player> PlayerJoined;
 		public static Action<Frame, Team, Player> PlayerLeft;
@@ -239,7 +252,7 @@ namespace Spark
 		/// <summary>
 		/// Frame is the last frame of the last match
 		/// </summary>
-		public static Action<Frame> MatchReset;
+		public static event Action<Frame> MatchReset;
 		/// <summary>
 		/// Frame, nearest player, distance to podium
 		/// </summary>
@@ -319,8 +332,8 @@ namespace Spark
 		public static Action<Frame, Team, Player> LargePing;
 		public static Action<Frame> RulesChanged;
 		
-		public static Action ManualClip;
-		public static Action BadWordDetected;
+		public static Action ManualClip = delegate { };
+		public static Action BadWordDetected = delegate { };
 
 		/// <summary>
 		/// For any event type that has EventData
@@ -413,12 +426,23 @@ namespace Spark
 
 				netMQEvents = new NetMQEvents();
 
-				InstalledSpeakerSystemVersion = FindEchoSpeakerSystemInstallVersion();
-				if (InstalledSpeakerSystemVersion.Length > 0)
+				_ = Task.Run(() =>
 				{
-					string[] latestSpeakerSystemVer = GetLatestSpeakerSystemURLVer();
-					IsSpeakerSystemUpdateAvailable = latestSpeakerSystemVer[1] != InstalledSpeakerSystemVersion;
-				}
+					try
+					{
+						InstalledSpeakerSystemVersion = FindEchoSpeakerSystemInstallVersion();
+						if (InstalledSpeakerSystemVersion.Length > 0)
+						{
+							string[] latestSpeakerSystemVer = GetLatestSpeakerSystemURLVer();
+							IsSpeakerSystemUpdateAvailable = IsNewerSpeakerSystemVersion(
+								latestSpeakerSystemVer[1], InstalledSpeakerSystemVersion);
+						}
+					}
+					catch (Exception ex)
+					{
+						Logger.Error($"[SpeakerSystem] Background update check failed: {ex.Message}");
+					}
+				});
 
 
 				SparkSettings.instance.sparkExeLocation = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Spark.exe");
@@ -480,6 +504,14 @@ namespace Spark
 					SparkSettings.instance.showDatabaseLog = true;
 				}
 
+				// Fills the UI with a fixed sample match so the dashboard can be looked at and
+				// iterated on without a live game. Nothing is uploaded or written while it's on.
+				if (args.Contains("-uipreview"))
+				{
+					uiPreviewMode = true;
+					uiPreviewCombat = args.Contains("-uipreviewcombat");
+				}
+
 
 				// make an exception for certain users
 				// Note that these usernames are not the access codes. Don't even try.
@@ -492,15 +524,34 @@ namespace Spark
 
 
 
-				if (!SparkSettings.instance.onlyActivateHighlightsWhenGameIsOpen &&
-					SparkSettings.instance.isNVHighlightsEnabled)
+				_ = Task.Run(() =>
 				{
-					HighlightsHelper.SetupNVHighlights();
-				}
-				else
-				{
-					HighlightsHelper.InitHighlightsSDK(true);
-				}
+					if (!SparkSettings.instance.onlyActivateHighlightsWhenGameIsOpen &&
+						SparkSettings.instance.isNVHighlightsEnabled)
+					{
+						HighlightsHelper.SetupNVHighlights();
+					}
+					else
+					{
+						HighlightsHelper.InitHighlightsSDK(true);
+					}
+
+					// Safely update UI once done, if highlights successfully initialized
+					if (HighlightsHelper.didHighlightsInit && HighlightsHelper.isNVHighlightsEnabled)
+					{
+						Application.Current?.Dispatcher?.Invoke(() =>
+						{
+							if (liveWindow != null)
+							{
+								liveWindow.showHighlights.IsEnabled = HighlightsHelper.DoNVClipsExist();
+								liveWindow.showHighlights.Visibility = Visibility.Visible;
+								liveWindow.showHighlights.Content = HighlightsHelper.DoNVClipsExist() 
+									? Properties.Resources.Show + " " + HighlightsHelper.nvHighlightClipCount + " " + Properties.Resources.Highlights 
+									: Properties.Resources.No_clips_available;
+							}
+						});
+					}
+				});
 
 				// only enable Highlights when game is open
 				ConnectedToGame += (_, _) =>
@@ -546,6 +597,7 @@ namespace Spark
 				speechRecognizer = new SpeechRecognition();
 				loggerEvents = new LoggerEvents();
 				spectateMeController = new SpectateMeController();
+				simpleSpectateController = new SimpleSpectateController();
 				uploadController = new UploadController();
 				localDatabase = new LocalDatabase();
 				cameraController = new CameraController();
@@ -583,7 +635,16 @@ namespace Spark
 				{
 					try
 					{
-						EchoVRSettingsManager.ReloadLoadingTips();
+						JToken embeddedTips = EchoVRSettingsManager.ReadEchoVRLoadingTips(true);
+						if (embeddedTips != null)
+						{
+							EchoVRSettingsManager.loadingTips = embeddedTips;
+						}
+						else
+						{
+							EchoVRSettingsManager.ReloadLoadingTips();
+						}
+
 						if (EchoVRSettingsManager.loadingTips != null)
 						{
 							JToken toolsAll = EchoVRSettingsManager.loadingTips["tools-all"];
@@ -655,9 +716,9 @@ namespace Spark
 
 		private static void OnLeftGame(Frame obj)
 		{
-			// Tell the Friends bot the user went offline
-			try { _ = FriendsTab.PushOffline(); }
-			catch (Exception e) { Console.WriteLine("Friends offline push error: " + e.Message); }
+			// Tell the Friends bot the user is now in the menu/transitioning
+			try { FriendsPresence.PushMenu(); }
+			catch (Exception e) { Console.WriteLine("Friends menu push error: " + e.Message); }
 		}
 
 
@@ -684,6 +745,133 @@ namespace Spark
 		private static void CCUCounter(object state)
 		{
 			_ = FetchUtils.client.PostAsync($"/spark_is_open?hw_id={DeviceId}&client_name={SparkSettings.instance.client_name}", null);
+			_ = ReportPlaytime();
+		}
+
+		private static string anonymousDeviceIdVal;
+
+		/// <summary>
+		/// An opaque, stable per-install id: SHA-256 of the MAC address, truncated to 32 hex chars.
+		/// <para>
+		/// Deliberately not <see cref="Logger.DeviceId"/> itself, which is the raw MAC. The global
+		/// playtime pool needs to tell installs apart so it can de-duplicate and rate-limit them —
+		/// it does not need to know whose they are, and a hash gives the first without the second.
+		/// </para>
+		/// </summary>
+		public static string AnonymousDeviceId
+		{
+			get
+			{
+				if (anonymousDeviceIdVal != null) return anonymousDeviceIdVal;
+
+				string mac = DeviceId;
+				if (string.IsNullOrEmpty(mac)) return null;
+
+				byte[] hash = System.Security.Cryptography.SHA256.HashData(
+					Encoding.UTF8.GetBytes("spark-playtime-v1:" + mac));
+				return anonymousDeviceIdVal = Convert.ToHexString(hash)[..32].ToLowerInvariant();
+			}
+		}
+
+		/// <summary>
+		/// The name this install appears under on the playtime leaderboard: the Discord identity
+		/// when the user is logged in, otherwise their EchoVR name. Null when neither is set, in
+		/// which case the install still contributes to the community total but gets no board row.
+		/// <para>
+		/// Discord is preferred because it's the one of the two the user can't casually retype —
+		/// <see cref="SparkSettings.client_name"/> is a free-text field in Settings, so it makes a
+		/// weak claim to an identity. Reads global_name (Discord's display name) ahead of the
+		/// username handle, matching what the rest of the app shows.
+		/// </para>
+		/// </summary>
+		private static string LeaderboardDisplayName()
+		{
+			// IsLoggedIn only checks for a token; the profile fetch that fills discordUserData can
+			// still have failed, so both are checked — same guard the player card uses.
+			if (DiscordOAuth.IsLoggedIn && DiscordOAuth.discordUserData != null)
+			{
+				if (DiscordOAuth.discordUserData.TryGetValue("global_name", out string globalName) &&
+					!string.IsNullOrWhiteSpace(globalName))
+				{
+					return globalName;
+				}
+
+				if (DiscordOAuth.discordUserData.TryGetValue("username", out string username) &&
+					!string.IsNullOrWhiteSpace(username))
+				{
+					return username;
+				}
+			}
+
+			string echoName = SparkSettings.instance.client_name;
+			return string.IsNullOrWhiteSpace(echoName) ? null : echoName;
+		}
+
+		/// <summary>
+		/// Contributes this install's lifetime playtime to the global pool, on the CCU heartbeat
+		/// that already runs every 60 seconds.
+		/// <para>
+		/// Sends the running total rather than a delta since the last report, which makes the call
+		/// idempotent: a dropped response, a retry or a duplicate costs nothing, and an install
+		/// that was closed for a week simply catches up on its next report. The server keeps the
+		/// larger of what it holds and what arrives, capped by the wall-clock time since that
+		/// install last reported.
+		/// </para>
+		/// </summary>
+		private static async Task ReportPlaytime()
+		{
+			if (!SparkSettings.instance.shareGlobalPlaytime) return;
+
+			string deviceId = AnonymousDeviceId;
+			if (deviceId == null) return;
+
+			// Written to settings every 60s by LiveWindow.UpdateSessionCard, on the same cadence
+			// as this heartbeat, so it is at most one tick behind the live figure.
+			double seconds = SparkSettings.instance.totalPlaytimeSeconds;
+			if (seconds <= 0) return;
+
+			try
+			{
+				string displayName = LeaderboardDisplayName();
+
+				string body = JsonConvert.SerializeObject(new
+				{
+					device_id = deviceId,
+					seconds,
+					version = AppVersionString(),
+					display_name = displayName,
+				});
+				using StringContent content = new StringContent(body, Encoding.UTF8, "application/json");
+				using HttpResponseMessage response =
+					await FetchUtils.client.PostAsync($"{SPARK_API_URL}/playtime", content);
+			}
+			catch (Exception)
+			{
+				// Best effort. A missed report costs nothing: the next one carries the same total.
+			}
+		}
+
+		/// <summary>
+		/// Global playtime across every install that reports in, or null if it hasn't been fetched
+		/// yet (or the server is unreachable). Refreshed by <see cref="RefreshGlobalPlaytime"/>.
+		/// </summary>
+		public static double? GlobalPlaytimeSeconds { get; private set; }
+
+		public static async Task RefreshGlobalPlaytime()
+		{
+			try
+			{
+				string json = await FetchUtils.GetRequestAsync($"{SPARK_API_URL}/playtime/total");
+				if (string.IsNullOrEmpty(json)) return;
+
+				JObject parsed = JObject.Parse(json);
+				double? total = (double?)parsed["total_seconds"];
+				if (total.HasValue) GlobalPlaytimeSeconds = total.Value;
+			}
+			catch (Exception)
+			{
+				// Leave the last known value in place rather than blanking the label on a blip.
+			}
 		}
 
 		/// <summary>
@@ -783,6 +971,19 @@ namespace Spark
 		{
 			fetchClient.Timeout = TimeSpan.FromSeconds(5);
 
+			// The preview holds a fixed frame, so the fetch loop would only overwrite it. Park here
+			// instead of polling an API we're deliberately not talking to.
+			if (uiPreviewMode)
+			{
+				lastFrame = UiPreviewData.BuildFrame();
+				UiPreviewData.PopulateRounds(lastFrame);
+				UiPreviewData.PopulateEventLog();
+				if (uiPreviewCombat) UiPreviewData.PopulateCombatPreview(lastFrame);
+				connectionState = ConnectionState.InGame;
+				while (running) await Task.Delay(250);
+				return;
+			}
+
 			DateTime lastFetch = DateTime.UtcNow;
 			while (running)
 			{
@@ -851,6 +1052,7 @@ namespace Spark
 						});
 
 						// parse the API data
+						CombatDataParser.Parse(session);
 						Frame f = Frame.FromJSON(frameTime, session, bones);
 
 						if (f != null)
@@ -892,6 +1094,22 @@ namespace Spark
 				catch (Exception ex)
 				{
 					LogRow(LogType.Error, $"Error in fetch request.\n{ex}");
+				}
+
+				if (connectionState != lastConnectionState)
+				{
+					switch (connectionState)
+					{
+						case ConnectionState.Menu:
+							FriendsPresence.PushMenu();
+							break;
+						case ConnectionState.InLobby:
+							FriendsPresence.PushLobby();
+							break;
+						case ConnectionState.NotConnected:
+							FriendsPresence.PushOffline();
+							break;
+					}
 				}
 
 				lastConnectionState = connectionState;
@@ -1144,7 +1362,10 @@ namespace Spark
 			Process[] process = Process.GetProcessesByName("echovr");
 			foreach (Process p in process)
 			{
-				if (findInArgs == null || GetCommandLine(p).Contains(findInArgs))
+				// GetCommandLine returns null when a process's command line can't be read. That
+				// used to throw straight out of here, abandoning the rest of the kill, so a caller
+				// that kills-then-launches could stack a second client on top of the first.
+				if (findInArgs == null || GetCommandLine(p)?.Contains(findInArgs) == true)
 				{
 					try
 					{
@@ -1207,6 +1428,36 @@ namespace Spark
 			}
 
 			return true;
+		}
+
+		/// <summary>
+		/// Moves an already-running client into a session without claiming a team slot.
+		///
+		/// The body deliberately carries no team_idx: that field is what makes this a player join.
+		/// Every value claims a team — including -1, which reads like "no team" but is the Random
+		/// Team option — so sending it drops a spectator client into the match as a player. Leaving
+		/// it out entirely keeps the client in the mode it launched in, so a -spectatorstream client
+		/// stays a spectator. This mirrors the server browser's spectate, which is known to work.
+		/// </summary>
+		public static async Task<bool> APISpectate(string session_id, string overrideIP = null, int overridePort = 0)
+		{
+			try
+			{
+				Dictionary<string, object> body = new Dictionary<string, object>()
+				{
+					{ "session_id", session_id },
+					{ "password", "" },
+				};
+
+				string ip = overrideIP ?? SparkSettings.instance.echoVRIP;
+				int port = overridePort == 0 ? SparkSettings.instance.echoVRPort : overridePort;
+				string resp = await FetchUtils.PostRequestAsync($"http://{ip}:{port}/join_session", null, JsonConvert.SerializeObject(body));
+				return !string.IsNullOrEmpty(resp) && resp.StartsWith("{");
+			}
+			catch (Exception)
+			{
+				return false;
+			}
 		}
 
 		public static async Task<bool> APIJoin(string session_id, int teamIndex = -1, string overrideIP = null, int overridePort = 0)
@@ -2382,13 +2633,6 @@ namespace Spark
 						}
 
 						// TODO check if a pass was made
-						if (false)
-						{
-							CurrentRound.events.Enqueue(new EventData(CurrentRound, EventContainer.EventType.pass, frame.game_clock,
-								team, player, null, player.head.Position, Vector3.Zero));
-							LogRow(LogType.File, frame.sessionid,
-								frame.game_clock_display + " - " + player.name + " made a pass");
-						}
 					}
 				}
 
@@ -2480,7 +2724,7 @@ namespace Spark
 					}
 				}
 
-				_ = FriendsTab.PushLobbyUpdate(lobbyId, team, mode);
+				FriendsPresence.PushMatch(lobbyId, team, mode);
 			}
 			catch (Exception e)
 			{
@@ -3172,7 +3416,7 @@ namespace Spark
 						await APIJoin(parts[3], joinType == JoinType.Spectator ? 2 : -1);
 					}
 				}
-				catch (Exception e)
+				catch (Exception)
 				{
 					new MessageBox(Resources.Failed_to_send_join_data_to_the_game__Maybe_you_left_the_game_, Resources.Error, Quit).Show();
 				}
@@ -3188,12 +3432,47 @@ namespace Spark
 		}
 		
 
+		/// <summary>
+		/// True only when a published release is genuinely newer than what is installed.
+		/// This used to be a plain inequality, which meant running a build ahead of the
+		/// newest published release prompted the user to "update" to an older one.
+		/// Tags look like "v0.4.5"; suffixes such as "v0.4.5_BETA" compare as 0.4.5.
+		/// </summary>
+		private static bool IsNewerSpeakerSystemVersion(string remoteTag, string localTag)
+		{
+			int[] remote = ParseSpeakerSystemVersion(remoteTag);
+			int[] local = ParseSpeakerSystemVersion(localTag);
+			if (remote == null || local == null)
+			{
+				// Unparseable on either side: only offer an update if something changed.
+				return !string.IsNullOrEmpty(remoteTag) && remoteTag != localTag;
+			}
+			for (int i = 0; i < 3; i++)
+			{
+				if (remote[i] != local[i]) return remote[i] > local[i];
+			}
+			return false;
+		}
+
+		private static int[] ParseSpeakerSystemVersion(string tag)
+		{
+			if (string.IsNullOrWhiteSpace(tag)) return null;
+			string[] parts = tag.TrimStart('v', 'V').Split('.');
+			int[] nums = new int[3];
+			for (int i = 0; i < 3 && i < parts.Length; i++)
+			{
+				string digits = new string(parts[i].TakeWhile(char.IsDigit).ToArray());
+				if (digits.Length == 0 || !int.TryParse(digits, out nums[i])) return null;
+			}
+			return nums;
+		}
+
 		private static string[] GetLatestSpeakerSystemURLVer()
 		{
 			string[] ret = new string[2];
 			try
 			{
-				HttpWebRequest req = (HttpWebRequest)WebRequest.Create(@"https://api.github.com/repos/iblowatsports/Echo-VR-Speaker-System/releases/latest");
+				HttpWebRequest req = (HttpWebRequest)WebRequest.Create(@"https://api.github.com/repos/heisthecat31/Echo-VR-Speaker-System/releases/latest");
 				req.Accept = "application/json";
 				req.UserAgent = "Spark";
 
@@ -3204,7 +3483,11 @@ namespace Spark
 				// Session Contents
 				string textResp = sr.ReadToEnd();
 				VersionJson versionJson = JsonConvert.DeserializeObject<VersionJson>(textResp);
-				ret[0] = versionJson.assets.First(url => url.browser_download_url.EndsWith("exe")).browser_download_url;
+				// FirstOrDefault: a release with no .exe attached used to throw here.
+				Asset installer = versionJson.assets?
+					.FirstOrDefault(url => url.browser_download_url != null &&
+					                       url.browser_download_url.EndsWith("exe"));
+				ret[0] = installer?.browser_download_url;
 				ret[1] = versionJson.tag_name;
 			}
 			catch (Exception e)
@@ -3747,6 +4030,7 @@ namespace Spark
 			running = false;
 			
 			SparkClosing?.Invoke();
+			try { FriendsPresence.PushOffline(); } catch { }
 			SparkSettings.instance.Save();
 			
 			if (closingWindow != null)

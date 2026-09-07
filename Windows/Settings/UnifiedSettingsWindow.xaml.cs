@@ -37,9 +37,22 @@ namespace Spark
 		private readonly System.Windows.Threading.DispatcherTimer _themeDebounceTimer;
 
 
+		/// <summary>
+		/// Set before opening this window (see <see cref="Program.ToggleWindow"/>, which only supports
+		/// a parameterless constructor) to land on the Change Theme tab instead of the default. Read
+		/// once in the constructor and reset immediately after.
+		/// </summary>
+		public static bool OpenToChangeTheme;
+
 		public UnifiedSettingsWindow()
 		{
 			InitializeComponent();
+
+			if (OpenToChangeTheme)
+			{
+				OpenToChangeTheme = false;
+				tabControl.SelectedItem = ChangeThemeTab;
+			}
 
 			_themeDebounceTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
 			_themeDebounceTimer.Tick += (s, ev) =>
@@ -47,6 +60,12 @@ namespace Spark
 				_themeDebounceTimer.Stop();
 				ThemesController.ApplyCustomTheme(_themeDark, _themeMid, _themeLight);
 			};
+		}
+
+		/// <summary>Selects the Change Theme tab on an already-open instance of this window.</summary>
+		public void JumpToChangeThemeTab()
+		{
+			tabControl.SelectedItem = ChangeThemeTab;
 		}
 
 		private void WindowLoad(object sender, RoutedEventArgs e)
@@ -156,11 +175,33 @@ namespace Spark
 		private void ExecutableLocationChanged(object sender, TextChangedEventArgs e)
 		{
 			if (!initialized) return;
-			string path = ((TextBox)sender).Text;
+			string path = ((TextBox)sender).Text.Trim().Trim('"');
+
+			if (path.EndsWith("ready-at-dawn-echo-arena", StringComparison.OrdinalIgnoreCase) || 
+				path.EndsWith("ready-at-dawn-echo-arena\\", StringComparison.OrdinalIgnoreCase) ||
+				path.EndsWith("ready-at-dawn-echo-arena/", StringComparison.OrdinalIgnoreCase))
+			{
+				string exePath = Path.Combine(path, "bin", "win10", "echovr.exe");
+				if (File.Exists(exePath))
+				{
+					path = exePath;
+				}
+				else
+				{
+					ExeLocationLabel.Content = "EchoVR Executable Location:   (echovr.exe not found in bin\\win10)";
+					return;
+				}
+			}
+
 			if (File.Exists(path))
 			{
 				ExeLocationLabel.Content = "EchoVR Executable Location:";
 				SparkSettings.instance.echoVRPath = path;
+
+				if (((TextBox)sender).Text != path)
+				{
+					((TextBox)sender).Text = path;
+				}
 			}
 			else
 			{
@@ -174,10 +215,15 @@ namespace Spark
 			{
 				TargetNameInput.Text = SparkSettings.instance.followPlayerName;
 			}
-			SpectatorNameInput.Text = SparkSettings.instance.client_name ?? "";
-			
+
 			AutoJoinCheckbox.IsChecked = SparkSettings.instance.questSpectatorAutoJoin;
-			
+			AnonymousModeCheckbox.IsChecked = SparkSettings.instance.questSpectatorAnonymous;
+			FollowSelfRadio.IsChecked = SparkSettings.instance.questSpectatorFollowSelf;
+			FollowFriendRadio.IsChecked = !SparkSettings.instance.questSpectatorFollowSelf;
+
+			UpdateQuestSpectatorPanels();
+			UpdateQuestSpectatorRunningUI();
+
 			QuestSpectatorPopup.Visibility = Visibility.Visible;
 		}
 
@@ -186,183 +232,88 @@ namespace Spark
 			QuestSpectatorPopup.Visibility = Visibility.Collapsed;
 		}
 
-private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
+		private void QuestSpectatorModeChanged(object sender, RoutedEventArgs e)
 		{
-			string spectatorName = SpectatorNameInput.Text.Trim();
+			UpdateQuestSpectatorPanels();
+		}
+
+		private void UpdateQuestSpectatorPanels()
+		{
+			if (QuestSpectatorNamePanel == null || QuestSpectatorSelfPanel == null) return;
+
+			bool self = FollowSelfRadio.IsChecked == true;
+			QuestSpectatorNamePanel.Visibility = self ? Visibility.Collapsed : Visibility.Visible;
+			QuestSpectatorSelfPanel.Visibility = self ? Visibility.Visible : Visibility.Collapsed;
+		}
+
+		private void UpdateQuestSpectatorRunningUI()
+		{
+			bool running = Program.simpleSpectateController?.Running == true;
+			StopQuestSpectatorButton.Visibility = running ? Visibility.Visible : Visibility.Collapsed;
+			LaunchQuestSpectatorButton.Content = running ? "Relaunch Spectator" : "Launch Spectator";
+		}
+
+		private void SetQuestSpectatorStatus(string status)
+		{
+			Dispatcher.Invoke(() =>
+			{
+				QuestSpectatorStatusText.Text = status ?? "";
+				QuestSpectatorStatusText.Visibility = string.IsNullOrEmpty(status) ? Visibility.Collapsed : Visibility.Visible;
+			});
+		}
+
+		private void StopQuestSpectator(object sender, RoutedEventArgs e)
+		{
+			Program.simpleSpectateController.Stop();
+			SetQuestSpectatorStatus("Stopped.");
+			UpdateQuestSpectatorRunningUI();
+		}
+
+		private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
+		{
+			bool followSelf = FollowSelfRadio.IsChecked == true;
 			string targetName = TargetNameInput.Text.Trim();
 
-			if (string.IsNullOrEmpty(targetName))
+			if (!followSelf && string.IsNullOrEmpty(targetName))
 			{
 				new Spark.MessageBox("Please enter the name of the player you want to spectate.", Properties.Resources.Error).Show();
 				return;
 			}
 
-			// 1. Save Settings
-			SparkSettings.instance.followPlayerName = targetName;
-			SparkSettings.instance.client_name = spectatorName;
+			// Following your own account means reading your own presence row off the friends bot,
+			// which needs a Discord login on this PC as well as the playing one.
+			if (followSelf && !FriendsPresence.Configured)
+			{
+				new Spark.MessageBox(
+					"Log into Discord in Spark on both PCs to spectate yourself — that's how this PC finds the session the other one is in.",
+					Properties.Resources.Error).Show();
+				return;
+			}
+
+			SparkSettings.instance.questSpectatorFollowSelf = followSelf;
+			if (!followSelf) SparkSettings.instance.followPlayerName = targetName;
 			SparkSettings.instance.questSpectatorAutoJoin = AutoJoinCheckbox.IsChecked == true;
+			SparkSettings.instance.questSpectatorAnonymous = AnonymousModeCheckbox.IsChecked == true;
 			SparkSettings.instance.Save();
 
-			// 2. Set Camera Mode to 'Follow specific player' (Index 3)
-			SparkSettings.instance.spectatorCamera = 3;
-			CameraModeDropdownChanged(3);
-
-			// 3. Hide Popup
-			QuestSpectatorPopup.Visibility = Visibility.Collapsed;
-
-			// 4. Async Launch & Monitor
-			Task.Run(async () =>
+			// Point the spectator camera at whoever we're following.
+			if (!followSelf)
 			{
-				// --- PHASE 1: INITIAL LAUNCH ---
-				// Try to find them immediately to generate Launch Arguments
-				string initialLobbyId = "";
-				Logger.LogRow(Logger.LogType.Info, $"Quest Spectator: Initial check for '{targetName}'...");
-				
-				try 
-				{
-					using (WebClient client = new WebClient()) 
-					{
-						string json = await client.DownloadStringTaskAsync("https://g.echovrce.com/status/matches");
-						JObject data = JObject.Parse(json);
-						JArray labels = (JArray)data["labels"];
-						if (labels != null) 
-						{
-							foreach (var server in labels) 
-							{
-								var players = server["players"] as JArray;
-								if (players != null && players.Any(p => string.Equals((string)p["display_name"], targetName, StringComparison.OrdinalIgnoreCase))) 
-								{
-									initialLobbyId = (string)server["id"];
-									break;
-								}
-							}
-						}
-					}
-				} 
-				catch (Exception) { /* Ignore initial error */ }
+				SparkSettings.instance.spectatorCamera = 3;
+				CameraModeDropdownChanged(3);
+			}
 
-				string args = "-spectatorstream";
-				if (SparkSettings.instance.spectatorStreamNoOVR) args += " -noovr";
-				if (!string.IsNullOrEmpty(initialLobbyId)) args += $" -lobbyid {initialLobbyId}";
+			SimpleSpectateController controller = Program.simpleSpectateController;
+			controller.StatusChanged -= SetQuestSpectatorStatus;
+			controller.StatusChanged += SetQuestSpectatorStatus;
 
-				if (File.Exists(SparkSettings.instance.echoVRPath)) 
-				{
-					try 
-					{ 
-						Process.Start(SparkSettings.instance.echoVRPath, args); 
-					}
-					catch (Exception ex) 
-					{ 
-						Logger.LogRow(Logger.LogType.Error, $"Error launching Echo VR: {ex.Message}"); 
-						return; 
-					}
-				} 
-				else 
-				{
-					Logger.LogRow(Logger.LogType.Error, "Echo VR executable not found.");
-					return;
-				}
+			controller.Start(
+				followSelf ? SimpleSpectateController.FollowMode.Self : SimpleSpectateController.FollowMode.Named,
+				targetName,
+				SparkSettings.instance.questSpectatorAnonymous,
+				SparkSettings.instance.questSpectatorAutoJoin);
 
-				// --- PHASE 2: MONITOR LOOP ---
-				if (SparkSettings.instance.questSpectatorAutoJoin)
-				{
-					string lastAttemptedSessionId = initialLobbyId;
-
-					using (WebClient client = new WebClient())
-					{
-						while (Program.running)
-						{
-							try
-							{
-								// STEP 1: Check Local State (Are we already with the player?)
-								bool targetInLocalMatch = false;
-								if (Program.lastFrame != null && !string.IsNullOrEmpty(Program.lastFrame.sessionid))
-								{
-									// Check if the target is in our current player list
-									var allPlayers = Program.lastFrame.GetAllPlayers();
-									if (allPlayers.Any(p => string.Equals(p.name, targetName, StringComparison.OrdinalIgnoreCase)))
-									{
-										targetInLocalMatch = true;
-									}
-								}
-
-								// IF FOUND LOCALLY: Do nothing, just wait. We are where we want to be.
-								if (targetInLocalMatch)
-								{
-									// Clear the last attempted ID so if they leave and rejoin the same server, we can follow.
-									lastAttemptedSessionId = ""; 
-									await Task.Delay(3000);
-									continue; 
-								}
-
-								// STEP 2: Target NOT in local match. Search API.
-								// We only query the API if the player is missing locally.
-								
-								string json = await client.DownloadStringTaskAsync("https://g.echovrce.com/status/matches");
-								JObject data = JObject.Parse(json);
-								JArray labels = (JArray)data["labels"];
-								
-								if (labels != null)
-								{
-									foreach (var server in labels)
-									{
-										var players = server["players"] as JArray;
-										if (players != null)
-										{
-											bool targetHere = false;
-											bool spectatorHere = false;
-
-											foreach (var p in players)
-											{
-												string pName = (string)p["display_name"];
-												if (string.Equals(pName, targetName, StringComparison.OrdinalIgnoreCase)) targetHere = true;
-												if (string.Equals(pName, spectatorName, StringComparison.OrdinalIgnoreCase)) spectatorHere = true;
-											}
-
-											if (targetHere)
-											{
-												string serverId = (string)server["id"];
-
-												// JOIN CRITERIA:
-												// 1. We aren't already trying to join this specific server (Loop protection)
-												// 2. The API doesn't see us inside that server already (Safeguard)
-												// 3. Our local game isn't already in that session (Double check)
-												
-												if (serverId != lastAttemptedSessionId && !spectatorHere)
-												{
-													if (Program.lastFrame == null || Program.lastFrame.sessionid != serverId)
-													{
-														Logger.LogRow(Logger.LogType.Info, $"Quest Spectator: Found {targetName} in {serverId}. Joining...");
-														
-														lastAttemptedSessionId = serverId;
-														await Program.APIJoin(serverId);
-
-														// Wait for join to process
-														await Task.Delay(5000);
-														
-														// Force Camera Lock
-														Application.Current.Dispatcher.Invoke(() => {
-															CameraWriteController.UseCameraControlKeys();
-														});
-													}
-												}
-												break; // Found them, stop checking other servers
-											}
-										}
-									}
-								}
-								// If target not found in API, we simply loop again. We stay in the current match (if any).
-							}
-							catch (Exception ex)
-							{
-								Console.WriteLine($"Quest Spectator Loop Error: {ex.Message}");
-							}
-
-							await Task.Delay(3000);
-						}
-					}
-				}
-			});
+			UpdateQuestSpectatorRunningUI();
 		}
 		
 		private async void FindQuestClick(object sender, RoutedEventArgs e)
@@ -691,6 +642,34 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 			}
 		}
 
+		public static bool PingSpike
+		{
+			get => SparkSettings.instance.pingSpikeTTS;
+			set
+			{
+				SparkSettings.instance.pingSpikeTTS = value;
+
+				if (value)
+				{
+					Program.synth.SpeakAsync($"NtsFranz's ping spiked to 150");
+				}
+			}
+		}
+
+		public static bool TTSSpecificNumbers
+		{
+			get => SparkSettings.instance.ttsSpecific;
+			set
+			{
+				SparkSettings.instance.ttsSpecific = value;
+
+				if (value)
+				{
+					Program.synth.SpeakAsync("18.67");
+				}
+			}
+		}
+
 		#endregion
 
 
@@ -839,6 +818,7 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 					discholderFollowTeamCheckbox.Visibility = Visibility.Collapsed;
 					discholderFollowCameraModeLabel.Visibility = Visibility.Collapsed;
 					discholderFollowCameraModeDropdown.Visibility = Visibility.Collapsed;
+					goProCameraPanel.Visibility = Visibility.Collapsed;
 					break;
 				case 2:
 					followSpecificPlayerPanel.Visibility = Visibility.Collapsed;
@@ -847,6 +827,7 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 					discholderFollowTeamCheckbox.Visibility = Visibility.Collapsed;
 					discholderFollowCameraModeLabel.Visibility = Visibility.Collapsed;
 					discholderFollowCameraModeDropdown.Visibility = Visibility.Collapsed;
+					goProCameraPanel.Visibility = Visibility.Collapsed;
 					break;
 				case 3:
 					followSpecificPlayerPanel.Visibility = Visibility.Visible;
@@ -855,6 +836,7 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 					discholderFollowTeamCheckbox.Visibility = Visibility.Collapsed;
 					discholderFollowCameraModeLabel.Visibility = Visibility.Collapsed;
 					discholderFollowCameraModeDropdown.Visibility = Visibility.Collapsed;
+					goProCameraPanel.Visibility = Visibility.Collapsed;
 					break;
 				case 4:
 					followSpecificPlayerPanel.Visibility = Visibility.Collapsed;
@@ -863,6 +845,16 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 					discholderFollowTeamCheckbox.Visibility = Visibility.Visible;
 					discholderFollowCameraModeLabel.Visibility = Visibility.Visible;
 					discholderFollowCameraModeDropdown.Visibility = Visibility.Visible;
+					goProCameraPanel.Visibility = Visibility.Collapsed;
+					break;
+				case 5:
+					followSpecificPlayerPanel.Visibility = Visibility.Collapsed;
+					followCameraModeLabel.Visibility = Visibility.Collapsed;
+					followCameraModeDropdown.Visibility = Visibility.Collapsed;
+					discholderFollowTeamCheckbox.Visibility = Visibility.Collapsed;
+					discholderFollowCameraModeLabel.Visibility = Visibility.Collapsed;
+					discholderFollowCameraModeDropdown.Visibility = Visibility.Collapsed;
+					goProCameraPanel.Visibility = Visibility.Visible;
 					break;
 			}
 		}
@@ -1225,6 +1217,7 @@ private void LaunchQuestSpectator(object sender, RoutedEventArgs e)
 		private void PresetRed_Click       (object s, RoutedEventArgs e) => ApplyPreset("#b70004", "#df0005", "#ff7174");
 		private void PresetYellow_Click    (object s, RoutedEventArgs e) => ApplyPreset("#fab011", "#fcc520", "#fcde64");
 		private void PresetPink_Click      (object s, RoutedEventArgs e) => ApplyPreset("#c32b61", "#ea6192", "#ffaac9");
+		private void PresetPVU_Click      (object s, RoutedEventArgs e) => ApplyPreset("#022432", "#011720", "#ADD8E6");
 
 		// ─── Apply / Reset ──────────────────────────────────────────────────────
 		private void ApplyTheme_Click(object sender, RoutedEventArgs e)

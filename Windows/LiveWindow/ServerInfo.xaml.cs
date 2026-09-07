@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -72,21 +72,21 @@ namespace Spark
 						orangePlayerPingsNamesServerInfoTab.Text = playerNames[Team.TeamColor.orange].ToString();
 						orangePlayerPingsPingsServerInfoTab.Text = playerPings[Team.TeamColor.orange].ToString();
 
-						string playerPingsHeader;
+						string scoreText;
 
 						if (Program.CurrentRound.serverScore > 0)
 						{
-							playerPingsHeader = $"{Properties.Resources.Player_Pings}   {Properties.Resources.Score_} {Program.CurrentRound.smoothedServerScore:N1}";
+							scoreText = $"{Properties.Resources.Score_} {Program.CurrentRound.smoothedServerScore:N1}";
 						}
 						else if (Math.Abs(Program.CurrentRound.serverScore - (-1)) < .1f)
 						{
-							playerPingsHeader = $"{Properties.Resources.Player_Pings}     >150";
+							scoreText = ">150";
 						}
 						else
 						{
-							playerPingsHeader = $"{Properties.Resources.Player_Pings}   {Properties.Resources.Score_} --";
+							scoreText = $"{Properties.Resources.Score_} --";
 						}
-						playerPingsGroupboxServerInfoTab.Header = playerPingsHeader;
+						serverScoreValueText.Text = scoreText;
 						
 					}
 				});
@@ -96,18 +96,13 @@ namespace Spark
 		private void UpdateServerLocations(string resp)
 		{
 			Dictionary<string, dynamic> obj = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(resp);
-			if (obj == null) return;
+			if (obj == null || !obj.ContainsKey("ip-api")) return;
 			string txt = @$"IP:	{obj["ip-api"]["query"]}
 
 ip-api.com
 City:	{obj["ip-api"]["city"]}, {obj["ip-api"]["regionName"]}, {obj["ip-api"]["country"]}
 Org:	{obj["ip-api"]["org"]}
 ISP:	{obj["ip-api"]["isp"]}
-
-ipdata.co
-City:	{obj["ipdata"]["city"] ?? "?"}, {obj["ipdata"]["region"] ?? "?"}, {obj["ipdata"]["country_name"]}
-Org:	{obj["ipdata"]["asn"]?["name"]}
-Domain:	{obj["ipdata"]["asn"]?["domain"]}
 
 {JsonConvert.SerializeObject(obj, Formatting.Indented)}
 ";

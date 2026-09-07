@@ -48,7 +48,7 @@
   <PropertyGroup>
     <WapProjPath Condition="'$(WapProjPath)'==''">$(MSBuildExtensionsPath)\Microsoft\DesktopBridge\</WapProjPath>
   </PropertyGroup>
-  <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.props" />
+  <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.props" Condition="Exists('$(WapProjPath)\Microsoft.DesktopBridge.props')" />
   <PropertyGroup>
     <ProjectGuid>bd942588-d1e6-494e-bfce-f588bc1c153d</ProjectGuid>
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
@@ -155,7 +155,7 @@
     <None Include="SparkMSIX_TemporaryKey.pfx" />
     <None Include="Package.StoreAssociation.xml" />
   </ItemGroup>
-  <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" />
+  <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" Condition="Exists('$(WapProjPath)\Microsoft.DesktopBridge.targets')" />
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1" PrivateAssets="all" />
   </ItemGroup>
@@ -164,4 +164,11 @@
       <SkipGetTargetFrameworkProperties>True</SkipGetTargetFrameworkProperties>
     </ProjectReference>
   </ItemGroup>
+  
+  <!-- Add dummy targets when Microsoft.DesktopBridge.targets is not imported so dotnet build won't fail -->
+  <Target Name="Build" Condition="!Exists('$(WapProjPath)\Microsoft.DesktopBridge.targets')" />
+  <Target Name="Clean" Condition="!Exists('$(WapProjPath)\Microsoft.DesktopBridge.targets')" />
+  <Target Name="Rebuild" Condition="!Exists('$(WapProjPath)\Microsoft.DesktopBridge.targets')" />
+  <Target Name="Publish" Condition="!Exists('$(WapProjPath)\Microsoft.DesktopBridge.targets')" />
+  
 </Project>

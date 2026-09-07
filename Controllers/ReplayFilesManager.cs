@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -17,6 +17,7 @@ namespace Spark
 	{
 		private ButterFile butter;
 		public string fileName;
+		private ulong tapeHandle = 0;
 
 		private readonly object butterWritingLock = new object();
 		private readonly object fileWritingLock = new object();
@@ -41,9 +42,10 @@ namespace Spark
 		private const string fileNameFormat = "rec_yyyy-MM-dd_HH-mm-ss";
 
 		private int lastButterNumChunks;
-		private static readonly List<float> fullDeltaTimes = new List<float> { 33.3333333f, 66.666666f, 100 };
-		private static int FrameInterval => Math.Clamp((int)(fullDeltaTimes[SparkSettings.instance.targetDeltaTimeIndexFull] / Program.StatsIntervalMs), 1, 10000);
-		private int frameIndex;
+		private static readonly List<float> fullDeltaTimes = new List<float> { 16.6666666f, 33.3333333f, 100f };
+		private static float TargetDeltaTime => SparkSettings.instance.targetDeltaTimeIndexFull < fullDeltaTimes.Count ? fullDeltaTimes[SparkSettings.instance.targetDeltaTimeIndexFull] : 33.3333333f;
+		private DateTime lastRecordedEchoreplayTime = DateTime.MinValue;
+		private DateTime lastRecordedButterTime = DateTime.MinValue;
 
 		public ReplayFilesManager()
 		{
@@ -112,15 +114,14 @@ namespace Spark
 
 		private void AddEchoreplayFrame(DateTime timestamp, string session, string bones)
 		{
-			frameIndex++;
-
 			if (!SparkSettings.instance.enableReplayBuffer)
 			{
 				if (!SparkSettings.instance.enableFullLogging) return;
-				if (!SparkSettings.instance.saveEchoreplayFiles) return;
+				if (!SparkSettings.instance.saveEchoreplayFiles && !SparkSettings.instance.saveTapeFiles) return;
 			}
 
-			if (frameIndex % FrameInterval != 0) return;
+			if ((timestamp - lastRecordedEchoreplayTime).TotalMilliseconds < TargetDeltaTime * 0.85f) return;
+			lastRecordedEchoreplayTime = timestamp;
 
 			try
 			{
@@ -143,11 +144,13 @@ namespace Spark
 						string lineToWrite = bones != null 
 							? $"{timestamp.ToString(echoreplayDateFormat)}\t{session}\t{bones}"
 							: $"{timestamp.ToString(echoreplayDateFormat)}\t{session}";
+							
+						long unixTimeMs = ((DateTimeOffset)timestamp).ToUnixTimeMilliseconds();
 
 						// Offload IO to background thread without blocking main thread
                         if (!writeQueue.IsAddingCompleted)
                         {
-						    writeQueue.Add(() => WriteEchoreplayLineDirect(lineToWrite));
+						    writeQueue.Add(() => WriteEchoreplayLineDirect(lineToWrite, session, unixTimeMs));
                         }
 					}
 				}
@@ -178,7 +181,8 @@ namespace Spark
 			if (!SparkSettings.instance.enableFullLogging) return;
 			if (!SparkSettings.instance.saveButterFiles) return;
 
-			if (frameIndex % FrameInterval != 0) return;
+			if ((f.recorded_time - lastRecordedButterTime).TotalMilliseconds < TargetDeltaTime * 0.85f) return;
+			lastRecordedButterTime = f.recorded_time;
 			
             if (!writeQueue.IsAddingCompleted)
             {
@@ -210,17 +214,25 @@ namespace Spark
 			}
 		}
 
-		private void WriteEchoreplayLineDirect(string line)
+		private void WriteEchoreplayLineDirect(string line, string session, long unixTimeMs)
 		{
 			lock (fileWritingLock)
 			{
 				if (!Directory.Exists(SparkSettings.instance.saveFolder)) return;
 
-				string filePath = Path.Combine(SparkSettings.instance.saveFolder, fileName + ".echoreplay");
-				
-				using (StreamWriter streamWriter = new StreamWriter(filePath, true))
+				if (SparkSettings.instance.saveEchoreplayFiles)
 				{
-					streamWriter.WriteLine(line);
+					string filePath = Path.Combine(SparkSettings.instance.saveFolder, fileName + ".echoreplay");
+					
+					using (StreamWriter streamWriter = new StreamWriter(filePath, true))
+					{
+						streamWriter.WriteLine(line);
+					}
+				}
+				
+				if (SparkSettings.instance.saveTapeFiles && tapeHandle != 0)
+				{
+					TapeFFI.TapeWriteFrame(tapeHandle, unixTimeMs, session);
 				}
 			}
 		}
@@ -293,6 +305,18 @@ namespace Spark
 				{
 					string lastFilename = fileName;
 					fileName = DateTime.Now.ToString(fileNameFormat);
+
+					if (tapeHandle != 0)
+					{
+						TapeFFI.TapeClose(tapeHandle);
+						tapeHandle = 0;
+					}
+
+					if (SparkSettings.instance.saveTapeFiles && !string.IsNullOrEmpty(SparkSettings.instance.saveFolder) && Directory.Exists(SparkSettings.instance.saveFolder))
+					{
+						string tapePath = Path.Combine(SparkSettings.instance.saveFolder, fileName + ".tape");
+						tapeHandle = TapeFFI.TapeCreate(tapePath, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+					}
 
 					if (SparkSettings.instance.useCompression && !string.IsNullOrEmpty(lastFilename))
 					{

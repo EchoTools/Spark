@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -339,25 +339,25 @@ public class Logger
 
 		return; // TODO This was uploading *super* often for some reason
 
-		var values = new Dictionary<string, string>
-		{
-			{ passwordField, SecretKeys.webLogPassword },
-			{ "file", name },
-			{ "data", data },
-			{ "folder", appName }
-		};
-		try
-		{
-			var content = new FormUrlEncodedContent(values);
-			// var response = await client.PostAsync(SecretKeys.webLogURL, content);
-			// if (!response.IsSuccessStatusCode)
-			// {
-			// 	Console.WriteLine(response.Content.ToString());
-			// }
-		}
-		catch (Exception e)
-		{
-			Console.WriteLine("Cound not upload log to the server: " + data.Substring(0, data.Length > 1000 ? 1000 : data.Length) + "\n Error: " + e);
-		}
+		// var values = new Dictionary<string, string>
+		// {
+		// 	{ passwordField, SecretKeys.webLogPassword },
+		// 	{ "file", name },
+		// 	{ "data", data },
+		// 	{ "folder", appName }
+		// };
+		// try
+		// {
+		// 	var content = new FormUrlEncodedContent(values);
+		// 	// var response = await client.PostAsync(SecretKeys.webLogURL, content);
+		// 	// if (!response.IsSuccessStatusCode)
+		// 	// {
+		// 	// 	Console.WriteLine(response.Content.ToString());
+		// 	// }
+		// }
+		// catch (Exception e)
+		// {
+		// 	Console.WriteLine("Cound not upload log to the server: " + data.Substring(0, data.Length > 1000 ? 1000 : data.Length) + "\n Error: " + e);
+		// }
 	}
 }

@@ -28,6 +28,43 @@
     <Style TargetType="{x:Type Control}" BasedOn="{StaticResource ModernTypography}" />
 
 
+    <!-- Derived palette. ThemesController.ApplyDerivedPalette overwrites every one of these at
+         startup from the user's three colours; the values here are the default Stealth Gray
+         result, so anything binding them still renders if that pass is ever skipped. -->
+    <SolidColorBrush x:Key="SurfaceGround"                       Color="#FF151515" />
+    <SolidColorBrush x:Key="SurfaceChrome"                       Color="#FF1E1E1E" />
+    <SolidColorBrush x:Key="SurfaceCard"                         Color="#FF262626" />
+    <SolidColorBrush x:Key="SurfaceRaised"                       Color="#FF303030" />
+    <SolidColorBrush x:Key="SurfaceBorderSoft"                   Color="#FF2C2C2C" />
+    <SolidColorBrush x:Key="SurfaceBorder"                       Color="#FF3B3B3B" />
+    <SolidColorBrush x:Key="SurfaceTrack"                        Color="#FF434343" />
+
+    <SolidColorBrush x:Key="TextPrimary"                         Color="#FFECECEC" />
+    <SolidColorBrush x:Key="TextDim"                             Color="#FFA5A5A5" />
+    <SolidColorBrush x:Key="TextFaint"                           Color="#FF787878" />
+    <SolidColorBrush x:Key="ControlPrimaryForeground"            Color="#FFECECEC" />
+    <SolidColorBrush x:Key="ControlAccentForeground"             Color="#FFECECEC" />
+    <SolidColorBrush x:Key="ControlAccent"                       Color="#FF3E3E3E" />
+
+    <SolidColorBrush x:Key="TeamBlue"                            Color="#FF6E93D6" />
+    <SolidColorBrush x:Key="TeamBlueTint"                        Color="#FF23293A" />
+    <SolidColorBrush x:Key="TeamBlueEdge"                        Color="#FF34405C" />
+    <SolidColorBrush x:Key="TeamBlueForeground"                  Color="#FF14161A" />
+    <SolidColorBrush x:Key="TeamOrange"                          Color="#FFD4941E" />
+    <SolidColorBrush x:Key="TeamOrangeTint"                      Color="#FF33291A" />
+    <SolidColorBrush x:Key="TeamOrangeEdge"                      Color="#FF54401D" />
+    <SolidColorBrush x:Key="TeamOrangeForeground"                Color="#FF14161A" />
+
+    <SolidColorBrush x:Key="StatusGood"                          Color="#FF7E9E5E" />
+    <SolidColorBrush x:Key="StatusGoodTint"                      Color="#FF1E241A" />
+    <SolidColorBrush x:Key="StatusGoodEdge"                      Color="#FF344023" />
+    <SolidColorBrush x:Key="StatusWarn"                          Color="#FFC9A227" />
+    <SolidColorBrush x:Key="StatusWarnTint"                      Color="#FF322C1A" />
+    <SolidColorBrush x:Key="StatusWarnEdge"                      Color="#FF54481E" />
+    <SolidColorBrush x:Key="StatusBad"                           Color="#FFC07A4A" />
+    <SolidColorBrush x:Key="StatusBadTint"                       Color="#FF2C221C" />
+    <SolidColorBrush x:Key="StatusBadEdge"                       Color="#FF4C3A2A" />
+
     <SolidColorBrush x:Key="ControlDarkerBackground"             Color="#FF1A1A1A" />
     <SolidColorBrush x:Key="ControlDarkerBorderBrush"            Color="#FF2A2A2A" />
     <SolidColorBrush x:Key="ControlDefaultBackground"            Color="#FF2D2D2D" />

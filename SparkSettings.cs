@@ -45,6 +45,7 @@ namespace Spark
 
 		public bool startOnBoot { get; set; } = false;
 		public bool startMinimized { get; set; } = false;
+		public bool closeButtonExitsApp { get; set; } = false;
 		public bool autoRestart { get; set; } = false;
 		public bool capturevp2 { get; set; } = false;
 		public bool capturevp2VR { get; set; } = false;
@@ -67,7 +68,24 @@ namespace Spark
 		public bool uploadToFirestore { get; set; } = true;
 		public bool saveEventsToCSV { get; set; } = false;
 		public bool fetchBones { get; set; } = false;
+		// Simple Spectate Mode — called Quest Spectator when these were added. The keys keep the old
+		// name because they're persisted in settings.json; renaming them would silently reset
+		// everyone's saved choices.
 		public bool questSpectatorAutoJoin { get; set; } = true;
+		public bool questSpectatorAnonymous { get; set; } = true;
+		public bool questSpectatorFollowSelf { get; set; } = false;
+
+		/// <summary>Cumulative wall-clock seconds Spark has been running across every past launch, not counting the current one — see LiveWindow.UpdateSessionCard.</summary>
+		public double totalPlaytimeSeconds { get; set; } = 0;
+
+		/// <summary>
+		/// Contribute <see cref="totalPlaytimeSeconds"/> to the community-wide playtime total shown
+		/// on the Session card, and to the public leaderboard. Sends the Discord name (falling back
+		/// to <see cref="client_name"/> when not logged in), an anonymous per-install hash and a
+		/// seconds count — see Program.LeaderboardDisplayName and Program.ReportPlaytime. Turning
+		/// this off stops reporting but still shows the global figure.
+		/// </summary>
+		public bool shareGlobalPlaytime { get; set; } = true;
 
 		/// <summary>
 		/// Enable replay files
@@ -83,6 +101,7 @@ namespace Spark
 		public int whenToSplitReplays { get; set; } = 0;
 		public ButterFile.CompressionFormat butterCompressionFormat { get; set; } = ButterFile.CompressionFormat.gzip;
 		public bool saveButterFiles { get; set; } = false;
+		public bool saveTapeFiles { get; set; } = false;
 		public bool saveEchoreplayFiles { get; set; } = true;
 		public bool showConsoleOnStart { get; set; } = false;
 		public bool outputGameStateEvents { get; set; } = true;
@@ -133,6 +152,9 @@ namespace Spark
 		public bool hideEchoVRUI { get; set; } = false;
 		public int followPlayerCameraMode { get; set; } = 0;
 		public string followPlayerName { get; set; } = "";
+		public int goProTargetHand { get; set; } = 0;
+		public float goProWiderFov { get; set; } = 100f;
+		public string goProPlayerName { get; set; } = "";
 		public bool discHolderFollowRestrictTeam { get; set; } = false;
 		public int discHolderFollowCamMode { get; set; } = 0;
 		public bool toggleMinimapAfterGoals { get; set; } = false;
@@ -156,9 +178,9 @@ namespace Spark
 		public string webBrowserHomeURL { get; set; } = "https://discord.com/app";
 		public bool showDashboardTab { get; set; } = true;
 		public bool showPortalTab { get; set; } = true;
-		public bool showWebBrowserTab { get; set; } = false;
+		public bool showWebBrowserTab { get; set; } = true;
 		public bool showDownloadEchoVRTab { get; set; } = true;
-		public bool showLinksTab { get; set; } = true;
+		public bool showLinksTab { get; set; } = false;
 		public bool showEventLogTab { get; set; } = true;
 		public bool showScoreboardTab { get; set; } = false;
 		public bool showSpeakerSystemTab { get; set; } = true;
@@ -171,6 +193,9 @@ namespace Spark
 		public bool showFriendsTab { get; set; } = true;
 		public string myFriendCode { get; set; } = "";
 		public List<string> friendCodes { get; set; } = new List<string>();
+		public string ignoredUpdateVersion { get; set; } = "";
+		public bool combatUpdatePopupShown { get; set; } = false;
+		public bool combatAPIDismissed { get; set; } = false;
 
 
 
@@ -195,6 +220,8 @@ namespace Spark
 		public int ttsVoice { get; set; } = 0;
 		public string ttsCacheFolder { get; set; } = "";
 		public int ttsCacheSizeBytes { get; set; } = 100000000;
+		public bool pingSpikeTTS { get; set; } = false;
+		public bool ttsSpecific { get; set; } = false;
 
 		#endregion
 
@@ -423,6 +450,48 @@ namespace Spark
 
 		public static SparkSettings instance;
 
+		#region Migrations
+
+		/// <summary>
+		/// Bump this when adding a migration below. Settings files written before migrations existed
+		/// have no <see cref="settingsVersion"/> key at all, and Json.NET leaves absent keys at their
+		/// initialiser — so this has to default to 0, not to the current version, or every existing
+		/// file would claim to be up to date.
+		/// </summary>
+		private const int CurrentSettingsVersion = 1;
+
+		public int settingsVersion { get; set; } = 0;
+
+		/// <summary>
+		/// Brings an older settings file up to date.
+		///
+		/// Changing a property's default only affects fresh installs: Save() writes every property,
+		/// so an existing settings.json already has an explicit value for it and deserialisation puts
+		/// that back over the new default. Anything that needs to reach people who already have a
+		/// settings file has to be applied here instead.
+		///
+		/// Each step runs once. The version is stamped and saved immediately afterwards, so a user
+		/// who undoes one of these changes doesn't get it forced on them again next launch.
+		/// </summary>
+		private static void Migrate()
+		{
+			if (instance == null) return;
+			if (instance.settingsVersion >= CurrentSettingsVersion) return;
+
+			// v1 — the Friends tab shipped hidden, then became a default-on feature. Existing users
+			// would otherwise never see it, since their file pins it to the old default.
+			if (instance.settingsVersion < 1)
+			{
+				instance.showFriendsTab = true;
+			}
+
+			Console.WriteLine($"Migrated settings from version {instance.settingsVersion} to {CurrentSettingsVersion}.");
+			instance.settingsVersion = CurrentSettingsVersion;
+			instance.Save();
+		}
+
+		#endregion
+
 
 		public void Save()
 		{
@@ -476,6 +545,17 @@ namespace Spark
 			{
 				Console.WriteLine($"Error reading settings file\n{e}");
 				instance = new SparkSettings();
+			}
+
+			try
+			{
+				Migrate();
+			}
+			catch (Exception e)
+			{
+				// A failed migration mustn't stop Spark from starting — worst case the user keeps
+				// their old value and we try again next launch.
+				Console.WriteLine($"Error migrating settings\n{e}");
 			}
 		}
 	}

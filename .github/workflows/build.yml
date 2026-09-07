@@ -1,0 +1,56 @@
+name: Build Spark
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore Dependencies
+      run: dotnet restore Spark.sln
+
+    - name: Build
+      run: dotnet build Spark.sln --configuration Release --no-restore
+
+    - name: Publish Framework-Dependent
+      run: dotnet publish Spark.csproj -c Release -p:PublishSingleFile=false --no-build -o ./publish-fd
+
+    - name: Publish Self-Contained
+      run: dotnet publish Spark.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish-sc
+
+    - name: Upload Framework-Dependent Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Spark-Framework-Dependent
+        path: ./publish-fd/
+        retention-days: 30
+
+    - name: Upload Self-Contained Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Spark-Self-Contained
+        path: ./publish-sc/
+        retention-days: 30

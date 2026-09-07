@@ -466,7 +466,7 @@ namespace Spark
 				{
 					try
 					{
-						Program.obs.ws.Connect(SparkSettings.instance.obsIP, SparkSettings.instance.obsPassword);
+						Program.obs.ws.ConnectAsync(SparkSettings.instance.obsIP, SparkSettings.instance.obsPassword);
 						// Program.obs.instance.GetReplayBufferStatus();
 					}
 					catch (AuthFailureException)
@@ -514,7 +514,7 @@ namespace Spark
 		{
 			if (!initialized) return;
 			TabControl control = (TabControl)sender;
-			clipsEventsBox.Header = $"Clip Settings ({((TabItem)control.SelectedValue).Header})";
+			clipsEventsBoxHeader.Text = $"CLIP SETTINGS ({((TabItem)control.SelectedValue).Header})".ToUpperInvariant();
 			clipsTab = (ClipsTab)control.SelectedIndex;
 
 			// if NV Highlights

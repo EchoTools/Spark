@@ -11,7 +11,7 @@ namespace Spark
 {
 	public static class OverlaysCustom
 	{
-		private static Dictionary<string, string> overlayData;
+
 		public static bool downloading;
 
 		public static async Task FetchOverlayData()

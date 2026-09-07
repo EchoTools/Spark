@@ -260,7 +260,15 @@
     let isLoading = true;
     let dirty = false;
     sw.subscribe("overlay_config", data => {
-        config = data;
+        if (!dirty) {
+            config = data;
+        } else {
+            // Only update non-text fields if the user is currently editing
+            config.visibility = data.visibility;
+            config.team_names_source = data.team_names_source;
+            config.round_scores = data.round_scores;
+            config.caster_prefs = data.caster_prefs;
+        }
         isLoading = false;
     });
     onMount(() => {
