@@ -29,6 +29,16 @@ namespace Spark
 		private const string PublicMatchesUrl = "https://g.echovrce.com/status/matches";
 		private const int PollMs = 3000;
 
+		/// <summary>
+		/// How long to let a freshly launched EchoVR come up before treating it as failed. A cold
+		/// start runs to tens of seconds, far past <see cref="PollMs"/>, so the follow loop has to
+		/// wait this out rather than deciding a client that hasn't answered yet is dead.
+		/// </summary>
+		private const int ClientBootSeconds = 120;
+
+		/// <summary>How long to let a join settle before reading back which slot it landed in.</summary>
+		private const int SlotCheckDelayMs = 6000;
+
 		/// <summary>How long before a join to the same session is worth trying again.</summary>
 		private const int JoinRetrySeconds = 15;
 
@@ -112,27 +122,26 @@ namespace Spark
 
 		private async Task RunAsync(bool anonymous, bool autoJoin, CancellationToken token)
 		{
-			// Launching straight into the target's session saves a join round-trip when they're
-			// already somewhere; otherwise the client comes up in the menu and the loop moves it.
-			SetStatus($"Looking for {TargetName}...");
-			string initialSessionId = await ResolveTargetSessionAsync(token);
+			// Launched bare, with no session id. A spectator client isn't allowed to start with
+			// -lobbyid, so it comes up on -spectatorstream — which drops it into an unrelated
+			// public match — and is then moved into the target's session over the local HTTP API.
+			// That's the same join the follow loop makes for every later hop, so there's one code
+			// path for getting into a session rather than two.
+			SetStatus("Starting the spectator client...");
+			LaunchSpectator(anonymous);
+			DateTime lastLaunch = DateTime.UtcNow;
 
-			LaunchSpectator(initialSessionId, anonymous);
-
-			SetStatus(initialSessionId != null
-				? $"Launching into {TargetName}'s session..."
-				: $"Waiting for {TargetName} to join a session...");
-
-			if (!autoJoin)
+			// Nothing can be asked of the client until it answers on its HTTP port.
+			if (!await WaitForSpectatorAsync(lastLaunch, token))
 			{
-				// Nothing left to follow, but this Spark still owns a spectator client, so it stays
-				// "running" (and stays quiet about its own presence) until the user stops it.
-				SetStatus("Spectator launched. Auto-follow is off.");
+				SetStatus("The spectator client didn't start.");
 				return;
 			}
 
-			string lastAttemptSession = initialSessionId;
-			DateTime lastAttemptTime = DateTime.UtcNow;
+			SetStatus($"Looking for {TargetName}...");
+
+			string lastAttemptSession = null;
+			DateTime lastAttemptTime = DateTime.MinValue;
 
 			while (!token.IsCancellationRequested && Program.running)
 			{
@@ -161,13 +170,23 @@ namespace Spark
 
 					if (!clientAlive)
 					{
-						// The spectator client is gone — closed, crashed, or never came up. A join
-						// request has nothing to talk to, so bring it back straight into the session.
+						// A cold EchoVR start takes far longer than one poll, so a client that isn't
+						// answering yet is usually still booting rather than gone. Relaunching on
+						// the first silent poll is what made EchoVR open and close over and over:
+						// each pass killed a client that had never been given time to finish
+						// starting, so it never got far enough to answer.
+						if ((DateTime.UtcNow - lastLaunch).TotalSeconds < ClientBootSeconds)
+						{
+							SetStatus("Waiting for the spectator client to start...");
+							continue;
+						}
+
 						Logger.LogRow(Logger.LogType.File, LogFile, "Simple Spectate: spectator client not responding, relaunching.");
 						SetStatus("Restarting the spectator client...");
-						LaunchSpectator(targetSessionId, anonymous);
-						lastAttemptSession = targetSessionId;
-						lastAttemptTime = DateTime.UtcNow;
+						LaunchSpectator(anonymous);
+						lastLaunch = DateTime.UtcNow;
+						lastAttemptSession = null;
+						lastAttemptTime = DateTime.MinValue;
 						continue;
 					}
 
@@ -184,11 +203,21 @@ namespace Spark
 
 					lastAttemptSession = targetSessionId;
 					lastAttemptTime = DateTime.UtcNow;
-					await Program.APIJoin(targetSessionId, overrideIP: "127.0.0.1", overridePort: SPECTATOR_PORT);
+					bool joined = await JoinAsSpectatorAsync(targetSessionId, anonymous, token, SetStatus);
+					lastLaunch = DateTime.UtcNow;   // the join may have relaunched the client
 
 					await Task.Delay(5000, token);
 
 					Application.Current?.Dispatcher.Invoke(CameraWriteController.UseCameraControlKeys);
+
+					// "Keep following them between sessions" governs the later hops only. The first
+					// one always has to happen: -spectatorstream on its own leaves the client
+					// watching a public match that has nothing to do with the target.
+					if (joined && !autoJoin)
+					{
+						SetStatus($"Spectating {TargetName}. Auto-follow is off.");
+						return;
+					}
 				}
 				catch (OperationCanceledException)
 				{
@@ -298,13 +327,178 @@ namespace Spark
 			if (presence == null) return null;
 			if (presence["online"]?.Value<bool>() != true) return null;
 
-			string sessionId = presence["lobby_id"]?.ToString();
-			return string.IsNullOrEmpty(sessionId) ? null : sessionId.ToUpperInvariant();
+			return NormalizeSessionId(presence["lobby_id"]?.ToString());
+		}
+
+		/// <summary>
+		/// Session ids turn up either as a bare guid or as a guid with a trailing ".something".
+		/// The game wants the bare guid in upper case, which is the form the server browser sends.
+		/// </summary>
+		private static string NormalizeSessionId(string sessionId)
+		{
+			return string.IsNullOrEmpty(sessionId) ? null : sessionId.Split('.')[0].ToUpperInvariant();
 		}
 
 		// ─── The local spectator client ────────────────────────────────────────
 
-		private void LaunchSpectator(string sessionId, bool anonymous)
+		/// <summary>
+		/// Brings up a spectator client already sitting in <paramref name="sessionId"/>, for the
+		/// one-shot "spectate this" buttons that have no follow loop of their own.
+		///
+		/// The two steps can't be collapsed into a single launch: a spectator client isn't allowed
+		/// to start with -lobbyid, so it has to come up on -spectatorstream and be moved into the
+		/// session afterwards over its local HTTP API.
+		/// </summary>
+		/// <param name="anonymous">Passes -noovr, which also lets this run beside a playing client.</param>
+		public static async Task<bool> SpectateSessionAsync(string sessionId, bool anonymous, CancellationToken token = default)
+		{
+			if (string.IsNullOrEmpty(sessionId)) return false;
+
+			LaunchSpectatorClient(anonymous);
+
+			if (!await WaitForSpectatorClientAsync(DateTime.UtcNow, token, null))
+			{
+				Logger.LogRow(Logger.LogType.File, LogFile, "Simple Spectate: spectator client never came up, nothing to join into.");
+				return false;
+			}
+
+			bool joined = await JoinAsSpectatorAsync(NormalizeSessionId(sessionId), anonymous, token, null);
+			Logger.LogRow(Logger.LogType.File, LogFile, $"Simple Spectate: one-shot join into {sessionId} {(joined ? "succeeded" : "failed")}.");
+			return joined;
+		}
+
+		private void LaunchSpectator(bool anonymous) => LaunchSpectatorClient(anonymous);
+
+		/// <summary>
+		/// Whether the spectator client is actually in a spectator slot, or was seated as a player.
+		/// Null when it can't be told.
+		///
+		/// This has to be read back rather than assumed, because nothing in the join request steers
+		/// it. The server only resolves an unassigned entrant role for social and *public*
+		/// arena/combat lobbies (evr_match.go, the TeamUnassigned switch); a private arena falls
+		/// through, the role stays unassigned, and the game seats the client on a team. Asking for
+		/// a role in the join body does not help — team_idx -1, 2 and omitting it entirely all come
+		/// back as a player.
+		/// </summary>
+		private static async Task<bool?> IsInSpectatorSlotAsync()
+		{
+			try
+			{
+				string json = await FetchUtils.GetRequestAsync($"http://127.0.0.1:{SPECTATOR_PORT}/session", null);
+				if (string.IsNullOrEmpty(json) || json[0] != '{') return null;
+
+				JObject frame = JObject.Parse(json);
+				string me = frame["client_name"]?.ToString();
+				if (string.IsNullOrEmpty(me)) return null;
+				if (frame["teams"] is not JArray teams) return null;
+
+				for (int i = 0; i < teams.Count; i++)
+				{
+					if (teams[i]["players"] is not JArray players) continue;
+
+					foreach (JToken player in players)
+					{
+						if (!string.Equals(player["name"]?.ToString(), me, StringComparison.OrdinalIgnoreCase)) continue;
+
+						// teams[0] and teams[1] are the playing teams; anything after them is
+						// spectators, so landing outside the first two is the good case.
+						return i >= 2;
+					}
+				}
+
+				// In the session but on nobody's roster, which is what a spectator looks like.
+				return true;
+			}
+			catch (Exception)
+			{
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Whether the session is a public match. The match API lists exactly the public ones, so a
+		/// session it doesn't know about is private. Null when the lookup can't be completed.
+		/// </summary>
+		private static async Task<bool?> IsPublicSessionAsync(string sessionId)
+		{
+			try
+			{
+				string json = await FetchUtils.GetRequestAsync(PublicMatchesUrl, null);
+				if (string.IsNullOrEmpty(json)) return null;
+				if (JObject.Parse(json)["labels"] is not JArray labels) return null;
+
+				foreach (JToken server in labels)
+				{
+					if (SameSession(NormalizeSessionId((string)server["id"]), sessionId)) return true;
+				}
+
+				return false;
+			}
+			catch (Exception)
+			{
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Puts the spectator client into <paramref name="sessionId"/> as a spectator.
+		///
+		/// A private match has to be entered through the launch arguments. The join API carries no
+		/// role, and the server only resolves an unassigned role for social and *public*
+		/// arena/combat lobbies, so joining a private match that way gets the client seated on a
+		/// team instead — measured with team_idx -1, team_idx 2, and with the field omitted, all
+		/// three of which came back as a player. Pairing the session id with -spectatorstream at
+		/// launch is the only way into a private match as a spectator.
+		///
+		/// Public matches keep the join API, which is much cheaper: no client restart.
+		/// </summary>
+		private static async Task<bool> JoinAsSpectatorAsync(string sessionId, bool anonymous, CancellationToken token, Action<string> status)
+		{
+			if (await IsPublicSessionAsync(sessionId) == false)
+			{
+				Logger.LogRow(Logger.LogType.File, LogFile,
+					$"Simple Spectate: {sessionId} is a private match, launching into it rather than joining over the API.");
+				return await RelaunchIntoSessionAsync(sessionId, anonymous, token, status);
+			}
+
+			if (await Program.APISpectate(sessionId, overrideIP: "127.0.0.1", overridePort: SPECTATOR_PORT))
+			{
+				await Task.Delay(SlotCheckDelayMs, token);
+
+				bool? spectating = await IsInSpectatorSlotAsync();
+				if (spectating != false)
+				{
+					// Spectating, or the placement couldn't be read — either way don't churn the
+					// client on a guess.
+					return true;
+				}
+
+				Logger.LogRow(Logger.LogType.File, LogFile,
+					$"Simple Spectate: join to {sessionId} seated us as a player, relaunching into the session instead.");
+			}
+
+			// The match looked public, or we couldn't tell, and the join still didn't leave us
+			// spectating. Fall back to the launch that always works.
+			return await RelaunchIntoSessionAsync(sessionId, anonymous, token, status);
+		}
+
+		/// <summary>
+		/// Restarts the spectator client straight into <paramref name="sessionId"/>, pairing the
+		/// session id with -spectatorstream so the client is a spectator from the moment it loads.
+		/// Costs a client restart, which is why it isn't used for matches the API can handle.
+		/// </summary>
+		private static async Task<bool> RelaunchIntoSessionAsync(string sessionId, bool anonymous, CancellationToken token, Action<string> status)
+		{
+			status?.Invoke("Restarting the spectator client into the session...");
+			LaunchSpectatorClient(anonymous, sessionId);
+
+			if (!await WaitForSpectatorClientAsync(DateTime.UtcNow, token, status)) return false;
+
+			await Task.Delay(SlotCheckDelayMs, token);
+			return await IsInSpectatorSlotAsync() != false;
+		}
+
+		private static void LaunchSpectatorClient(bool anonymous, string sessionId = null)
 		{
 			try { Program.KillEchoVR($"-httpport {SPECTATOR_PORT}"); }
 			catch (Exception e)
@@ -316,6 +510,10 @@ namespace Spark
 
 			try
 			{
+				// sessionId is normally null, so this comes up on -spectatorstream alone and is
+				// moved into the target's session by the join. It is only passed — becoming
+				// -lobbyid — when that join seated us as a player and there is nothing else left
+				// to try. See JoinAsSpectatorAsync.
 				Program.StartEchoVR(
 					Program.JoinType.Spectator,
 					port: SPECTATOR_PORT,
@@ -326,6 +524,29 @@ namespace Spark
 			{
 				Logger.LogRow(Logger.LogType.Error, $"Simple Spectate: failed to launch the spectator client.\n{e}");
 			}
+		}
+
+		/// <summary>
+		/// Waits for a freshly launched spectator client to start answering on its HTTP port.
+		/// False means it never did within <see cref="ClientBootSeconds"/>.
+		/// </summary>
+		private Task<bool> WaitForSpectatorAsync(DateTime launchedAt, CancellationToken token)
+			=> WaitForSpectatorClientAsync(launchedAt, token, SetStatus);
+
+		private static async Task<bool> WaitForSpectatorClientAsync(DateTime launchedAt, CancellationToken token, Action<string> status)
+		{
+			while (!token.IsCancellationRequested && Program.running)
+			{
+				(bool alive, string _) = await GetSpectatorStateAsync();
+				if (alive) return true;
+
+				if ((DateTime.UtcNow - launchedAt).TotalSeconds > ClientBootSeconds) return false;
+
+				status?.Invoke("Waiting for the spectator client to start...");
+				await Task.Delay(PollMs, token);
+			}
+
+			return false;
 		}
 
 		/// <summary>

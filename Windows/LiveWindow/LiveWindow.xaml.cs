@@ -181,6 +181,9 @@ namespace Spark
         [DllImport("user32.dll")]
         public static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, out uint ProcessId);
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
 
@@ -450,12 +453,66 @@ namespace Spark
             SendMessage(unityHWND, WM_ACTIVATE, WA_ACTIVE, IntPtr.Zero);
         }
 
+        /// <summary>
+        /// Finds the Speaker System window among the children of <paramref name="parent"/>.
+        ///
+        /// Unity reparents itself into Spark because of -parentHWND, but the window does
+        /// not exist the moment WaitForInputIdle returns, and Spark's window has several
+        /// other native children (a Static, and WebView2's Chrome_* windows for the
+        /// Browser tab). The old code took whichever child enumerated first and stopped,
+        /// which picked the Static and repositioned that instead - leaving the Unity view
+        /// at its default 1280x720 off in the corner, and the Speaker panel black.
+        /// </summary>
+        private IntPtr FindSpeakerSystemChild(IntPtr parent, int essPid)
+        {
+            IntPtr found = IntPtr.Zero;
+            EnumChildWindows(parent, (hwnd, lparam) =>
+            {
+                uint pid;
+                GetWindowThreadProcessId(hwnd, out pid);
+                if (pid != (uint)essPid) return 1;
+
+                StringBuilder cls = new StringBuilder(256);
+                GetClassName(hwnd, cls, cls.Capacity);
+                if (cls.ToString() != "UnityWndClass") return 1;
+
+                found = hwnd;
+                return 0;
+            }, IntPtr.Zero);
+            return found;
+        }
+
         private int WindowEnum(IntPtr hwnd, IntPtr lparam)
         {
+            // Kept for the delegate signature; the real lookup is FindSpeakerSystemChild.
             unityHWND = hwnd;
-            //ActivateUnityWindow();
-            MoveSpeakerSystemWindow();
             return 0;
+        }
+
+        /// <summary>
+        /// Positions the embedded Unity window over the Speaker panel. Must run on the UI
+        /// thread - it reads WPF layout - and converts to physical pixels, because
+        /// MoveWindow works in pixels while WPF reports device-independent units.
+        /// </summary>
+        private void MoveSpeakerSystemWindow()
+        {
+            if (unityHWND == IntPtr.Zero) return;
+
+            double scaleX = 1.0, scaleY = 1.0;
+            PresentationSource src = PresentationSource.FromVisual(this);
+            if (src != null && src.CompositionTarget != null)
+            {
+                scaleX = src.CompositionTarget.TransformToDevice.M11;
+                scaleY = src.CompositionTarget.TransformToDevice.M22;
+            }
+
+            Point origin = speakerSystemPanel.TransformToAncestor(this).Transform(new Point(0, 0));
+            MoveWindow(unityHWND,
+                (int)(origin.X * scaleX), (int)(origin.Y * scaleY),
+                (int)(speakerSystemPanel.ActualWidth * scaleX),
+                (int)(speakerSystemPanel.ActualHeight * scaleY),
+                true);
+            ActivateUnityWindow();
         }
 
         private void speakerSystemPanel_Resize(object sender, EventArgs e)
@@ -465,24 +522,6 @@ namespace Spark
             Point relativePoint = speakerSystemPanel.TransformToAncestor(this).Transform(new Point(0, 0));
             MoveWindow(unityHWND, (int)relativePoint.X, (int)relativePoint.Y, (int)speakerSystemPanel.ActualWidth, (int)speakerSystemPanel.ActualHeight, true);
             ActivateUnityWindow();
-        }
-
-        private void MoveSpeakerSystemWindow()
-        {
-            //Wait until unity app is ready to be resized
-            int count = 0;
-            while (((int)GetWindowLongPtr(unityHWND, GWL_USERDATA) & UNITY_READY) != 1 && count < 40)
-            {
-                count++;
-                Thread.Sleep(150);
-            }
-
-            ActivateUnityWindow();
-            startStopEchoSpeakerSystem.IsEnabled = true;
-            Point relativePoint = speakerSystemPanel.TransformToAncestor(this)
-                .Transform(new Point(0, 0));
-
-            MoveWindow(unityHWND, Convert.ToInt32(relativePoint.X), Convert.ToInt32(relativePoint.Y), Convert.ToInt32(speakerSystemPanel.ActualWidth), Convert.ToInt32(speakerSystemPanel.ActualHeight), true);
         }
 
         private void liveWindow_FormClosed(object sender, EventArgs e)
@@ -2775,11 +2814,13 @@ namespace Spark
         private void speakerSystemPanel_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             if (!speakerSystemPanel.IsVisible) return;
-            if (SpeakerSystemProcess == null || SpeakerSystemProcess.Handle.ToInt32() <= 0) return;
 
+            // These depend only on what is installed, not on whether Speaker System is
+            // currently running. They used to sit below an early return that fired when
+            // the process was null, so the update button kept its XAML default (Visible)
+            // and showed even when the installed version was already current.
             try
             {
-                LogRow(LogType.Info, AppContext.BaseDirectory);
                 if (Program.InstalledSpeakerSystemVersion.Length > 0)
                 {
                     installEchoSpeakerSystem.Visibility = Visibility.Hidden;
@@ -2792,14 +2833,9 @@ namespace Spark
                     startStopEchoSpeakerSystem.Visibility = Visibility.Hidden;
                 }
 
-                if (Program.IsSpeakerSystemUpdateAvailable)
-                {
-                    updateEchoSpeakerSystem.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    updateEchoSpeakerSystem.Visibility = Visibility.Hidden;
-                }
+                updateEchoSpeakerSystem.Visibility = Program.IsSpeakerSystemUpdateAvailable
+                    ? Visibility.Visible
+                    : Visibility.Hidden;
             }
             catch (Exception ex)
             {
@@ -2846,14 +2882,53 @@ namespace Spark
 
         public void SpeakerSystemStart(IntPtr unityHandle)
         {
-            Dispatcher.Invoke(() =>
+            int essPid;
+            try { essPid = SpeakerSystemProcess.Id; }
+            catch (Exception) { return; }
+
+            // Poll off the UI thread: Unity's window appears a second or two after the
+            // process starts, and the old code enumerated exactly once, immediately.
+            Task.Run(() =>
             {
-                SpeakerSystemProcess.Refresh();
-                SetParent(unityHWND, unityHandle);
-                SetWindowLong(SpeakerSystemProcess.MainWindowHandle, GWL_STYLE, WS_VISIBLE);
-                EnumChildWindows(unityHandle, WindowEnum, IntPtr.Zero);
-                speakerSystemInstallLabel.Visibility = Visibility.Hidden;
-                startStopEchoSpeakerSystem.Content = Properties.Resources.Stop_Echo_Speaker_System;
+                IntPtr child = IntPtr.Zero;
+                for (int i = 0; i < 80 && child == IntPtr.Zero; i++)
+                {
+                    Thread.Sleep(250);
+                    try { child = FindSpeakerSystemChild(unityHandle, essPid); }
+                    catch (Exception) { }
+                }
+
+                if (child != IntPtr.Zero)
+                {
+                    // Give Unity a moment to report it is ready to be resized.
+                    for (int i = 0; i < 40; i++)
+                    {
+                        if ((((int)GetWindowLongPtr(child, GWL_USERDATA)) & UNITY_READY) == 1) break;
+                        Thread.Sleep(150);
+                    }
+                }
+
+                Dispatcher.Invoke(() =>
+                {
+                    if (child == IntPtr.Zero)
+                    {
+                        LogRow(LogType.Error,
+                            "[SpeakerSystem] no UnityWndClass window owned by pid " + essPid +
+                            " appeared under the Spark window - it did not embed.");
+                        speakerSystemInfoPanel.Visibility = Visibility.Visible;
+                        startStopEchoSpeakerSystem.Content = Properties.Resources.Start_Echo_Speaker_System;
+                        startStopEchoSpeakerSystem.IsEnabled = true;
+                        return;
+                    }
+
+                    unityHWND = child;
+                    SetWindowLong(child, GWL_STYLE, WS_VISIBLE);
+                    MoveSpeakerSystemWindow();
+                    speakerSystemInstallLabel.Visibility = Visibility.Hidden;
+                    speakerSystemInfoPanel.Visibility = Visibility.Collapsed;
+                    startStopEchoSpeakerSystem.Content = Properties.Resources.Stop_Echo_Speaker_System;
+                    startStopEchoSpeakerSystem.IsEnabled = true;
+                });
             });
         }
 
@@ -2874,32 +2949,75 @@ namespace Spark
         {
             if (!speakerSystemPanel.IsVisible) return;
 
-            if (SpeakerSystemProcess == null || SpeakerSystemProcess.HasExited)
+            // HasExited throws on a Process that was never started, which used to happen
+            // after a failed launch and made the button dead until Spark was restarted.
+            bool notRunning;
+            try
             {
+                notRunning = SpeakerSystemProcess == null || SpeakerSystemProcess.HasExited;
+            }
+            catch (InvalidOperationException)
+            {
+                notRunning = true;
+                SpeakerSystemProcess = null;
+            }
+
+            if (notRunning)
+            {
+                Process starting = null;
                 try
                 {
                     speakerSystemInstallLabel.Visibility = Visibility.Hidden;
                     startStopEchoSpeakerSystem.IsEnabled = false;
                     startStopEchoSpeakerSystem.Content = Properties.Resources.Stop_Echo_Speaker_System;
-                    SpeakerSystemProcess = new Process();
+
+                    string essPath = "C:\\Program Files (x86)\\Echo Speaker System\\Echo Speaker System.exe";
+                    if (!File.Exists(essPath))
+                    {
+                        throw new FileNotFoundException(
+                            "Echo Speaker System is not installed at " + essPath, essPath);
+                    }
 
                     WindowInteropHelper helper = new WindowInteropHelper(this);
                     HwndSource hwndSource = HwndSource.FromHwnd(helper.EnsureHandle());
-                    if (hwndSource != null)
+                    if (hwndSource == null)
                     {
-                        IntPtr unityHandle = hwndSource.Handle;
-                        SpeakerSystemProcess.StartInfo.FileName = "C:\\Program Files (x86)\\Echo Speaker System\\Echo Speaker System.exe";
-                        SpeakerSystemProcess.StartInfo.Arguments = "ignitebot -parentHWND " + unityHandle.ToInt32() + " " + Environment.CommandLine;
-                        SpeakerSystemProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                        SpeakerSystemProcess.StartInfo.CreateNoWindow = true;
-
-                        SpeakerSystemProcess.Start();
-                        SpeakerSystemProcess.WaitForInputIdle();
-                        SpeakerSystemStart(unityHandle);
+                        // Used to be an empty if-body: nothing launched, the button stayed
+                        // disabled, and there was no clue why.
+                        throw new InvalidOperationException(
+                            "Could not obtain the Spark window handle to embed into.");
                     }
+
+                    IntPtr unityHandle = hwndSource.Handle;
+                    // ToInt64: window handles are 64-bit on x64 and ToInt32 throws
+                    // OverflowException on any handle above the Int32 range.
+                    string args = "ignitebot -parentHWND " + unityHandle.ToInt64() +
+                                  " " + Environment.CommandLine;
+                    LogRow(LogType.Info, $"[SpeakerSystem] launching: {essPath} {args}");
+
+                    starting = new Process();
+                    starting.StartInfo.FileName = essPath;
+                    starting.StartInfo.Arguments = args;
+                    starting.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    starting.StartInfo.CreateNoWindow = true;
+
+                    starting.Start();
+                    // Only publish the process once it actually started, so a failure
+                    // cannot leave an unstarted Process behind for HasExited to trip on.
+                    SpeakerSystemProcess = starting;
+                    SpeakerSystemProcess.WaitForInputIdle();
+                    // The Unity window takes over this area now.
+                    speakerSystemInfoPanel.Visibility = Visibility.Collapsed;
+                    SpeakerSystemStart(unityHandle);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    // This was silent, which is why nothing showed up in the log when the
+                    // embed failed.
+                    LogRow(LogType.Error, $"[SpeakerSystem] failed to start\n{ex}");
+                    try { if (starting != null && !starting.HasExited) starting.Kill(); } catch { }
+                    SpeakerSystemProcess = null;
+                    speakerSystemInfoPanel.Visibility = Visibility.Visible;
                     startStopEchoSpeakerSystem.Content = Properties.Resources.Start_Echo_Speaker_System;
                     startStopEchoSpeakerSystem.IsEnabled = true;
                 }
@@ -2910,6 +3028,7 @@ namespace Spark
                 Program.netMQEvents.CloseApp();
                 Thread.Sleep(800);
                 KillSpeakerSystem();
+                speakerSystemInfoPanel.Visibility = Visibility.Visible;
                 startStopEchoSpeakerSystem.Content = Properties.Resources.Start_Echo_Speaker_System;
                 startStopEchoSpeakerSystem.IsEnabled = true;
             }

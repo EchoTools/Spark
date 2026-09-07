@@ -287,10 +287,80 @@ namespace Spark
         {
             if (sender is Button btn && btn.DataContext is FriendViewModel friend)
             {
-                if (string.IsNullOrEmpty(friend.SessionId)) return;
+                if (string.IsNullOrEmpty(friend.SessionId))
+                {
+                    // Both join routes need an id - /join_session takes one, and the game is
+                    // launched with -lobbyid - so there is nothing to try without it. Say why
+                    // instead of returning silently off a button that now looks clickable.
+                    ShowNoSessionNotice(friend);
+                    return;
+                }
                 bool ok = await TryApiJoin(friend.SessionId);
                 if (!ok) ShowTeamChooser(friend);
             }
+        }
+
+        /// <summary>
+        /// Explains why a friend cannot be joined yet. A lobby id comes from that friend's own
+        /// game log rather than the API, so it is missing when their Spark is older, is watching a
+        /// Quest over the network, or simply has not seen the room line yet.
+        /// </summary>
+        private void ShowNoSessionNotice(FriendViewModel friend)
+        {
+            var win = new Window
+            {
+                Title = $"Join {friend.Name}",
+                Width = 380,
+                SizeToContent = SizeToContent.Height,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                ResizeMode = ResizeMode.NoResize,
+                Topmost = true
+            };
+            win.SetResourceReference(Control.BackgroundProperty, "SurfaceGround");
+
+            var stack = new StackPanel { Margin = new Thickness(20) };
+
+            var heading = new TextBlock
+            {
+                Text = $"{friend.Name} is not joinable yet",
+                FontSize = 14,
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(0, 0, 0, 10),
+                TextWrapping = TextWrapping.Wrap
+            };
+            heading.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimary");
+            stack.Children.Add(heading);
+
+            var body = new TextBlock
+            {
+                Text = "Their Spark has not shared a session id. A lobby id is read from the " +
+                       "friend's own game log, so this happens when they are running an older " +
+                       "Spark, are playing on Quest over the network, or have only just joined " +
+                       "the room.\n\nIt should become joinable on its own once their Spark " +
+                       "reports the room.",
+                FontSize = 12,
+                LineHeight = 18,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 16)
+            };
+            body.SetResourceReference(TextBlock.ForegroundProperty, "TextDim");
+            stack.Children.Add(body);
+
+            var ok = new Button
+            {
+                Content = "OK",
+                Height = 32,
+                Width = 90,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                BorderThickness = new Thickness(0)
+            };
+            ok.SetResourceReference(Control.BackgroundProperty, "SurfaceRaised");
+            ok.SetResourceReference(Control.ForegroundProperty, "TextPrimary");
+            ok.Click += (s2, e2) => win.Close();
+            stack.Children.Add(ok);
+
+            win.Content = stack;
+            win.ShowDialog();
         }
 
         private async Task<bool> TryApiJoin(string sessionId)
@@ -361,8 +431,17 @@ namespace Spark
             try
             {
                 string lobbyId = sessionId.Split('.')[0];
-                string args = team == "spectator" ? $"-lobbyid {lobbyId} -spectatorstream" : $"-lobbyid {lobbyId} -lobbyteam {team}";
-                System.Diagnostics.Process.Start(SparkSettings.instance.echoVRPath, args);
+
+                if (team == "spectator")
+                {
+                    // A spectator client can't be launched with -lobbyid, so this can't just be
+                    // another Process.Start: it has to come up on -spectatorstream and then be
+                    // moved into the session over its HTTP API.
+                    _ = SimpleSpectateController.SpectateSessionAsync(lobbyId, SparkSettings.instance.spectatorStreamNoOVR);
+                    return;
+                }
+
+                System.Diagnostics.Process.Start(SparkSettings.instance.echoVRPath, $"-lobbyid {lobbyId} -lobbyteam {team}");
             } catch { }
         }
 
@@ -411,7 +490,7 @@ namespace Spark
         public string SeparatorText   { get => separatorText;   set { separatorText   = value; Notify(); } }
         public string SessionTypeText { get => sessionTypeText; set { sessionTypeText = value; Notify(); } }
         public string StatusBadgeText { get => statusBadgeText; set { statusBadgeText = value; Notify(); Notify(nameof(ShowStatusBadge)); } }
-        public string SessionId   { get => sessionId;   set { sessionId   = value; Notify(); Notify(nameof(IsJoinable)); } }
+        public string SessionId   { get => sessionId;   set { sessionId   = value; Notify(); NotifyMultiple("IsJoinable", "HasJoinableSession", "JoinButtonTooltip"); } }
         public string SessionIdText { get => sessionIdText; set { sessionIdText = value; Notify(); } }
         public AccentKind Accent  { get => accent;      set { accent      = value; Notify(); } }
         public double Opacity     { get => opacity;     set { opacity     = value; Notify(); } }
@@ -419,7 +498,7 @@ namespace Spark
         public PresenceKind Presence
         {
             get => presence;
-            set { presence = value; Notify(); NotifyMultiple("IsOnline", "ShowJoinButton", "ShowStatusBadge", "IsJoinable"); }
+            set { presence = value; Notify(); NotifyMultiple("IsOnline", "ShowJoinButton", "ShowStatusBadge", "IsJoinable", "HasJoinableSession", "JoinButtonTooltip"); }
         }
 
         public bool IsOnline => Presence != PresenceKind.Offline;
@@ -432,7 +511,21 @@ namespace Spark
         /// </summary>
         public Visibility ShowJoinButton => IsOnline ? Visibility.Visible : Visibility.Collapsed;
 
-        public bool IsJoinable => IsOnline && !string.IsNullOrEmpty(SessionId);
+        /// <summary>
+        /// Enabled for anyone online. This used to also require a session id, which greyed the
+        /// button out for friends sitting in a lobby whose client had not reported a room id yet -
+        /// the common case, since a lobby id comes from the friend's own game log rather than the
+        /// API. A greyed button gave no clue why, so the button now stays live and the click
+        /// explains what is missing.
+        /// </summary>
+        public bool IsJoinable => IsOnline;
+
+        /// <summary>True when we actually hold something we can hand to the game.</summary>
+        public bool HasJoinableSession => !string.IsNullOrEmpty(SessionId);
+
+        public string JoinButtonTooltip => HasJoinableSession
+            ? $"Join {Name}"
+            : $"{Name} has not shared a joinable session id yet";
 
         public void UpdateStatus(string lobbyId, string team, string mode, string sessionType)
         {

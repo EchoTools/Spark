@@ -237,6 +237,7 @@
                                         <Button Grid.Column="3" Content="Join" Width="70" Height="32"
                                                 Style="{StaticResource JoinButton}" VerticalAlignment="Center"
                                                 IsEnabled="{Binding IsJoinable}" Visibility="{Binding ShowJoinButton}"
+                                                ToolTip="{Binding JoinButtonTooltip}"
                                                 Click="JoinFriendClicked"/>
                                     </Grid>
                                 </Border>

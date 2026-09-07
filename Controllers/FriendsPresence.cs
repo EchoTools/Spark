@@ -32,6 +32,14 @@ namespace Spark
 		/// </summary>
 		private const int HeartbeatTickSeconds = 5;
 
+		/// <summary>
+		/// How long to keep asking the log for a lobby id after entering a lobby, and how often.
+		/// The first read starts the log watcher and so always comes back empty, and the client can
+		/// take a moment to write the room line, so the id is rarely there on the first attempt.
+		/// </summary>
+		private const int LobbyIdRetryMs = 1000;
+		private const int LobbyIdAttempts = 20;
+
 		private static readonly HttpClient http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
 		private static readonly object stateLock = new object();
 
@@ -208,9 +216,42 @@ namespace Spark
 		public static void PushLobby()
 		{
 			// Reading the log touches the disk and this is called from the game-polling loop, so
-			// keep it off that thread. If the id hasn't been written yet the heartbeat picks it up.
+			// keep it off that thread.
 			int generation = NextGeneration();
-			Task.Run(() => Publish(generation, EchoLogSessionReader.CurrentSessionId, null, "In Lobby", SessionTypeLobby));
+			Task.Run(async () =>
+			{
+				// Announce the lobby immediately so friends see the state without waiting, even if
+				// there is no id to go with it yet.
+				string id = EchoLogSessionReader.CurrentSessionId;
+				Publish(generation, id, null, "In Lobby", SessionTypeLobby);
+				if (!string.IsNullOrEmpty(id)) return;
+
+				// Then chase the id. Publishing null and leaving it to the heartbeat meant a friend
+				// showed as "In Lobby" but greyed out for the first few seconds - and permanently,
+				// if the room line landed between heartbeat ticks and the id never changed again.
+				for (int attempt = 0; attempt < LobbyIdAttempts; attempt++)
+				{
+					await Task.Delay(LobbyIdRetryMs);
+
+					lock (stateLock)
+					{
+						// Left the lobby, or a newer push superseded this one.
+						if (generation != pushGeneration) return;
+					}
+
+					id = EchoLogSessionReader.CurrentSessionId;
+					if (string.IsNullOrEmpty(id)) continue;
+
+					// Publish re-checks the generation under the lock before sending.
+					Publish(generation, id, null, "In Lobby", SessionTypeLobby);
+					return;
+				}
+
+				Logger.LogRow(Logger.LogType.Error,
+					"FriendsPresence: no lobby id found in the EchoVR log after " +
+					(LobbyIdAttempts * LobbyIdRetryMs / 1000) + "s; friends will see the lobby " +
+					"but will not be able to join it.");
+			});
 		}
 
 		public static void PushMenu()

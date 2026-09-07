@@ -434,7 +434,8 @@ namespace Spark
 						if (InstalledSpeakerSystemVersion.Length > 0)
 						{
 							string[] latestSpeakerSystemVer = GetLatestSpeakerSystemURLVer();
-							IsSpeakerSystemUpdateAvailable = latestSpeakerSystemVer[1] != InstalledSpeakerSystemVersion;
+							IsSpeakerSystemUpdateAvailable = IsNewerSpeakerSystemVersion(
+								latestSpeakerSystemVer[1], InstalledSpeakerSystemVersion);
 						}
 					}
 					catch (Exception ex)
@@ -1361,7 +1362,10 @@ namespace Spark
 			Process[] process = Process.GetProcessesByName("echovr");
 			foreach (Process p in process)
 			{
-				if (findInArgs == null || GetCommandLine(p).Contains(findInArgs))
+				// GetCommandLine returns null when a process's command line can't be read. That
+				// used to throw straight out of here, abandoning the rest of the kill, so a caller
+				// that kills-then-launches could stack a second client on top of the first.
+				if (findInArgs == null || GetCommandLine(p)?.Contains(findInArgs) == true)
 				{
 					try
 					{
@@ -1424,6 +1428,36 @@ namespace Spark
 			}
 
 			return true;
+		}
+
+		/// <summary>
+		/// Moves an already-running client into a session without claiming a team slot.
+		///
+		/// The body deliberately carries no team_idx: that field is what makes this a player join.
+		/// Every value claims a team — including -1, which reads like "no team" but is the Random
+		/// Team option — so sending it drops a spectator client into the match as a player. Leaving
+		/// it out entirely keeps the client in the mode it launched in, so a -spectatorstream client
+		/// stays a spectator. This mirrors the server browser's spectate, which is known to work.
+		/// </summary>
+		public static async Task<bool> APISpectate(string session_id, string overrideIP = null, int overridePort = 0)
+		{
+			try
+			{
+				Dictionary<string, object> body = new Dictionary<string, object>()
+				{
+					{ "session_id", session_id },
+					{ "password", "" },
+				};
+
+				string ip = overrideIP ?? SparkSettings.instance.echoVRIP;
+				int port = overridePort == 0 ? SparkSettings.instance.echoVRPort : overridePort;
+				string resp = await FetchUtils.PostRequestAsync($"http://{ip}:{port}/join_session", null, JsonConvert.SerializeObject(body));
+				return !string.IsNullOrEmpty(resp) && resp.StartsWith("{");
+			}
+			catch (Exception)
+			{
+				return false;
+			}
 		}
 
 		public static async Task<bool> APIJoin(string session_id, int teamIndex = -1, string overrideIP = null, int overridePort = 0)
@@ -3398,12 +3432,47 @@ namespace Spark
 		}
 		
 
+		/// <summary>
+		/// True only when a published release is genuinely newer than what is installed.
+		/// This used to be a plain inequality, which meant running a build ahead of the
+		/// newest published release prompted the user to "update" to an older one.
+		/// Tags look like "v0.4.5"; suffixes such as "v0.4.5_BETA" compare as 0.4.5.
+		/// </summary>
+		private static bool IsNewerSpeakerSystemVersion(string remoteTag, string localTag)
+		{
+			int[] remote = ParseSpeakerSystemVersion(remoteTag);
+			int[] local = ParseSpeakerSystemVersion(localTag);
+			if (remote == null || local == null)
+			{
+				// Unparseable on either side: only offer an update if something changed.
+				return !string.IsNullOrEmpty(remoteTag) && remoteTag != localTag;
+			}
+			for (int i = 0; i < 3; i++)
+			{
+				if (remote[i] != local[i]) return remote[i] > local[i];
+			}
+			return false;
+		}
+
+		private static int[] ParseSpeakerSystemVersion(string tag)
+		{
+			if (string.IsNullOrWhiteSpace(tag)) return null;
+			string[] parts = tag.TrimStart('v', 'V').Split('.');
+			int[] nums = new int[3];
+			for (int i = 0; i < 3 && i < parts.Length; i++)
+			{
+				string digits = new string(parts[i].TakeWhile(char.IsDigit).ToArray());
+				if (digits.Length == 0 || !int.TryParse(digits, out nums[i])) return null;
+			}
+			return nums;
+		}
+
 		private static string[] GetLatestSpeakerSystemURLVer()
 		{
 			string[] ret = new string[2];
 			try
 			{
-				HttpWebRequest req = (HttpWebRequest)WebRequest.Create(@"https://api.github.com/repos/iblowatsports/Echo-VR-Speaker-System/releases/latest");
+				HttpWebRequest req = (HttpWebRequest)WebRequest.Create(@"https://api.github.com/repos/heisthecat31/Echo-VR-Speaker-System/releases/latest");
 				req.Accept = "application/json";
 				req.UserAgent = "Spark";
 
@@ -3414,7 +3483,11 @@ namespace Spark
 				// Session Contents
 				string textResp = sr.ReadToEnd();
 				VersionJson versionJson = JsonConvert.DeserializeObject<VersionJson>(textResp);
-				ret[0] = versionJson.assets.First(url => url.browser_download_url.EndsWith("exe")).browser_download_url;
+				// FirstOrDefault: a release with no .exe attached used to throw here.
+				Asset installer = versionJson.assets?
+					.FirstOrDefault(url => url.browser_download_url != null &&
+					                       url.browser_download_url.EndsWith("exe"));
+				ret[0] = installer?.browser_download_url;
 				ret[1] = versionJson.tag_name;
 			}
 			catch (Exception e)

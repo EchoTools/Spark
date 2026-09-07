@@ -871,11 +871,10 @@ namespace Spark
                     return;
                 }
                 
-                string echoPath = SparkSettings.instance.echoVRPath;
-                string arguments = $"-lobbyid {lobbyId} -spectatorstream";
-                
-                System.Diagnostics.Process.Start(echoPath, arguments);
-                
+                // A spectator client can't be launched with -lobbyid. It comes up on
+                // -spectatorstream and is then moved into the session over its HTTP API.
+                _ = SimpleSpectateController.SpectateSessionAsync(lobbyId, SparkSettings.instance.spectatorStreamNoOVR);
+
                 new MessageBox($"Spectating {server.DisplayName}...", "Joining Server").Show();
             }
             catch (Exception ex)
