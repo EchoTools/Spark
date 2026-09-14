@@ -2044,9 +2044,10 @@ namespace Spark
                     Player apiPlayer = apiTeam.players[pIndex];
                     JToken jsonPlayer = jsonPlayers != null && jsonPlayers.Count > pIndex ? jsonPlayers[pIndex] : null;
 
-                    string weapon = jsonPlayer?["Weapon"]?.ToString() ?? jsonPlayer?["weapon"]?.ToString() ?? "N/A";
-                    string ordnance = jsonPlayer?["Ordnance"]?.ToString() ?? jsonPlayer?["ordnance"]?.ToString() ?? "N/A";
-                    string tacmod = jsonPlayer?["TacMod"]?.ToString() ?? jsonPlayer?["tacmod"]?.ToString() ?? "N/A";
+                    // The API gives internal names ("assault", "det"); show the ones players know.
+                    string weapon = GearNames.Display(jsonPlayer?["Weapon"]?.ToString() ?? jsonPlayer?["weapon"]?.ToString() ?? "N/A");
+                    string ordnance = GearNames.Display(jsonPlayer?["Ordnance"]?.ToString() ?? jsonPlayer?["ordnance"]?.ToString() ?? "N/A");
+                    string tacmod = GearNames.Display(jsonPlayer?["TacMod"]?.ToString() ?? jsonPlayer?["tacmod"]?.ToString() ?? "N/A");
                     CombatStats stats = CombatDataParser.GetCombatStats(apiPlayer.userid);
 
                     CombatLoadout loadout = new CombatLoadout
@@ -2149,7 +2150,7 @@ namespace Spark
                 {
                     Killer = string.IsNullOrEmpty(k.killer) ? "Self" : k.killer,
                     Victim = string.IsNullOrEmpty(k.killed) ? "Unknown" : k.killed,
-                    Weapon = k.killed_with,
+                    Weapon = GearNames.Display(k.killed_with),
                     KillerColor = nameColors.TryGetValue(k.killer ?? "", out Brush kc) ? kc : CombatThemeBrush("TextDim"),
                     VictimColor = nameColors.TryGetValue(k.killed ?? "", out Brush vc) ? vc : CombatThemeBrush("TextDim"),
                     RowBg = i == 0 ? raisedBrush : Brushes.Transparent

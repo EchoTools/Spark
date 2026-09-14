@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -193,7 +194,8 @@ namespace Spark
 			};
 			Program.LargePing += (frame, team, player) =>
 			{
-				if (SparkSettings.instance.pingSpikeTTS)
+				if (SparkSettings.instance.pingSpikeTTS &&
+				    (!SparkSettings.instance.pingSpikeTTSPrivateOnly || frame.private_match))
 				{
 					SpeakAsync($"{player.name}'s ping spiked to {player.ping}");
 				}
@@ -210,20 +212,65 @@ namespace Spark
 			catch { }
 		}
 
+		/// <summary>
+		/// The speeds on offer, as multiples of the voice's normal pace: tenths from half speed to
+		/// double. That is the range the neural voices behind the Spark API document for their speaking
+		/// rate, so every step sounds different online. The offline Windows voice moves one step of its
+		/// own -10..10 rate per tenth, as the four speeds this replaced already did.
+		/// </summary>
+		public static readonly IReadOnlyList<SpeedOption> SpeedOptions = Enumerable.Range(5, 16)
+			.Select(tenths => new SpeedOption(tenths / 10.0))
+			.ToList();
+
+		public sealed class SpeedOption
+		{
+			public SpeedOption(double rate)
+			{
+				Rate = rate;
+			}
+
+			public double Rate { get; }
+
+			/// <summary>
+			/// "1.4x", plus the name the old four-speed list used where this is one of those speeds, so
+			/// whatever someone had picked is still easy to find.
+			/// </summary>
+			public string Label
+			{
+				get
+				{
+					string name = Rate switch
+					{
+						0.6 => Resources.Slow,
+						1.0 => Resources.Normal,
+						1.4 => Resources.Fast,
+						1.8 => Resources.Very_Fast,
+						_ => null,
+					};
+					string speed = $"{Rate:0.0}x";
+					return name == null ? speed : $"{speed} ({name})";
+				}
+			}
+
+			public override string ToString() => Label;
+		}
+
+		/// <summary>The offered speed closest to <paramref name="speed"/>, or normal speed if it isn't usable.</summary>
+		public static double NearestSpeed(double speed)
+		{
+			if (double.IsNaN(speed) || speed <= 0) return 1.0;
+			return SpeedOptions.OrderBy(option => Math.Abs(option.Rate - speed)).First().Rate;
+		}
+
 		public void LoadTtsSpeed()
 		{
 			try
 			{
-				int savedValue = SparkSettings.instance.ttsSpeedIndex;
-				// Validate range
-				if (savedValue < 1 || savedValue > 4) savedValue = 2; // Default to 2 (1.0x) if invalid
-				
-				int index = savedValue - 1;
-				SetRateInternal(index);
+				ApplyRate(NearestSpeed(SparkSettings.instance.ttsSpeedMultiplier));
 			}
 			catch
 			{
-				SetRateInternal(1);
+				ApplyRate(1.0);
 			}
 		}
 
@@ -291,17 +338,13 @@ namespace Spark
 
 		public float Rate => currentRate;
 
-		public void SetRate(int speedIndex)
+		/// <param name="speed">A multiple of normal speed; snapped to the nearest of <see cref="SpeedOptions"/>.</param>
+		public void SetRate(double speed)
 		{
-			if (speedIndex < 0) speedIndex = 1;
-			if (speedIndex > 3) speedIndex = 1;
-			
-			int value = speedIndex + 1;
-			
-			SparkSettings.instance.TTSSpeed = value;
-			SparkSettings.instance.ttsSpeedIndex = value;
-			
-			Task.Run(() => 
+			speed = NearestSpeed(speed);
+			SparkSettings.instance.ttsSpeedMultiplier = speed;
+
+			Task.Run(() =>
 			{
 				try
 				{
@@ -309,22 +352,19 @@ namespace Spark
 				}
 				catch { }
 			});
-			
-			SetRateInternal(speedIndex);
+
+			ApplyRate(speed);
 		}
-		
-		private void SetRateInternal(int speedIndex)
+
+		private void ApplyRate(double speed)
 		{
-			switch (speedIndex)
-			{
-				case 0: currentRate = 0.6f; synth.Rate = -4; break;
-				case 1: currentRate = 1.0f; synth.Rate = 0; break;
-				case 2: currentRate = 1.4f; synth.Rate = 4; break;
-				case 3: currentRate = 1.8f; synth.Rate = 8; break;
-				default: currentRate = 1.0f; synth.Rate = 0; break;
-			}
-			
-			currentRateString = currentRate.ToString("F1");
+			currentRate = (float)speed;
+			// A step of the offline voice's -10..10 rate per tenth: the old speeds used exactly this
+			// (0.6x was -4, 1.4x was 4, 1.8x was 8).
+			synth.Rate = Math.Clamp((int)Math.Round((speed - 1.0) * 10), -10, 10);
+			// Goes into every cached clip's filename. Invariant, and still "1.4" rather than "1.40", so
+			// clips cached at the old speeds keep being found.
+			currentRateString = speed.ToString("0.0#", CultureInfo.InvariantCulture);
 		}
 
 		public void SetOutputToDefaultAudioDevice()

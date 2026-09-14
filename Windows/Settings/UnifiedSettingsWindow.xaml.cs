@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Net;
 using EchoVRAPI;
+using System.Threading;
 
 
 
@@ -461,6 +462,168 @@ namespace Spark
 			Program.replayFilesManager.Split();
 		}
 
+		/// <summary>
+		/// Repairs a .butter file the replay viewer won't open, writing what survives out as a
+		/// .echoreplay next to it. The decode runs off the UI thread: a long recording is tens of
+		/// thousands of frames and would otherwise freeze the settings window.
+		/// </summary>
+		private async void RepairButterFileClicked(object sender, RoutedEventArgs e)
+		{
+			if (!initialized) return;
+
+			Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog
+			{
+				FileName = "",
+				DefaultExt = ".butter",
+				Filter = "Butter replays (.butter)|*.butter|All files|*.*",
+				InitialDirectory = Directory.Exists(SparkSettings.instance.saveFolder) ? SparkSettings.instance.saveFolder : "",
+			};
+
+			if (dlg.ShowDialog() != true) return;
+
+			string path = dlg.FileName;
+
+			repairButterButton.IsEnabled = false;
+			repairButterStatusLabel.Content = "Repairing " + Path.GetFileName(path) + "...";
+
+			try
+			{
+				ButterRepair.RepairResult result = await Task.Run(() => ButterRepair.RepairToEchoreplay(path));
+
+				repairButterStatusLabel.Content = result.Success
+					? $"Recovered {result.FrameCount:N0} frames"
+					: "Couldn't recover any frames";
+
+				new MessageBox(result.Summary, result.Success ? "Replay Repaired" : "Repair Failed").Show();
+
+				// Drop the user at the result so they don't have to go hunting for it.
+				if (result.Success && !string.IsNullOrEmpty(result.OutputPath))
+				{
+					try { Process.Start("explorer.exe", "/select,\"" + result.OutputPath + "\""); }
+					catch (Exception ex) { Logger.LogRow(Logger.LogType.Error, "Couldn't reveal the repaired replay\n" + ex); }
+				}
+			}
+			catch (Exception ex)
+			{
+				repairButterStatusLabel.Content = "Repair failed";
+				Logger.LogRow(Logger.LogType.Error, $"Butter repair threw for {path}\n{ex}");
+				new MessageBox("Repair failed:\n\n" + ex.Message, "Repair Failed").Show();
+			}
+			finally
+			{
+				repairButterButton.IsEnabled = true;
+			}
+		}
+
+		/// <summary>
+		/// Scans the save folder for .butter files the replay viewer won't open, repairs them, and
+		/// deletes the originals.
+		///
+		/// Deliberately a button rather than something that runs on its own: it removes recordings,
+		/// and that shouldn't happen while nobody is watching. The confirmation below is the last
+		/// chance to back out, and a repair whose replacement doesn't verify keeps both files.
+		/// </summary>
+		/// <summary>Live while a scan is running; the same button cancels it.</summary>
+		private CancellationTokenSource butterScanCancel;
+
+		private async void ScanBrokenButterClicked(object sender, RoutedEventArgs e)
+		{
+			if (!initialized) return;
+
+			// Second press while a scan is in flight means stop, not start again.
+			if (butterScanCancel != null)
+			{
+				butterScanCancel.Cancel();
+				scanBrokenButterButton.IsEnabled = false;
+				scanBrokenButterButton.Content = "Stopping...";
+				scanBrokenButterStatusLabel.Content = "Finishing the current file...";
+				return;
+			}
+
+			string folder = SparkSettings.instance.saveFolder;
+			if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+			{
+				new MessageBox("Your replay save folder isn't set or doesn't exist, so there's nothing to scan.", "Nothing to Scan").Show();
+				return;
+			}
+
+			int butterCount;
+			try { butterCount = Directory.GetFiles(folder, "*.butter", SearchOption.TopDirectoryOnly).Length; }
+			catch (Exception ex)
+			{
+				new MessageBox("Couldn't read the save folder:\n\n" + ex.Message, "Nothing to Scan").Show();
+				return;
+			}
+
+			if (butterCount == 0)
+			{
+				new MessageBox("No .butter files found in:\n" + folder, "Nothing to Scan").Show();
+				return;
+			}
+
+			if (System.Windows.MessageBox.Show(
+					$"Check {butterCount:N0} .butter file(s) in:\n{folder}\n\n" +
+					"Broken ones will be converted to .echoreplay and the broken originals deleted.\n\n" +
+					"Files that decode fine are left alone, and a repair that can't be verified keeps the original.",
+					"Search and Repair",
+					MessageBoxButton.OKCancel,
+					MessageBoxImage.Warning) != MessageBoxResult.OK)
+			{
+				return;
+			}
+
+			butterScanCancel = new CancellationTokenSource();
+			CancellationToken token = butterScanCancel.Token;
+
+			scanBrokenButterButton.Content = "Cancel";
+			repairButterButton.IsEnabled = false;
+			scanBrokenButterStatusLabel.Content = "Scanning...";
+
+			try
+			{
+				// Progress arrives on a worker thread, so hop to the dispatcher to touch the label.
+				// BeginInvoke rather than Invoke: a synchronous hop per file would stall the scan
+				// behind the UI thread, which is part of why this felt slow.
+				Action<string> progress = msg => Dispatcher.BeginInvoke(
+					new Action(() => scanBrokenButterStatusLabel.Content = msg));
+
+				ButterRepair.ScanResult result = await Task.Run(
+					() => ButterRepair.ScanAndRepair(folder, deleteOriginals: true, progress: progress, token: token), token);
+
+				scanBrokenButterStatusLabel.Content = result.Cancelled
+					? $"Stopped after {result.Scanned:N0}"
+					: result.Broken == 0
+						? $"Checked {result.Scanned:N0}, none broken"
+						: $"Repaired {result.Repaired:N0} of {result.Broken:N0}";
+
+				string detail = result.Details.Count > 0
+					? "\n\n" + string.Join("\n", result.Details.Take(20))
+					  + (result.Details.Count > 20 ? $"\n...and {result.Details.Count - 20:N0} more (see the log)" : "")
+					: "";
+
+				new MessageBox(result.Summary + detail, "Search and Repair").Show();
+			}
+			catch (OperationCanceledException)
+			{
+				scanBrokenButterStatusLabel.Content = "Stopped";
+			}
+			catch (Exception ex)
+			{
+				scanBrokenButterStatusLabel.Content = "Scan failed";
+				Logger.LogRow(Logger.LogType.Error, $"Butter scan threw for {folder}\n{ex}");
+				new MessageBox("Scan failed:\n\n" + ex.Message, "Search and Repair").Show();
+			}
+			finally
+			{
+				butterScanCancel?.Dispose();
+				butterScanCancel = null;
+
+				scanBrokenButterButton.Content = "Search and repair...";
+				scanBrokenButterButton.IsEnabled = true;
+				repairButterButton.IsEnabled = true;
+			}
+		}
+
 		#endregion
 
 		#region TTS
@@ -528,17 +691,17 @@ namespace Spark
 			}
 		}
 
-		public static int SpeechSpeed
+		/// <summary>Speech speed as a multiple of normal; the list's values come from TTSController.SpeedOptions.</summary>
+		public static double SpeechSpeed
 		{
-			get => SparkSettings.instance.TTSSpeed;
+			get => TTSController.NearestSpeed(SparkSettings.instance.ttsSpeedMultiplier);
 			set
 			{
+				bool changed = Math.Abs(value - SparkSettings.instance.ttsSpeedMultiplier) > 0.001;
 				Program.synth.SetRate(value);
 
-				if (value != SparkSettings.instance.TTSSpeed)
+				if (changed)
 					Program.synth.SpeakAsync(Properties.Resources.This_is_the_new_speed);
-
-				SparkSettings.instance.TTSSpeed = value;
 			}
 		}
 
@@ -654,6 +817,12 @@ namespace Spark
 					Program.synth.SpeakAsync($"NtsFranz's ping spiked to 150");
 				}
 			}
+		}
+
+		public static bool PingSpikePrivateOnly
+		{
+			get => SparkSettings.instance.pingSpikeTTSPrivateOnly;
+			set => SparkSettings.instance.pingSpikeTTSPrivateOnly = value;
 		}
 
 		public static bool TTSSpecificNumbers

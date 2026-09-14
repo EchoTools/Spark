@@ -92,7 +92,13 @@ namespace Spark
 		/// </summary>
 		public bool enableFullLogging { get; set; } = false;
 
+        /// <summary>Legacy four-step speech speed, 1-based. Only read to migrate to <see cref="ttsSpeedMultiplier"/>.</summary>
         public int ttsSpeedIndex { get; set; } = 1;
+		/// <summary>
+		/// Speech speed as a multiple of normal: one of TTSController.SpeedOptions. Replaces
+		/// <see cref="ttsSpeedIndex"/> and <see cref="TTSSpeed"/>, which only knew four speeds.
+		/// </summary>
+		public double ttsSpeedMultiplier { get; set; } = 1.0;
 		public bool onlyRecordPrivateMatches { get; set; } = false;
 		public bool batchWrites { get; set; } = true;
 		public bool useCompression { get; set; } = true;
@@ -191,6 +197,12 @@ namespace Spark
 		public bool showCreateServerTab { get; set; } = true;
 		public bool showPlayerCardTab { get; set; } = true;
 		public bool showFriendsTab { get; set; } = true;
+		public bool showReplayAnalyserTab { get; set; } = true;
+		/// <summary>
+		/// Folder the Replay Analyser tab reads. Empty means follow <see cref="saveFolder"/>, which is
+		/// where Spark records to; it only holds a path when the user has picked somewhere else.
+		/// </summary>
+		public string replayAnalyserFolder { get; set; } = "";
 		public string myFriendCode { get; set; } = "";
 		public List<string> friendCodes { get; set; } = new List<string>();
 		public string ignoredUpdateVersion { get; set; } = "";
@@ -208,6 +220,7 @@ namespace Spark
 		public bool joustSpeedTTS { get; set; } = false;
 		public bool serverLocationTTS { get; set; } = false;
 		public bool maxBoostSpeedTTS { get; set; } = false;
+		/// <summary>Legacy four-step speech speed's list position. Only read to migrate to <see cref="ttsSpeedMultiplier"/>.</summary>
 		public int TTSSpeed { get; set; } = 1;
 		public bool playerJoinTTS { get; set; } = false;
 		public bool playerLeaveTTS { get; set; } = false;
@@ -221,6 +234,8 @@ namespace Spark
 		public string ttsCacheFolder { get; set; } = "";
 		public int ttsCacheSizeBytes { get; set; } = 100000000;
 		public bool pingSpikeTTS { get; set; } = false;
+		/// <summary>With <see cref="pingSpikeTTS"/> on, only announce ping spikes while in a private match.</summary>
+		public bool pingSpikeTTSPrivateOnly { get; set; } = false;
 		public bool ttsSpecific { get; set; } = false;
 
 		#endregion
@@ -458,7 +473,7 @@ namespace Spark
 		/// initialiser — so this has to default to 0, not to the current version, or every existing
 		/// file would claim to be up to date.
 		/// </summary>
-		private const int CurrentSettingsVersion = 1;
+		private const int CurrentSettingsVersion = 2;
 
 		public int settingsVersion { get; set; } = 0;
 
@@ -483,6 +498,23 @@ namespace Spark
 			if (instance.settingsVersion < 1)
 			{
 				instance.showFriendsTab = true;
+			}
+
+			// v2 — speech speed went from four named steps to a multiplier in tenths. The step that
+			// actually set the voice was ttsSpeedIndex (1-based: Slow, Normal, Fast, Very Fast), but it
+			// defaulted to 1, Slow, while the settings list showed Normal. An index still at that
+			// default beside a list position also at its default means the speed was never touched, so
+			// it becomes the Normal the settings showed rather than the slow voice the mismatch played.
+			if (instance.settingsVersion < 2)
+			{
+				instance.ttsSpeedMultiplier = (instance.ttsSpeedIndex, instance.TTSSpeed) switch
+				{
+					(1, 1) => 1.0,
+					(1, _) => 0.6,
+					(3, _) => 1.4,
+					(4, _) => 1.8,
+					_ => 1.0,
+				};
 			}
 
 			Console.WriteLine($"Migrated settings from version {instance.settingsVersion} to {CurrentSettingsVersion}.");

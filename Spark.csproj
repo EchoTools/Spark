@@ -7,7 +7,7 @@
     <StartupObject>Spark.App</StartupObject>
     <ApplicationIcon>img\ignite_logo.ico</ApplicationIcon>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <Version>3.2.0</Version>
+    <Version>3.2.1</Version>
     <PackageProjectUrl>https://www.ignitevr.gg/spark</PackageProjectUrl>
     <Company>IgniteVR</Company>
     <Authors>he_is_the_cat, NtsFranz, VTSxKING, iblowatsports</Authors>
@@ -18,7 +18,7 @@
     <AssemblyName>Spark</AssemblyName>
     <RootNamespace>Spark</RootNamespace>
     <LangVersion>14</LangVersion>
-    <PackageVersion>3.2.0</PackageVersion>
+    <PackageVersion>3.2.1</PackageVersion>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <SelfContained>true</SelfContained>
@@ -42,6 +42,14 @@
     <EmbeddedResource Include="wwwtemplates\default_scoreboard.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
+    <!-- The game's gear table (rad15\json\balance\mp_equipment.json), used to turn the API's internal
+         weapon/ordnance/tac mod names into the ones players see. Taken from the Quest source copy,
+         which still has the cut gear (Starburst, Translocator...) as commented-out entries that the
+         compiled PC data strips; those are marked "cut". Embedded rather than copied alongside, so a
+         missing file can't quietly put the raw names back on screen. -->
+    <EmbeddedResource Include="resources\mp_equipment.json" LogicalName="Spark.mp_equipment.json" />
+    <!-- Top-down render of the arena that the Replay Analyser draws movement heatmaps over. -->
+    <Resource Include="ReplayAnalyser\Resources\arena-top.png" />
     <Page Update="Windows\QuestIPs.xaml">
       <SubType>Designer</SubType>
     </Page>

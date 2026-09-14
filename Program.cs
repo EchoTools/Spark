@@ -157,6 +157,12 @@ namespace Spark
 		public static TTSController synth;
 		public static ReplayClips replayClips;
 		public static ReplayFilesManager replayFilesManager;
+
+		/// <summary>
+		/// How long shutdown will wait for the replay buffer to finish writing and compressing
+		/// before giving up and closing regardless.
+		/// </summary>
+		private const int ReplayFlushTimeoutSeconds = 120;
 		public static CameraWriteController cameraWriteController;
 		public static CameraWrite cameraWriteWindow;
 		public static EchoGPController echoGPController;
@@ -914,13 +920,33 @@ namespace Spark
 
 			if (replayFilesManager != null)
 			{
-				while (replayFilesManager.zipping || 
-				       replayFilesManager.replayThreadActive || 
+				// Bounded. This wait used to be open-ended, so anything that left a flag set or a
+				// write that never returned trapped the app on "Compressing Replay File..." with
+				// no way out but the task manager. The cap is generous enough for a genuinely
+				// large replay; past it we say so in the log and close anyway, since a truncated
+				// recording beats a process that won't exit.
+				DateTime replayFlushDeadline = DateTime.UtcNow.AddSeconds(ReplayFlushTimeoutSeconds);
+
+				while (replayFilesManager.zipping ||
+				       replayFilesManager.replayThreadActive ||
 				       replayFilesManager.splitting)
 				{
+					if (DateTime.UtcNow > replayFlushDeadline)
+					{
+						LogRow(LogType.Error,
+							$"Replay flush did not finish within {ReplayFlushTimeoutSeconds}s " +
+							$"(zipping={replayFilesManager.zipping}, queued={replayFilesManager.replayThreadActive}, splitting={replayFilesManager.splitting}). Closing anyway.");
+						break;
+					}
+
 					if (closingWindow != null) closingWindow.label.Content = Resources.Compressing_Replay_File___;
 					await Task.Delay(10);
 				}
+
+				// Never called anywhere before this, so the write thread, the queue and its
+				// cancellation token were all left dangling — along with the two-second bounded
+				// wait inside Dispose that was written for exactly this moment.
+				replayFilesManager.Dispose();
 			}
 
 			if (closingWindow != null) closingWindow.label.Content = Resources.Closing_NVIDIA_Highlights___;

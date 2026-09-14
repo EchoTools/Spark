@@ -1,0 +1,265 @@
+<UserControl x:Class="Spark.ReplayAnalyser.Views.PlayersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:rc="clr-namespace:Spark.ReplayAnalyser.Controls">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Spark;component/ReplayAnalyser/Views/ReplayAnalyserStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style x:Key="ColHead" TargetType="TextBlock" BasedOn="{StaticResource RaCaption}">
+                <Setter Property="TextAlignment" Value="Right"/>
+                <Setter Property="VerticalAlignment" Value="Bottom"/>
+            </Style>
+
+            <Style x:Key="StatCell" TargetType="TextBlock" BasedOn="{StaticResource RaNumber}">
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="TextAlignment" Value="Right"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
+            <!-- Shared by both team tables. Each row is its own Grid, so the column widths live in one
+                 place here and in the header below; the name column takes whatever is left. -->
+            <DataTemplate x:Key="PlayerRow">
+                <Border x:Name="row" CornerRadius="5" Padding="0,5" Margin="0,1" Background="Transparent" Cursor="Hand"
+                        MouseLeftButtonUp="PlayerRowClicked" ToolTip="Show this player's detail below">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="44"/>
+                            <ColumnDefinition Width="32"/>
+                            <ColumnDefinition Width="32"/>
+                            <ColumnDefinition Width="38"/>
+                            <ColumnDefinition Width="42"/>
+                            <ColumnDefinition Width="36"/>
+                            <ColumnDefinition Width="46"/>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="46"/>
+                            <ColumnDefinition Width="58"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Style="{StaticResource RaSideTick}" Margin="5,1,9,1"
+                                rc:ToneBrush.Background="{Binding Tone}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" FontSize="12.5"
+                                   Foreground="{DynamicResource TextPrimary}" Margin="0,0,8,0"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Points}" Style="{StaticResource StatCell}" FontWeight="Bold"/>
+                        <TextBlock Grid.Column="3" Text="{Binding Goals}" Style="{StaticResource StatCell}"/>
+                        <TextBlock Grid.Column="4" Text="{Binding Assists}" Style="{StaticResource StatCell}"/>
+                        <TextBlock Grid.Column="5" Text="{Binding Saves}" Style="{StaticResource StatCell}"/>
+                        <TextBlock Grid.Column="6" Text="{Binding Stuns}" Style="{StaticResource StatCell}"/>
+                        <TextBlock Grid.Column="7" Text="{Binding Turnovers}" Style="{StaticResource StatCell}"/>
+                        <TextBlock Grid.Column="8" Text="{Binding ShotsTaken}" Style="{StaticResource StatCell}"/>
+                        <TextBlock Grid.Column="9" Text="{Binding AccuracyText}" Style="{StaticResource StatCell}"/>
+                        <TextBlock Grid.Column="10" Text="{Binding PossessionText}" Style="{StaticResource StatCell}"/>
+                        <TextBlock Grid.Column="11" Text="{Binding MinutesText}" Style="{StaticResource StatCell}"/>
+                        <TextBlock Grid.Column="12" Text="{Binding DistanceText}" Style="{StaticResource StatCell}" Margin="0,0,8,0"/>
+                    </Grid>
+                </Border>
+                <DataTemplate.Triggers>
+                    <Trigger SourceName="row" Property="IsMouseOver" Value="True">
+                        <Setter TargetName="row" Property="Background" Value="{DynamicResource SurfaceRaised}"/>
+                    </Trigger>
+                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                        <Setter TargetName="row" Property="Background" Value="{DynamicResource SurfaceTrack}"/>
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+
+            <Style x:Key="StatGroup" TargetType="Border" BasedOn="{StaticResource RaWell}">
+                <Setter Property="Padding" Value="12,8,12,9"/>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="380" Margin="16"
+                    Visibility="{Binding HasMatch, Converter={StaticResource RaNotBoolVis}}">
+            <TextBlock Text="No replay open" Style="{StaticResource RaHeading}" HorizontalAlignment="Center"/>
+            <TextBlock Style="{StaticResource RaBody}" TextAlignment="Center" Margin="0,4,0,0"
+                       Text="Pick a replay from the library to see the player breakdown."/>
+        </StackPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      Visibility="{Binding HasMatch, Converter={StaticResource RaBoolVis}}">
+            <StackPanel Margin="16,14,16,16">
+
+                <!-- ===== scoreboard ===== -->
+                <Border Style="{StaticResource RaCard}">
+                    <StackPanel>
+                        <TextBlock Text="Scoreboard" Style="{StaticResource RaHeading}"/>
+                        <TextBlock Style="{StaticResource RaBody}" Margin="0,2,0,0"
+                                   Text="Click a player to open their detail below."/>
+
+                        <!-- Scrolls sideways once the page is too narrow for every column. The table is
+                             held at the viewport's width until then, so the name column still stretches. -->
+                        <ScrollViewer Margin="0,10,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                                      rc:WheelBubble.Enabled="True">
+                            <StackPanel MinWidth="640"
+                                        Width="{Binding ViewportWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="17"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="44"/>
+                                        <ColumnDefinition Width="32"/>
+                                        <ColumnDefinition Width="32"/>
+                                        <ColumnDefinition Width="38"/>
+                                        <ColumnDefinition Width="42"/>
+                                        <ColumnDefinition Width="36"/>
+                                        <ColumnDefinition Width="46"/>
+                                        <ColumnDefinition Width="50"/>
+                                        <ColumnDefinition Width="50"/>
+                                        <ColumnDefinition Width="46"/>
+                                        <ColumnDefinition Width="58"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="1" Text="PLAYER" Style="{StaticResource RaCaption}"/>
+                                    <TextBlock Grid.Column="2" Text="PTS" Style="{StaticResource ColHead}" ToolTip="Points scored"/>
+                                    <TextBlock Grid.Column="3" Text="G" Style="{StaticResource ColHead}" ToolTip="Goals"/>
+                                    <TextBlock Grid.Column="4" Text="A" Style="{StaticResource ColHead}" ToolTip="Assists"/>
+                                    <TextBlock Grid.Column="5" Text="SV" Style="{StaticResource ColHead}" ToolTip="Saves"/>
+                                    <TextBlock Grid.Column="6" Text="STN" Style="{StaticResource ColHead}" ToolTip="Stuns"/>
+                                    <TextBlock Grid.Column="7" Text="TO" Style="{StaticResource ColHead}" ToolTip="Turnovers"/>
+                                    <TextBlock Grid.Column="8" Text="SHOT" Style="{StaticResource ColHead}" ToolTip="Shots taken"/>
+                                    <TextBlock Grid.Column="9" Text="ACC" Style="{StaticResource ColHead}" ToolTip="Shot accuracy"/>
+                                    <TextBlock Grid.Column="10" Text="DISC" Style="{StaticResource ColHead}" ToolTip="Time holding the disc"/>
+                                    <TextBlock Grid.Column="11" Text="MIN" Style="{StaticResource ColHead}" ToolTip="Minutes of live play"/>
+                                    <TextBlock Grid.Column="12" Text="DIST" Style="{StaticResource ColHead}" Margin="0,0,8,0" ToolTip="Distance skated"/>
+                                </Grid>
+
+                                <TextBlock Text="BLUE" Style="{StaticResource RaCaption}" Foreground="{DynamicResource TeamBlue}" Margin="17,6,0,2"/>
+                                <ItemsControl ItemsSource="{Binding BluePlayers}" ItemTemplate="{StaticResource PlayerRow}"/>
+
+                                <TextBlock Text="ORANGE" Style="{StaticResource RaCaption}" Foreground="{DynamicResource TeamOrange}" Margin="17,12,0,2"/>
+                                <ItemsControl ItemsSource="{Binding OrangePlayers}" ItemTemplate="{StaticResource PlayerRow}"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== one player in detail ===== -->
+                <Border Style="{StaticResource RaCard}" Margin="0,12,0,0">
+                    <StackPanel>
+                        <DockPanel>
+                            <ComboBox DockPanel.Dock="Right" Style="{StaticResource RaPicker}" Width="220" Margin="12,0,0,0"
+                                      ItemsSource="{Binding Players}"
+                                      SelectedItem="{Binding SelectedPlayer}"
+                                      ItemTemplate="{StaticResource RaPlayerName}"/>
+                            <StackPanel>
+                                <TextBlock Text="Player detail" Style="{StaticResource RaHeading}"/>
+                                <TextBlock Text="{Binding SelectedPlayer.HeadlineText}" Style="{StaticResource RaBody}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <StackPanel Visibility="{Binding HasSelectedPlayer, Converter={StaticResource RaBoolVis}}">
+
+                            <!-- heatmaps -->
+                            <rc:Columns Margin="0,14,0,0" MinColumnWidth="300" Gap="14">
+                                <StackPanel>
+                                    <TextBlock Text="POSITION — TOP DOWN" Style="{StaticResource RaCaption}"/>
+                                    <TextBlock Style="{StaticResource RaBody}" FontSize="11.5" Margin="0,2,0,0"
+                                               Text="Every route they skated, with their shots ringed and goals filled in green."/>
+                                    <rc:ArenaMap MaxHeight="240" Margin="0,8,0,0"
+                                                 Tracks="{Binding SelectedPlayer.Tracks}"
+                                                 Shots="{Binding SelectedPlayer.ShotPositions}"
+                                                 Goals="{Binding SelectedPlayer.GoalPositions}"
+                                                 Attacking="{Binding SelectedPlayer.Side}"
+                                                 View="TopDown"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="HEIGHT — SIDE ON" Style="{StaticResource RaCaption}"/>
+                                    <TextBlock Style="{StaticResource RaBody}" FontSize="11.5" Margin="0,2,0,0"
+                                               Text="The same routes from the side. Hugging the floor or the ceiling both leave lanes open."/>
+                                    <rc:ArenaMap MaxHeight="240" Margin="0,8,0,0"
+                                                 Tracks="{Binding SelectedPlayer.Tracks}"
+                                                 Attacking="{Binding SelectedPlayer.Side}"
+                                                 View="Side"/>
+                                </StackPanel>
+                            </rc:Columns>
+
+                            <!-- numbers -->
+                            <rc:Columns Margin="0,14,0,0" MinColumnWidth="190" MaxColumns="3" Gap="10">
+                                <Border Style="{StaticResource StatGroup}">
+                                    <StackPanel>
+                                        <TextBlock Text="ZONE OCCUPANCY" Style="{StaticResource RaCaption}" Margin="0,0,0,4"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="Own third" Style="{StaticResource RaStatLabel}"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedPlayer.DefShareText}" Style="{StaticResource RaStatValue}"/>
+                                            <TextBlock Grid.Row="1" Text="Middle" Style="{StaticResource RaStatLabel}"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedPlayer.NeutralShareText}" Style="{StaticResource RaStatValue}"/>
+                                            <TextBlock Grid.Row="2" Text="Attacking third" Style="{StaticResource RaStatLabel}"/>
+                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedPlayer.OffShareText}" Style="{StaticResource RaStatValue}"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource StatGroup}">
+                                    <StackPanel>
+                                        <TextBlock Text="DISC WORK" Style="{StaticResource RaCaption}" Margin="0,0,0,4"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="Time on disc" Style="{StaticResource RaStatLabel}"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedPlayer.PossessionText}" Style="{StaticResource RaStatValue}"/>
+                                            <TextBlock Grid.Row="1" Text="Average hold" Style="{StaticResource RaStatLabel}"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedPlayer.HoldText}" Style="{StaticResource RaStatValue}"/>
+                                            <TextBlock Grid.Row="2" Text="Times stunned" Style="{StaticResource RaStatLabel}"/>
+                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedPlayer.TimesStunned}" Style="{StaticResource RaStatValue}"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource StatGroup}">
+                                    <StackPanel>
+                                        <TextBlock Text="THROW MECHANICS" Style="{StaticResource RaCaption}" Margin="0,0,0,4"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="Average release" Style="{StaticResource RaStatLabel}"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedPlayer.ThrowSpeedText}" Style="{StaticResource RaStatValue}"/>
+                                            <TextBlock Grid.Row="1" Text="Wrist penalty" Style="{StaticResource RaStatLabel}"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedPlayer.WristPenaltyText}" Style="{StaticResource RaStatValue}"/>
+                                            <TextBlock Grid.Row="2" Text="Off-axis spin" Style="{StaticResource RaStatLabel}"/>
+                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedPlayer.OffAxisText}" Style="{StaticResource RaStatValue}"/>
+                                        </Grid>
+                                        <TextBlock Style="{StaticResource RaBody}" FontSize="11" LineHeight="15" Margin="0,6,0,0"
+                                                   Foreground="{DynamicResource TextFaint}"
+                                                   Visibility="{Binding SelectedPlayer.HasThrowData, Converter={StaticResource RaNotBoolVis}}"
+                                                   Text="Echo VR only records throw telemetry for the client that captured the replay, so these are unavailable for other players."/>
+                                    </StackPanel>
+                                </Border>
+                            </rc:Columns>
+
+                            <TextBlock Text="PASSING" Style="{StaticResource RaCaption}" Margin="0,14,0,0"/>
+                            <TextBlock Text="{Binding SelectedPlayer.PassTargetsText}" Style="{StaticResource RaBody}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

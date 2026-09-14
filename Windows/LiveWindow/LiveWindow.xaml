@@ -1219,7 +1219,17 @@
                         </Grid>
                     </Grid>
                 </TabItem>
-                
+
+                <TabItem x:Name="ReplayAnalyserTabItem" FontSize="12.5" Padding="7,0,7,0" Visibility="{l:SettingBinding showReplayAnalyserTab, Converter={StaticResource BoolToVis}}">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="/img/baseline_replay_white_24px.png" Height="14" VerticalAlignment="Center"/>
+                            <Label Content="Replay Analyser" Padding="4,0,0,0" VerticalAlignment="Center" Style="{StaticResource TabHeaderLabel}"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <l:ReplayAnalyserTab />
+                </TabItem>
+
                 <!--<TabItem x:Name="PlayerStatsTab" FontSize="12.5" Padding="7,0,7,0" Visibility="Visible">
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal">

@@ -80,9 +80,13 @@ namespace Spark
 			};
 			Program.SparkClosing += () =>
 			{
-                // Stop accepting new writes, but allow buffer to drain
-				writeQueue.CompleteAdding();
+				// Queue the final flush BEFORE closing the queue. Split() begins with
+				// `if (writeQueue.IsAddingCompleted) return;`, so completing first made the
+				// shutdown split a no-op: the butter file was never written out, the tape never
+				// closed and the last .echoreplay never zipped. Now the flush is queued, then
+				// adding is closed so nothing new arrives while the buffer drains.
 				Split();
+				writeQueue.CompleteAdding();
 			};
 		}
 
@@ -290,60 +294,73 @@ namespace Spark
 		{
             if (writeQueue.IsAddingCompleted) return;
 
-			writeQueue.Add(() => 
+			writeQueue.Add(() =>
 			{
 				splitting = true;
-				
-				lock (butterWritingLock)
-				{
-					WriteOutButterFile();
-					butter = new ButterFile(compressionFormat: SparkSettings.instance.butterCompressionFormat);
-					lastButterNumChunks = 0;
-				}
 
-				lock (fileWritingLock)
+				// Everything below can throw: a full disk, a save folder that has been moved or
+				// unmounted, a file another process is holding open. FileWritingLoop catches and
+				// logs that so the writer thread survives — but without this finally the flag
+				// resets were skipped and splitting stayed true for the rest of the process.
+				// GentleClose waits on these flags, so a single failed write left every later
+				// shutdown stuck on "Compressing Replay File..." with nothing left to compress.
+				try
 				{
-					string lastFilename = fileName;
-					fileName = DateTime.Now.ToString(fileNameFormat);
-
-					if (tapeHandle != 0)
+					lock (butterWritingLock)
 					{
-						TapeFFI.TapeClose(tapeHandle);
-						tapeHandle = 0;
+						WriteOutButterFile();
+						butter = new ButterFile(compressionFormat: SparkSettings.instance.butterCompressionFormat);
+						lastButterNumChunks = 0;
 					}
 
-					if (SparkSettings.instance.saveTapeFiles && !string.IsNullOrEmpty(SparkSettings.instance.saveFolder) && Directory.Exists(SparkSettings.instance.saveFolder))
+					lock (fileWritingLock)
 					{
-						string tapePath = Path.Combine(SparkSettings.instance.saveFolder, fileName + ".tape");
-						tapeHandle = TapeFFI.TapeCreate(tapePath, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
-					}
+						string lastFilename = fileName;
+						fileName = DateTime.Now.ToString(fileNameFormat);
 
-					if (SparkSettings.instance.useCompression && !string.IsNullOrEmpty(lastFilename))
-					{
-						string oldFile = Path.Combine(SparkSettings.instance.saveFolder, lastFilename + ".echoreplay");
-						if (File.Exists(oldFile))
+						if (tapeHandle != 0)
 						{
-							zipping = true;
-							try
+							TapeFFI.TapeClose(tapeHandle);
+							tapeHandle = 0;
+						}
+
+						if (SparkSettings.instance.saveTapeFiles && !string.IsNullOrEmpty(SparkSettings.instance.saveFolder) && Directory.Exists(SparkSettings.instance.saveFolder))
+						{
+							string tapePath = Path.Combine(SparkSettings.instance.saveFolder, fileName + ".tape");
+							tapeHandle = TapeFFI.TapeCreate(tapePath, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+						}
+
+						if (SparkSettings.instance.useCompression && !string.IsNullOrEmpty(lastFilename))
+						{
+							string oldFile = Path.Combine(SparkSettings.instance.saveFolder, lastFilename + ".echoreplay");
+							if (File.Exists(oldFile))
 							{
-								string tempDir = Path.Combine(SparkSettings.instance.saveFolder, "temp_zip_" + Guid.NewGuid());
-								Directory.CreateDirectory(tempDir);
+								zipping = true;
+								try
+								{
+									string tempDir = Path.Combine(SparkSettings.instance.saveFolder, "temp_zip_" + Guid.NewGuid());
+									Directory.CreateDirectory(tempDir);
 								
-								string destFile = Path.Combine(tempDir, lastFilename + ".echoreplay");
-								File.Move(oldFile, destFile);
+									string destFile = Path.Combine(tempDir, lastFilename + ".echoreplay");
+									File.Move(oldFile, destFile);
 								
-								ZipFile.CreateFromDirectory(tempDir, oldFile);
-								Directory.Delete(tempDir, true);
+									ZipFile.CreateFromDirectory(tempDir, oldFile);
+									Directory.Delete(tempDir, true);
+								}
+								catch (Exception ex)
+								{
+									Logger.LogRow(Logger.LogType.Error, "Error zipping split file: " + ex.Message);
+								}
+								zipping = false;
 							}
-							catch (Exception ex)
-							{
-								Logger.LogRow(Logger.LogType.Error, "Error zipping split file: " + ex.Message);
-							}
-							zipping = false;
 						}
 					}
 				}
-				splitting = false;
+				finally
+				{
+					zipping = false;
+					splitting = false;
+				}
 			});
 
 			replayBufferTimestamps.Clear();

@@ -319,6 +319,7 @@
 									<CheckBox Content="Choose Server" Style="{StaticResource ThemedCheckBox}" IsChecked="{l:SettingBinding showCreateServerTab}" Margin="0,0,18,9" />
 									<CheckBox Content="PlayerCard" Style="{StaticResource ThemedCheckBox}" IsChecked="{l:SettingBinding showPlayerCardTab}" Margin="0,0,18,9" />
 									<CheckBox Content="Friends" Style="{StaticResource ThemedCheckBox}" IsChecked="{l:SettingBinding showFriendsTab}" Margin="0,0,18,9" />
+									<CheckBox Content="Replay Analyser" Style="{StaticResource ThemedCheckBox}" IsChecked="{l:SettingBinding showReplayAnalyserTab}" Margin="0,0,18,9" />
 								</WrapPanel>
 							</StackPanel>
 						</Border>
@@ -515,6 +516,48 @@
 								</StackPanel>
 							</StackPanel>
 						</Border>
+
+						<!-- Outside fullLoggingBox on purpose: repairing a file you already have
+						     shouldn't require replay recording to be switched on. -->
+						<TextBlock Text="REPAIR" Style="{StaticResource CardHeading}"/>
+						<Border Style="{StaticResource SettingsCard}">
+							<StackPanel>
+								<TextBlock Text="Broken butter file? Convert it to echoreplay and fix it"
+								           Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" FontSize="13"
+								           TextWrapping="Wrap" Margin="0,0,0,6"/>
+								<TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextDim}" FontSize="11.5" LineHeight="17" Margin="0,0,0,10">
+									<Run Text="Some .butter files won't open in the replay viewer — one damaged frame is enough for it to reject the whole recording. This re-reads the file a chunk at a time, keeps everything that still decodes, and saves it alongside the original as a .echoreplay."/>
+								</TextBlock>
+								<StackPanel Orientation="Horizontal">
+									<Button x:Name="repairButterButton" Content="Choose .butter file..."
+									        Style="{StaticResource SecondaryButtonStyle}" Padding="10,6" Margin="0,0,10,0"
+									        Click="RepairButterFileClicked" />
+									<Label x:Name="repairButterStatusLabel" Content=""
+									       Foreground="{DynamicResource TextFaint}" FontSize="11.5"
+									       VerticalAlignment="Center" />
+								</StackPanel>
+
+								<Border Height="1" Background="{DynamicResource SurfaceBorderSoft}" Margin="0,12,0,12"/>
+
+								<TextBlock Text="Search for broken files and automatically repair them"
+								           Foreground="{DynamicResource TextPrimary}" FontWeight="SemiBold" FontSize="13"
+								           TextWrapping="Wrap" Margin="0,0,0,4"/>
+								<TextBlock Text="Please note this will delete the broken file too"
+								           Foreground="{DynamicResource StatusWarn}" FontSize="11.5"
+								           TextWrapping="Wrap" Margin="0,0,0,6"/>
+								<TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextDim}" FontSize="11.5" LineHeight="17" Margin="0,0,0,10">
+									<Run Text="Checks every .butter file in your save folder. A file counts as broken when the standard decoder rejects it, or when parts of it are damaged or cut short. Each one is rewritten as a .echoreplay, and the original is only deleted once the replacement has been read back and checked."/>
+								</TextBlock>
+								<StackPanel Orientation="Horizontal">
+									<Button x:Name="scanBrokenButterButton" Content="Search and repair..."
+									        Style="{StaticResource SecondaryButtonStyle}" Padding="10,6" Margin="0,0,10,0"
+									        Click="ScanBrokenButterClicked" />
+									<Label x:Name="scanBrokenButterStatusLabel" Content=""
+									       Foreground="{DynamicResource TextFaint}" FontSize="11.5"
+									       VerticalAlignment="Center" />
+								</StackPanel>
+							</StackPanel>
+						</Border>
 					</StackPanel>
 				</ScrollViewer>
 			</TabItem>
@@ -551,12 +594,9 @@
 									<StackPanel Grid.Column="0" Margin="0,0,10,0">
 										<Label x:Name="label1" Content="{x:Static p:Resources.Speech_Speed}" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
 										<ComboBox HorizontalAlignment="Stretch" Style="{StaticResource ThemedComboBox}"
-												  SelectedIndex="{Binding SpeechSpeed}">
-											<ComboBoxItem Content="{x:Static p:Resources.Slow}" />
-											<ComboBoxItem Content="{x:Static p:Resources.Normal}" />
-											<ComboBoxItem Content="{x:Static p:Resources.Fast}" />
-											<ComboBoxItem Content="{x:Static p:Resources.Very_Fast}" />
-										</ComboBox>
+												  ItemsSource="{x:Static l:TTSController.SpeedOptions}"
+												  SelectedValuePath="Rate" SelectedValue="{Binding SpeechSpeed}"
+												  MaxDropDownHeight="440" />
 									</StackPanel>
 
 									<StackPanel Grid.Column="1" Margin="0,0,10,0">
@@ -634,8 +674,14 @@
 											  IsChecked="{Binding PlayerSwitch}" />
 								<CheckBox Content="Private Match Rules Changed" Style="{StaticResource ThemedCheckBox}"
 								          IsChecked="{Binding RulesChanged}" />
-								<CheckBox Content="Ping Spike" Style="{StaticResource ThemedCheckBox}"
-								          IsChecked="{Binding PingSpike}" />
+								<StackPanel Orientation="Horizontal">
+									<CheckBox x:Name="pingSpikeCheckbox" Content="Ping Spike" Style="{StaticResource ThemedCheckBox}"
+									          IsChecked="{Binding PingSpike}" />
+									<!-- Only means anything with Ping Spike on, so it greys out otherwise. -->
+									<CheckBox Content="Only in private matches" Style="{StaticResource ThemedCheckBox}" Margin="18,0,0,9"
+									          IsChecked="{Binding PingSpikePrivateOnly}"
+									          IsEnabled="{Binding IsChecked, ElementName=pingSpikeCheckbox}" />
+								</StackPanel>
 								<CheckBox x:Name="ttsSpecificNumbersCheckbox" Content="Use Specific Numbers (e.g. 18.67)" Style="{StaticResource ThemedCheckBox}" Margin="0"
 											  IsChecked="{Binding TTSSpecificNumbers}" />
 							</StackPanel>

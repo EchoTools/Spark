@@ -277,9 +277,10 @@ namespace Spark
 					Player apiPlayer = apiTeam.players[p];
 					JToken jsonPlayer = jsonPlayers != null && jsonPlayers.Count > p ? jsonPlayers[p] : null;
 
-					string weapon = jsonPlayer?["Weapon"]?.ToString() ?? jsonPlayer?["weapon"]?.ToString() ?? "N/A";
-					string ordnance = jsonPlayer?["Ordnance"]?.ToString() ?? jsonPlayer?["ordnance"]?.ToString() ?? "N/A";
-					string tacmod = jsonPlayer?["TacMod"]?.ToString() ?? jsonPlayer?["tacmod"]?.ToString() ?? "N/A";
+					// The API gives internal names ("assault", "det"); show the ones players know.
+					string weapon = GearNames.Display(jsonPlayer?["Weapon"]?.ToString() ?? jsonPlayer?["weapon"]?.ToString() ?? "N/A");
+					string ordnance = GearNames.Display(jsonPlayer?["Ordnance"]?.ToString() ?? jsonPlayer?["ordnance"]?.ToString() ?? "N/A");
+					string tacmod = GearNames.Display(jsonPlayer?["TacMod"]?.ToString() ?? jsonPlayer?["tacmod"]?.ToString() ?? "N/A");
 					string mods = string.IsNullOrEmpty(ordnance) || ordnance == "N/A"
 						? (string.IsNullOrEmpty(tacmod) || tacmod == "N/A" ? "" : tacmod)
 						: (string.IsNullOrEmpty(tacmod) || tacmod == "N/A" ? ordnance : $"{ordnance} · {tacmod}");
@@ -372,7 +373,7 @@ namespace Spark
 				{
 					killer = string.IsNullOrEmpty(k.killer) ? "Self" : k.killer,
 					victim = string.IsNullOrEmpty(k.killed) ? "Unknown" : k.killed,
-					weapon = k.killed_with,
+					weapon = GearNames.Display(k.killed_with),
 					killerColor = nameColors.TryGetValue(k.killer ?? "", out string kc) ? kc : "var(--text-dim)",
 					victimColor = nameColors.TryGetValue(k.killed ?? "", out string vc) ? vc : "var(--text-dim)",
 					bg = i == 0 ? "var(--raised)" : "transparent"

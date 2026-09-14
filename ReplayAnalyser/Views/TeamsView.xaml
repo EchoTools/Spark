@@ -1,0 +1,178 @@
+<UserControl x:Class="Spark.ReplayAnalyser.Views.TeamsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:rc="clr-namespace:Spark.ReplayAnalyser.Controls">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Spark;component/ReplayAnalyser/Views/ReplayAnalyserStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style x:Key="TinyLabel" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="9.5"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextFaint}"/>
+            </Style>
+
+            <!-- One player's slot: name, role, and where on the sheet they actually live. -->
+            <DataTemplate x:Key="RoleRow">
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Style="{StaticResource RaSideTick}" Margin="0,2,10,2"
+                            rc:ToneBrush.Background="{Binding Tone}"/>
+                    <StackPanel Grid.Column="1">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding RoleName}" Margin="10,0,0,0"
+                                       FontSize="11.5" FontWeight="SemiBold" VerticalAlignment="Center"
+                                       rc:ToneBrush.Foreground="{Binding Tone}"/>
+                            <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimary}"/>
+                        </DockPanel>
+
+                        <TextBlock Text="{Binding StatLine}" FontFamily="{StaticResource RaNumFont}" FontSize="11"
+                                   Foreground="{DynamicResource TextDim}" Margin="0,3,0,0"/>
+
+                        <!-- Their average position, own goal on the left, attacking goal on the right. -->
+                        <ProgressBar Style="{StaticResource RaMeter}" Margin="0,7,0,0"
+                                     Value="{Binding Position, Mode=OneWay}"
+                                     rc:ToneBrush.Foreground="{Binding Tone}"/>
+                        <Grid Margin="0,3,0,0">
+                            <TextBlock Text="own goal" Style="{StaticResource TinyLabel}"/>
+                            <TextBlock Text="{Binding FieldProgressText}" Style="{StaticResource TinyLabel}"
+                                       HorizontalAlignment="Center" Foreground="{DynamicResource TextDim}"/>
+                            <TextBlock Text="their goal" Style="{StaticResource TinyLabel}" HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <TextBlock Text="{Binding Evidence}" Style="{StaticResource RaBody}" FontSize="11" LineHeight="15"
+                                   Foreground="{DynamicResource TextFaint}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+
+            <!-- A whole side: shape, style, roles and the numbers behind them. The original drew this
+                 twice, once per team; one template now serves both. -->
+            <DataTemplate x:Key="TeamCard">
+                <Border Style="{StaticResource RaCard}">
+                    <StackPanel>
+                        <DockPanel>
+                            <Border DockPanel.Dock="Right" VerticalAlignment="Center" CornerRadius="6" Padding="9,2"
+                                    Background="{DynamicResource SurfaceRaised}" Margin="10,0,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="RATING" Style="{StaticResource RaCaption}" VerticalAlignment="Center" Margin="0,0,7,0"/>
+                                    <TextBlock Text="{Binding RatingText}" FontFamily="{StaticResource RaNumFont}" FontSize="16"
+                                               FontWeight="Bold" Foreground="{DynamicResource TextPrimary}"/>
+                                </StackPanel>
+                            </Border>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Name}" FontSize="17" FontWeight="Bold" VerticalAlignment="Center"
+                                           rc:ToneBrush.Foreground="{Binding Tone}"/>
+                                <TextBlock Text="{Binding ScoreText}" FontSize="17" FontWeight="Bold" Margin="10,0,0,0"
+                                           FontFamily="{StaticResource RaNumFont}" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextPrimary}"/>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <TextBlock Text="{Binding StackShape}" FontSize="13" Margin="0,8,0,0" TextWrapping="Wrap"
+                                   rc:ToneBrush.Foreground="{Binding Tone}"/>
+                        <TextBlock Text="{Binding Summary}" Style="{StaticResource RaBody}" Margin="0,5,0,0"/>
+
+                        <ItemsControl ItemsSource="{Binding Tags}" ItemTemplate="{StaticResource RaTagChip}" Margin="0,10,0,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+
+                        <TextBlock Text="SHAPE" Style="{StaticResource RaCaption}" Margin="0,8,0,10"/>
+                        <ItemsControl ItemsSource="{Binding Roles}" ItemTemplate="{StaticResource RoleRow}"/>
+
+                        <TextBlock Text="TEAM NUMBERS" Style="{StaticResource RaCaption}" Margin="0,2,0,6"/>
+                        <Border Style="{StaticResource RaWell}" Padding="12,6">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="Press height" Style="{StaticResource RaStatLabel}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding PressText}" Style="{StaticResource RaStatValue}"/>
+                                <TextBlock Grid.Row="1" Text="Back left open" Style="{StaticResource RaStatLabel}"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding BackOpenText}" Style="{StaticResource RaStatValue}"/>
+                                <TextBlock Grid.Row="2" Text="Spacing" Style="{StaticResource RaStatLabel}"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SpacingText}" Style="{StaticResource RaStatValue}"/>
+                                <TextBlock Grid.Row="3" Text="Average hold" Style="{StaticResource RaStatLabel}"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding HoldText}" Style="{StaticResource RaStatValue}"/>
+                                <TextBlock Grid.Row="4" Text="Stuns" Style="{StaticResource RaStatLabel}"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding StunsText}" Style="{StaticResource RaStatValue}"/>
+                                <TextBlock Grid.Row="5" Text="Shot accuracy" Style="{StaticResource RaStatLabel}"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding AccuracyText}" Style="{StaticResource RaStatValue}"/>
+                                <TextBlock Grid.Row="6" Text="Possession" Style="{StaticResource RaStatLabel}"/>
+                                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding PossessionText}" Style="{StaticResource RaStatValue}"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="380" Margin="16"
+                    Visibility="{Binding HasTeams, Converter={StaticResource RaNotBoolVis}}">
+            <TextBlock Text="No replay open" Style="{StaticResource RaHeading}" HorizontalAlignment="Center"/>
+            <TextBlock Style="{StaticResource RaBody}" TextAlignment="Center" Margin="0,4,0,0"
+                       Text="Pick a replay from the library to see how each team played."/>
+        </StackPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      Visibility="{Binding HasTeams, Converter={StaticResource RaBoolVis}}">
+            <StackPanel Margin="16,14,16,16">
+                <TextBlock Text="Team analysis" Style="{StaticResource RaPageTitle}"/>
+                <TextBlock Style="{StaticResource RaBody}" Margin="0,3,0,0"
+                           Text="How each side actually set up — who took the goal, who pushed, and who covered the middle — read from where players spent their time rather than from what they were nominally playing."/>
+
+                <!-- ===== the two shapes ===== -->
+                <rc:Columns Margin="0,12,0,0" MinColumnWidth="330" Gap="12">
+                    <ContentControl Content="{Binding BlueTeam}" ContentTemplate="{StaticResource TeamCard}" Focusable="False"
+                                    HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+                    <ContentControl Content="{Binding OrangeTeam}" ContentTemplate="{StaticResource TeamCard}" Focusable="False"
+                                    HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+                </rc:Columns>
+
+                <!-- ===== matchup ===== -->
+                <Border Style="{StaticResource RaCard}" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock Text="The matchup" Style="{StaticResource RaHeading}"/>
+                        <TextBlock Style="{StaticResource RaBody}" Margin="0,2,0,0"
+                                   Text="What each side did to the other: where the shape was exploited, who did the damage, and what to change."/>
+                        <rc:Columns Margin="0,12,0,0" MinColumnWidth="320" Gap="12">
+                            <StackPanel>
+                                <TextBlock Text="WHAT ORANGE DID TO BLUE" Style="{StaticResource RaCaption}"
+                                           Foreground="{DynamicResource TeamBlue}" Margin="0,0,0,8"/>
+                                <ItemsControl ItemsSource="{Binding BlueMatchup}" ItemTemplate="{StaticResource RaMatchupCard}"
+                                              ItemsPanel="{StaticResource RaCardStack}"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="WHAT BLUE DID TO ORANGE" Style="{StaticResource RaCaption}"
+                                           Foreground="{DynamicResource TeamOrange}" Margin="0,0,0,8"/>
+                                <ItemsControl ItemsSource="{Binding OrangeMatchup}" ItemTemplate="{StaticResource RaMatchupCard}"
+                                              ItemsPanel="{StaticResource RaCardStack}"/>
+                            </StackPanel>
+                        </rc:Columns>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
