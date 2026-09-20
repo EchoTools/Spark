@@ -12,4 +12,9 @@ Spark is a Windows desktop program that can record, process, and upload EchoVR d
 ## License
 Source available under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
+## Idle Dash
 <img width="1260" height="678" alt="image" src="https://github.com/user-attachments/assets/ab041209-34aa-49f2-aa05-b1d64c3edf0a" />
+
+## Combat Dash
+<img width="1267" height="682" alt="image" src="https://github.com/user-attachments/assets/46745438-2292-4320-a2c1-c1b067dc41e1" />
+
