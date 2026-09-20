@@ -16,5 +16,6 @@ Source available under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
 <img width="1260" height="678" alt="image" src="https://github.com/user-attachments/assets/ab041209-34aa-49f2-aa05-b1d64c3edf0a" />
 
 ## Combat Dash
-<img width="1267" height="682" alt="image" src="https://github.com/user-attachments/assets/46745438-2292-4320-a2c1-c1b067dc41e1" />
+<img width="1262" height="674" alt="image" src="https://github.com/user-attachments/assets/3c07c7cc-0da7-487e-bd8e-a226812e9741" />
+
 
