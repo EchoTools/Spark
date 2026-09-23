@@ -1,0 +1,132 @@
+<UserControl x:Class="Spark.ReplayAnalyser.Views.TrendsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:rc="clr-namespace:Spark.ReplayAnalyser.Controls">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Spark;component/ReplayAnalyser/Views/ReplayAnalyserStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style x:Key="TrendCell" TargetType="TextBlock" BasedOn="{StaticResource RaNumber}">
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="TextAlignment" Value="Right"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
+            <Style x:Key="TrendHead" TargetType="TextBlock" BasedOn="{StaticResource RaCaption}">
+                <Setter Property="TextAlignment" Value="Right"/>
+                <Setter Property="VerticalAlignment" Value="Bottom"/>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="16,14,16,16">
+            <TextBlock Text="Career trends" Style="{StaticResource RaPageTitle}"/>
+            <TextBlock Style="{StaticResource RaBody}" Margin="0,3,0,0"
+                       Text="Form across every indexed replay the selected player appears in. One bad game says very little; a run of them says a lot."/>
+
+            <Border Style="{StaticResource RaCard}" Margin="0,12,0,0">
+                <StackPanel>
+                    <DockPanel>
+                        <ComboBox DockPanel.Dock="Right" Style="{StaticResource RaPicker}" Width="220" Margin="12,0,0,0"
+                                  ItemsSource="{Binding Players}"
+                                  SelectedItem="{Binding SelectedPlayer}"
+                                  ItemTemplate="{StaticResource RaPlayerName}"/>
+                        <TextBlock Text="{Binding TrendSummary}" Style="{StaticResource RaBody}" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+                    </DockPanel>
+
+                    <rc:LineChart Height="240" Margin="0,12,0,0"
+                                  Series="{Binding TrendSeries}"
+                                  XIsTime="False" XLabel="match"
+                                  YFormat="0.0" YLabel="per minute"/>
+                    <TextBlock Style="{StaticResource RaBody}" FontSize="11" Margin="0,6,0,0"
+                               Foreground="{DynamicResource TextFaint}"
+                               Text="The horizontal axis counts indexed matches in the order they were played, not wall-clock time."/>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource RaCard}" Margin="0,12,0,0">
+                <StackPanel>
+                    <TextBlock Text="Match by match" Style="{StaticResource RaHeading}"/>
+                    <TextBlock Style="{StaticResource RaBody}" Margin="0,4,0,0" Text="No indexed matches for this player yet."
+                               Visibility="{Binding Trends.Count, Converter={StaticResource RaZeroVis}}"/>
+
+                    <ScrollViewer Margin="0,10,0,0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                                  rc:WheelBubble.Enabled="True">
+                        <StackPanel MinWidth="600"
+                                    Width="{Binding ViewportWidth, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="118"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="58"/>
+                                    <ColumnDefinition Width="44"/>
+                                    <ColumnDefinition Width="34"/>
+                                    <ColumnDefinition Width="38"/>
+                                    <ColumnDefinition Width="40"/>
+                                    <ColumnDefinition Width="36"/>
+                                    <ColumnDefinition Width="46"/>
+                                    <ColumnDefinition Width="60"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="WHEN" Style="{StaticResource RaCaption}"/>
+                                <TextBlock Grid.Column="1" Text="FILE" Style="{StaticResource RaCaption}"/>
+                                <TextBlock Grid.Column="2" Text="SCORE" Style="{StaticResource TrendHead}"/>
+                                <TextBlock Grid.Column="3" Text="PTS" Style="{StaticResource TrendHead}"/>
+                                <TextBlock Grid.Column="4" Text="G" Style="{StaticResource TrendHead}"/>
+                                <TextBlock Grid.Column="5" Text="SV" Style="{StaticResource TrendHead}"/>
+                                <TextBlock Grid.Column="6" Text="STN" Style="{StaticResource TrendHead}"/>
+                                <TextBlock Grid.Column="7" Text="TO" Style="{StaticResource TrendHead}"/>
+                                <TextBlock Grid.Column="8" Text="MIN" Style="{StaticResource TrendHead}"/>
+                                <TextBlock Grid.Column="9" Text="PTS/MIN" Style="{StaticResource TrendHead}"/>
+                            </Grid>
+
+                            <ItemsControl ItemsSource="{Binding Trends}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border x:Name="row" CornerRadius="5" Padding="0,4" Background="Transparent">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="118"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="58"/>
+                                                    <ColumnDefinition Width="44"/>
+                                                    <ColumnDefinition Width="34"/>
+                                                    <ColumnDefinition Width="38"/>
+                                                    <ColumnDefinition Width="40"/>
+                                                    <ColumnDefinition Width="36"/>
+                                                    <ColumnDefinition Width="46"/>
+                                                    <ColumnDefinition Width="60"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" VerticalAlignment="Center" FontSize="12"
+                                                           Text="{Binding When, StringFormat='{}{0:ddd d MMM HH:mm}'}"
+                                                           Foreground="{DynamicResource TextDim}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding FileName}" VerticalAlignment="Center" FontSize="12"
+                                                           Foreground="{DynamicResource TextFaint}" Margin="0,0,10,0"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding Score}" Style="{StaticResource TrendCell}"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding Points}" Style="{StaticResource TrendCell}" FontWeight="Bold"/>
+                                                <TextBlock Grid.Column="4" Text="{Binding Goals}" Style="{StaticResource TrendCell}"/>
+                                                <TextBlock Grid.Column="5" Text="{Binding Saves}" Style="{StaticResource TrendCell}"/>
+                                                <TextBlock Grid.Column="6" Text="{Binding Stuns}" Style="{StaticResource TrendCell}"/>
+                                                <TextBlock Grid.Column="7" Text="{Binding Turnovers}" Style="{StaticResource TrendCell}"/>
+                                                <TextBlock Grid.Column="8" Text="{Binding Minutes, StringFormat='{}{0:F1}'}" Style="{StaticResource TrendCell}"/>
+                                                <TextBlock Grid.Column="9" Text="{Binding PointsPerMinute, StringFormat='{}{0:F2}'}" Style="{StaticResource TrendCell}"/>
+                                            </Grid>
+                                        </Border>
+                                        <DataTemplate.Triggers>
+                                            <Trigger SourceName="row" Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="row" Property="Background" Value="{DynamicResource SurfaceRaised}"/>
+                                            </Trigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

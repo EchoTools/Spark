@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,8 +28,8 @@ namespace Spark
 
 			endpoints.MapGet("/api/camera/go_to_waypoint/{index}", async context =>
 			{
-				context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-				context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+				context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+				context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 				if (int.TryParse(context.Request.RouteValues["index"]?.ToString(), out int index))
 				{
 					CameraWrite.TryGoToWaypoint(index);
@@ -44,8 +44,8 @@ namespace Spark
 
 			endpoints.MapGet("/api/camera/play_animation/{index}", async context =>
 			{
-				context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-				context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+				context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+				context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 				if (int.TryParse(context.Request.RouteValues["index"]?.ToString(), out int index))
 				{
 					Program.cameraWriteWindow.TryPlayAnim(index);
@@ -59,8 +59,8 @@ namespace Spark
 
 			endpoints.MapGet("/api/camera/go_to_waypoint/by_name/{name}", async context =>
 			{
-				context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-				context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+				context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+				context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 				string name = context.Request.RouteValues["name"]?.ToString();
 
 				if (Program.cameraWriteWindow.TryGoToWaypoint(name))
@@ -76,8 +76,8 @@ namespace Spark
 
 			endpoints.MapGet("/api/camera/play_animation/by_name/{name}", async context =>
 			{
-				context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-				context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+				context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+				context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 				string name = context.Request.RouteValues["name"]?.ToString();
 
 				Program.cameraWriteWindow.TryPlayAnim(name);
@@ -87,8 +87,8 @@ namespace Spark
 
 			endpoints.MapGet("/api/camera/orbit_disc_enabled/{enabled}", async context =>
 			{
-				context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-				context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+				context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+				context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 				if (bool.TryParse(context.Request.RouteValues["enabled"]?.ToString(), out bool enabled))
 				{
 					Program.cameraWriteWindow.OrbitDisc(enabled);
@@ -159,8 +159,8 @@ namespace Spark
 			{
 				try
 				{
-					context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-					context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+					context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+					context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 					CameraWriteSettings.Load();
 					await context.Response.WriteAsync("Reloaded camera settings");
 				}
@@ -175,8 +175,8 @@ namespace Spark
 			{
 				try
 				{
-					context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-					context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+					context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+					context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 					string teamName = context.Request.RouteValues["team_name"]?.ToString();
 					if (Enum.TryParse(context.Request.RouteValues["team_color"]?.ToString(), out Team.TeamColor teamColor) &&
 					    !string.IsNullOrEmpty(teamName))
@@ -213,8 +213,8 @@ namespace Spark
 			{
 				try
 				{
-					context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-					context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+					context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+					context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 					string teamLogo = context.Request.RouteValues["team_logo"]?.ToString();
 					if (Enum.TryParse(context.Request.RouteValues["team_color"]?.ToString(), out Team.TeamColor teamColor) &&
 					    !string.IsNullOrEmpty(teamLogo))
@@ -251,8 +251,8 @@ namespace Spark
 			{
 				try
 				{
-					context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-					context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+					context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+					context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 					string body = await new StreamReader(context.Request.Body).ReadToEndAsync();
 					Dictionary<string, string> data = JsonConvert.DeserializeObject<Dictionary<string, string>>(body);
 
@@ -324,8 +324,8 @@ namespace Spark
 			{
 				try
 				{
-					context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-					context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+					context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+					context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 					string body = await new StreamReader(context.Request.Body).ReadToEndAsync();
 					Dictionary<string, object> data = JsonConvert.DeserializeObject<Dictionary<string, object>>(body);
 
@@ -377,8 +377,8 @@ namespace Spark
 			{
 				try
 				{
-					context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-					context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+					context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+					context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 
 					if (int.TryParse(context.Request.RouteValues["source"]?.ToString(), out int source))
 					{
@@ -401,8 +401,8 @@ namespace Spark
 			{
 				try
 				{
-					context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-					context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+					context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+					context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 					string body = await new StreamReader(context.Request.Body).ReadToEndAsync();
 					Dictionary<string, object> data = JsonConvert.DeserializeObject<Dictionary<string, object>>(body);
 
@@ -450,8 +450,8 @@ namespace Spark
 			{
 				try
 				{
-					context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-					context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+					context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+					context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 
 					await context.Response.WriteAsJsonAsync(OverlayConfig.ToDict());
 				}
@@ -466,8 +466,8 @@ namespace Spark
 			{
 				try
 				{
-					context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-					context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+					context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+					context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 
 					// initialize
 					if (vrmlAPIClient == null)
@@ -493,7 +493,7 @@ namespace Spark
 					string val = vrmlAPICache[request].Item2;
 					if (val.StartsWith("{") || val.StartsWith("["))
 					{
-						context.Response.Headers.Add("Content-Type", "application/json");
+						context.Response.Headers.Append("Content-Type", "application/json");
 					}
 
 					await context.Response.WriteAsync(val);
@@ -515,8 +515,8 @@ namespace Spark
 						Program.liveWindow.Activate();
 					});
 
-					context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-					context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+					context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+					context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 
 					await context.Response.WriteAsJsonAsync(new Dictionary<string, string>()
 					{
@@ -533,8 +533,8 @@ namespace Spark
 			{
 				try
 				{
-					context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-					context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+					context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+					context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 					string body = await new StreamReader(context.Request.Body).ReadToEndAsync();
 					Dictionary<string, object> data = JsonConvert.DeserializeObject<Dictionary<string, object>>(body);
 
@@ -568,8 +568,8 @@ namespace Spark
 			{
 				try
 				{
-					context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-					context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+					context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+					context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
 
 					string request = context.Request.GetEncodedUrl();
 					request = request[(request.IndexOf("settings/get/", StringComparison.Ordinal) + "settings/get/".Length)..];

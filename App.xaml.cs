@@ -11,6 +11,9 @@ namespace Spark
 	{
 		protected override void OnStartup(StartupEventArgs e)
 		{
+			// Disable hardware acceleration so Oculus Dash and OBS can capture the window correctly
+			System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
+
 			// load settings file
 			SparkSettings.Load();
 

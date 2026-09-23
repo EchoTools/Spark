@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -22,7 +22,7 @@ namespace Spark
 		private WaveInEvent micCapture;
 		private WasapiLoopbackCapture speakerCapture;
 		private VoskRecognizer voskRecMic;
-		private VoskRecognizer voskRecSpeaker;
+
 
 		public bool Enabled
 		{
@@ -170,16 +170,6 @@ namespace Spark
 			speakerLevel = maxSample;
 
 			// Optimization: Avoid allocation if speaker rec isn't active
-			if (voskRecSpeaker != null)
-			{
-				float[] floats = new float[e.BytesRecorded / 4];
-				Buffer.BlockCopy(e.Buffer, 0, floats, 0, e.BytesRecorded);
-
-				if (voskRecSpeaker.AcceptWaveform(floats, floats.Length))
-				{
-					HandleResult(voskRecSpeaker.Result());
-				}
-			}
 		}
 
 		private void MicDataAvailable(object sender, WaveInEventArgs e)
@@ -351,7 +341,7 @@ namespace Spark
 			speakerCapture?.StopRecording();
 			speakerCapture?.Dispose();
 			voskRecMic?.Dispose();
-			voskRecSpeaker?.Dispose();
+
 		}
 	}
 }

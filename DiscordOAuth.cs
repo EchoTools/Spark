@@ -37,6 +37,7 @@ namespace Spark
 
         public static string igniteUploadKey = string.Empty;
         public static string firebaseCred;
+        public static bool IsAdmin { get; private set; } = false;
 
         public static List<AccessCodeKey> availableAccessCodes = new List<AccessCodeKey>();
         private static readonly AccessCodeKey personalAccessCode = new AccessCodeKey
@@ -315,12 +316,34 @@ namespace Spark
                     { "global_name", jsonResponse["global_name"]?.ToString() }
                 };
 
+                FetchAdminStatus();
                 FetchAccessCodes();
             }
             catch (Exception ex)
             {
                 Logger.LogRow(Logger.LogType.Error, $"Error fetching user details: {ex.Message}");
                 // Handle the error appropriately
+            }
+        }
+
+        private static async void FetchAdminStatus()
+        {
+            try
+            {
+                HttpResponseMessage adminResponse = await client.GetAsync("https://sparkapi-production-e6df.up.railway.app/admins");
+                if (adminResponse.IsSuccessStatusCode)
+                {
+                    string responseString = await adminResponse.Content.ReadAsStringAsync();
+                    List<string> admins = JsonConvert.DeserializeObject<List<string>>(responseString);
+                    if (admins != null && DiscordUserID != null)
+                    {
+                        IsAdmin = admins.Contains(DiscordUserID);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogRow(Logger.LogType.Error, $"Error fetching admin status: {ex.Message}");
             }
         }
 

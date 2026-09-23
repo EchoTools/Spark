@@ -6,139 +6,205 @@
              xmlns:l="clr-namespace:Spark"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="580"
-             Background="{DynamicResource ControlDarkerBackground}"
+             Background="{DynamicResource SurfaceGround}"
              FontSize="14"
              DataContext="{Binding RelativeSource={RelativeSource Self}}"
              Loaded="UserControl_Loaded"
              Unloaded="UserControl_Unloaded">
+    <UserControl.Resources>
+        <Style x:Key="CardHeading" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFaint}"/>
+            <Setter Property="Margin" Value="2,0,0,10"/>
+        </Style>
+
+        <Style x:Key="SettingsCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="14"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
+
+        <Style x:Key="ThemedCheckBox" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Margin" Value="0,0,0,9"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="Label">
+            <Setter Property="Foreground" Value="{DynamicResource TextDim}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="0,4,8,4"/>
+        </Style>
+
+        <Style x:Key="ThemedTextBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Background" Value="{DynamicResource SurfaceRaised}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource SurfaceRaised}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource ControlMouseOverBackground}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HintText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextFaint}"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+    </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="12,12,12,16">
+        <StackPanel Margin="14,14,14,16">
 
             <!-- Header -->
-            <Label Content="Media Controller" FontSize="16" Margin="0,0,0,2"/>
-            <TextBlock TextWrapping="Wrap" Opacity="0.65" FontSize="12" Margin="4,0,0,12"
+            <TextBlock Text="Media Controller" FontSize="18" FontWeight="Bold"
+                       Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,8"/>
+            <TextBlock Style="{StaticResource HintText}" Margin="0,0,0,14"
                        Text="Control your music from inside EchoVR using the mute button. Requires EchoVR running on this PC."/>
 
             <!-- Status bar -->
-            <Border Background="{DynamicResource ContainerBackground}"
-                    CornerRadius="4" BorderBrush="{DynamicResource ControlDefaultBorderBrush}"
-                    BorderThickness="1" Padding="10,8" Margin="0,0,0,10">
+            <Border Background="{DynamicResource SurfaceCard}"
+                    CornerRadius="8" BorderBrush="{DynamicResource SurfaceBorder}"
+                    BorderThickness="1" Padding="12,10" Margin="0,0,0,10">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Ellipse x:Name="StatusDot" Width="10" Height="10"
-                             Fill="#c0392b" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <Ellipse x:Name="StatusDot" Width="9" Height="9"
+                             Fill="{DynamicResource StatusBad}" Margin="0,0,8,0" VerticalAlignment="Center"/>
                     <TextBlock x:Name="StatusText" Text="EchoVR: Disconnected"
-                               VerticalAlignment="Center" FontWeight="SemiBold"/>
-                    <TextBlock x:Name="ActionText" Text="" Opacity="0.7" FontSize="12"
+                               Foreground="{DynamicResource TextPrimary}"
+                               VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12.5"/>
+                    <TextBlock x:Name="ActionText" Text="" Foreground="{DynamicResource TextFaint}" FontSize="11.5"
                                Margin="16,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
             </Border>
 
             <!-- Exclusivity warning -->
             <Border x:Name="MediaExclusivityWarning" Visibility="Collapsed"
-                    Background="#33c0392b" CornerRadius="4"
-                    BorderBrush="#c0392b" BorderThickness="1"
-                    Padding="10,8" Margin="0,0,0,10">
-                <TextBlock TextWrapping="Wrap" FontSize="12"
-                           Text="⚠  Cannot enable — Controller Clipping is currently active. Disable it in the Clips → Controller tab first."/>
+                    Background="{DynamicResource StatusBadTint}" CornerRadius="8"
+                    BorderBrush="{DynamicResource StatusBadEdge}" BorderThickness="1"
+                    Padding="12,10" Margin="0,0,0,10">
+                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource StatusBad}"
+                           Text="Cannot enable — Controller Clipping is currently active. Disable it in the Clips → Controller tab first."/>
             </Border>
 
             <!-- Enable toggle -->
             <CheckBox x:Name="EnableCheckBox"
                       Content="Enable Media Controller"
+                      Style="{StaticResource ThemedCheckBox}"
                       IsChecked="{l:SettingBinding mediaControllerEnabled}"
-                      Margin="4,0,0,12"
+                      Margin="0,0,0,14"
                       Checked="EnableChecked"
                       Unchecked="EnableUnchecked"/>
 
             <!-- Settings group -->
-            <GroupBox Header="Settings" Margin="0,0,0,10"
-                      Background="{DynamicResource ControlDarkerBackground}"
-                      BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                <StackPanel Margin="8,6,8,8" Background="{DynamicResource ControlDarkerBackground}">
+            <TextBlock Text="SETTINGS" Style="{StaticResource CardHeading}"/>
+            <Border Style="{StaticResource SettingsCard}">
+                <StackPanel>
 
                     <!-- Hold threshold -->
-                    <StackPanel Orientation="Horizontal" Margin="0,4,0,4">
-                        <Label Content="Hold for Play/Pause:" Width="180"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Label Content="Hold for Play/Pause:" Style="{StaticResource FieldLabel}" Width="170" VerticalAlignment="Center"/>
                         <TextBox x:Name="HoldThresholdBox"
                                  Text="{l:SettingBinding mediaControllerHoldThreshold}"
-                                 Width="60" Padding="4,2" VerticalContentAlignment="Center"
-                                 Background="{DynamicResource ControlDefaultBackground}"
+                                 Style="{StaticResource ThemedTextBox}"
+                                 Width="60" TextAlignment="Center"
                                  TextChanged="NumericBox_TextChanged"/>
-                        <Label Content="seconds" Margin="4,0,0,0" Opacity="0.7"/>
+                        <Label Content="seconds" Foreground="{DynamicResource TextFaint}" FontSize="11.5" Margin="8,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <!-- Prev clicks -->
-                    <StackPanel Orientation="Horizontal" Margin="0,4,0,4">
-                        <Label Content="Clicks for Prev Track:" Width="180"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Label Content="Clicks for Prev Track:" Style="{StaticResource FieldLabel}" Width="170" VerticalAlignment="Center"/>
                         <TextBox x:Name="PrevClicksBox"
                                  Text="{l:SettingBinding mediaControllerPrevClicks}"
-                                 Width="60" Padding="4,2" VerticalContentAlignment="Center"
-                                 Background="{DynamicResource ControlDefaultBackground}"
+                                 Style="{StaticResource ThemedTextBox}"
+                                 Width="60" TextAlignment="Center"
                                  TextChanged="NumericBox_TextChanged"/>
-                        <Label Content="clicks" Margin="4,0,0,0" Opacity="0.7"/>
+                        <Label Content="clicks" Foreground="{DynamicResource TextFaint}" FontSize="11.5" Margin="8,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <!-- Next clicks -->
-                    <StackPanel Orientation="Horizontal" Margin="0,4,0,4">
-                        <Label Content="Clicks for Next Track:" Width="180"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Label Content="Clicks for Next Track:" Style="{StaticResource FieldLabel}" Width="170" VerticalAlignment="Center"/>
                         <TextBox x:Name="NextClicksBox"
                                  Text="{l:SettingBinding mediaControllerNextClicks}"
-                                 Width="60" Padding="4,2" VerticalContentAlignment="Center"
-                                 Background="{DynamicResource ControlDefaultBackground}"
+                                 Style="{StaticResource ThemedTextBox}"
+                                 Width="60" TextAlignment="Center"
                                  TextChanged="NumericBox_TextChanged"/>
-                        <Label Content="clicks" Margin="4,0,0,0" Opacity="0.7"/>
+                        <Label Content="clicks" Foreground="{DynamicResource TextFaint}" FontSize="11.5" Margin="8,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <!-- Click timeout -->
-                    <StackPanel Orientation="Horizontal" Margin="0,4,0,4">
-                        <Label Content="Multi-click window:" Width="180"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Multi-click window:" Style="{StaticResource FieldLabel}" Width="170" VerticalAlignment="Center"/>
                         <TextBox x:Name="ClickTimeoutBox"
                                  Text="{l:SettingBinding mediaControllerClickTimeout}"
-                                 Width="60" Padding="4,2" VerticalContentAlignment="Center"
-                                 Background="{DynamicResource ControlDefaultBackground}"
+                                 Style="{StaticResource ThemedTextBox}"
+                                 Width="60" TextAlignment="Center"
                                  TextChanged="NumericBox_TextChanged"/>
-                        <Label Content="seconds" Margin="4,0,0,0" Opacity="0.7"/>
+                        <Label Content="seconds" Foreground="{DynamicResource TextFaint}" FontSize="11.5" Margin="8,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <Separator Margin="0,8,0,8"/>
+                    <Border Height="1" Background="{DynamicResource SurfaceBorderSoft}" Margin="0,12,0,12"/>
 
                     <!-- Auto-reconnect -->
                     <CheckBox Content="Auto-reconnect when EchoVR is not found"
-                              IsChecked="{l:SettingBinding mediaControllerAutoReconnect}"
-                              Margin="0,2,0,2"/>
+                              Style="{StaticResource ThemedCheckBox}" Margin="0"
+                              IsChecked="{l:SettingBinding mediaControllerAutoReconnect}"/>
 
                 </StackPanel>
-            </GroupBox>
+            </Border>
 
             <!-- Controls reference -->
-            <GroupBox Header="Mute Button Mappings" Margin="0,0,0,10"
-                      Background="{DynamicResource ControlDarkerBackground}"
-                      BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                <StackPanel Margin="8,6,8,8" Background="{DynamicResource ControlDarkerBackground}">
-                    <TextBlock Opacity="0.75" FontSize="12">
-                        <Run FontFamily="Consolas">Hold 3s</Run><Run>  →  Play / Pause</Run>
-                        <LineBreak/>
-                        <Run FontFamily="Consolas">3 clicks</Run><Run>  →  Previous Track (configurable above)</Run>
-                        <LineBreak/>
-                        <Run FontFamily="Consolas">4 clicks</Run><Run>  →  Next Track (configurable above)</Run>
-                    </TextBlock>
-                </StackPanel>
-            </GroupBox>
+            <TextBlock Text="MUTE BUTTON MAPPINGS" Style="{StaticResource CardHeading}"/>
+            <Border Style="{StaticResource SettingsCard}">
+                <TextBlock Foreground="{DynamicResource TextDim}" FontSize="12">
+                    <Run FontFamily="Consolas" Foreground="{DynamicResource TextPrimary}">Hold 3s</Run><Run>  -  Play / Pause</Run>
+                    <LineBreak/>
+                    <Run FontFamily="Consolas" Foreground="{DynamicResource TextPrimary}">3 clicks</Run><Run>  -  Previous Track (configurable above)</Run>
+                    <LineBreak/>
+                    <Run FontFamily="Consolas" Foreground="{DynamicResource TextPrimary}">4 clicks</Run><Run>  -  Next Track (configurable above)</Run>
+                </TextBlock>
+            </Border>
 
             <!-- Test controls -->
-            <GroupBox Header="Test Controls" Margin="0,0,0,10"
-                      Background="{DynamicResource ControlDarkerBackground}"
-                      BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                <StackPanel Orientation="Horizontal" Margin="8,8,8,8"
-                            Background="{DynamicResource ControlDarkerBackground}">
-                    <Button Content="⏮  Prev Track"  Width="120" Margin="0,0,8,0" Padding="6,4"
+            <TextBlock Text="TEST CONTROLS" Style="{StaticResource CardHeading}"/>
+            <Border Style="{StaticResource SettingsCard}">
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Prev Track" Style="{StaticResource SecondaryButtonStyle}" Width="110" Margin="0,0,8,0"
                             Click="PrevTrackClick"/>
-                    <Button Content="⏯  Play / Pause" Width="130" Margin="0,0,8,0" Padding="6,4"
+                    <Button Content="Play / Pause" Style="{StaticResource SecondaryButtonStyle}" Width="110" Margin="0,0,8,0"
                             Click="PlayPauseClick"/>
-                    <Button Content="⏭  Next Track"  Width="120" Padding="6,4"
+                    <Button Content="Next Track" Style="{StaticResource SecondaryButtonStyle}" Width="110"
                             Click="NextTrackClick"/>
                 </StackPanel>
-            </GroupBox>
+            </Border>
 
         </StackPanel>
     </ScrollViewer>

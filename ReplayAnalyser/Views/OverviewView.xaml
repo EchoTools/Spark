@@ -1,0 +1,181 @@
+<UserControl x:Class="Spark.ReplayAnalyser.Views.OverviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:rc="clr-namespace:Spark.ReplayAnalyser.Controls">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Spark;component/ReplayAnalyser/Views/ReplayAnalyserStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style x:Key="LegendText" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextDim}"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Margin" Value="6,0,16,0"/>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="380" Margin="16"
+                    Visibility="{Binding HasMatch, Converter={StaticResource RaNotBoolVis}}">
+            <TextBlock Text="No replay open" Style="{StaticResource RaHeading}" HorizontalAlignment="Center"/>
+            <TextBlock Style="{StaticResource RaBody}" TextAlignment="Center" Margin="0,4,0,0"
+                       Text="Pick a replay from the library to see the match breakdown."/>
+        </StackPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      Visibility="{Binding HasMatch, Converter={StaticResource RaBoolVis}}">
+            <StackPanel Margin="16,14,16,16">
+
+                <!-- ===== scoreboard ===== -->
+                <Border Style="{StaticResource RaCard}" Padding="0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="{DynamicResource TeamBlueTint}" CornerRadius="7,0,0,7" Padding="18,10,22,10">
+                            <StackPanel HorizontalAlignment="Right">
+                                <TextBlock Text="BLUE" FontSize="11" FontWeight="Bold" HorizontalAlignment="Right"
+                                           Foreground="{DynamicResource TeamBlue}"/>
+                                <TextBlock Text="{Binding BlueScoreText}" FontSize="44" FontWeight="Bold" HorizontalAlignment="Right"
+                                           FontFamily="{StaticResource RaNumFont}" Foreground="{DynamicResource TeamBlue}" Margin="0,-4,0,-2"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="1" Background="{DynamicResource TeamOrangeTint}" CornerRadius="0,7,7,0" Padding="22,10,18,10">
+                            <StackPanel HorizontalAlignment="Left">
+                                <TextBlock Text="ORANGE" FontSize="11" FontWeight="Bold"
+                                           Foreground="{DynamicResource TeamOrange}"/>
+                                <TextBlock Text="{Binding OrangeScoreText}" FontSize="44" FontWeight="Bold"
+                                           FontFamily="{StaticResource RaNumFont}" Foreground="{DynamicResource TeamOrange}" Margin="0,-4,0,-2"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.ColumnSpan="2" Width="1" HorizontalAlignment="Center" Background="{DynamicResource SurfaceBorder}"/>
+                    </Grid>
+                </Border>
+
+                <!-- ===== score timeline ===== -->
+                <Border Style="{StaticResource RaCard}" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock Text="How the score was built" Style="{StaticResource RaHeading}"/>
+                        <TextBlock Style="{StaticResource RaBody}" Margin="0,2,0,0"
+                                   Text="Each dot along the top is a goal. Steps show the points as they landed."/>
+                        <rc:LineChart Height="210" Margin="0,10,0,0"
+                                      Series="{Binding ScoreSeries}"
+                                      Markers="{Binding GoalMarkers}"
+                                      YFormat="0" YLabel="points"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== possession + territory: side by side when there's room ===== -->
+                <rc:Columns Margin="0,12,0,0" MinColumnWidth="330" Gap="12">
+                    <Border Style="{StaticResource RaCard}">
+                        <DockPanel>
+                            <rc:LineChart DockPanel.Dock="Bottom" Height="180" Margin="0,10,0,0"
+                                          Series="{Binding PossessionSeries}"
+                                          Markers="{Binding GoalMarkers}"
+                                          YMin="0" YMax="100" YFormat="0" YLabel="% blue"/>
+                            <StackPanel>
+                                <TextBlock Text="Possession swing" Style="{StaticResource RaHeading}"/>
+                                <TextBlock Style="{StaticResource RaBody}" Margin="0,2,0,0"
+                                           Text="Blue's running share of disc time. Above 50 means blue is holding it."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource RaCard}">
+                        <DockPanel>
+                            <rc:LineChart DockPanel.Dock="Bottom" Height="180" Margin="0,10,0,0"
+                                          Series="{Binding TerritorySeries}"
+                                          Markers="{Binding GoalMarkers}"
+                                          YMin="-40" YMax="40" YFormat="0" ShowZeroLine="True" YLabel="metres"/>
+                            <StackPanel>
+                                <TextBlock Text="Territory" Style="{StaticResource RaHeading}"/>
+                                <TextBlock Style="{StaticResource RaBody}" Margin="0,2,0,0"
+                                           Text="Where the disc sat along the arena. Positive is orange's end, negative is blue's."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </rc:Columns>
+
+                <!-- ===== heatmap ===== -->
+                <Border Style="{StaticResource RaCard}" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock Text="How the match was played" Style="{StaticResource RaHeading}"/>
+                        <TextBlock Style="{StaticResource RaBody}" Margin="0,2,0,0"
+                                   Text="Every route skated by both teams, with the disc in white over the top. Lanes used again and again burn brightest. Blue defends the left, orange the right."/>
+                        <rc:ArenaMap MaxHeight="420" Margin="0,10,0,0" Tracks="{Binding MatchTracks}"/>
+                        <WrapPanel Margin="4,8,0,0">
+                            <Ellipse Width="8" Height="8" Fill="{DynamicResource TeamBlue}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Blue routes" Style="{StaticResource LegendText}"/>
+                            <Ellipse Width="8" Height="8" Fill="{DynamicResource TeamOrange}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Orange routes" Style="{StaticResource LegendText}"/>
+                            <Ellipse Width="8" Height="8" Fill="#FFE8F6FF" VerticalAlignment="Center"/>
+                            <TextBlock Text="Disc" Style="{StaticResource LegendText}"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== team comparison ===== -->
+                <Border Style="{StaticResource RaCard}" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Team for team" Style="{StaticResource RaHeading}"/>
+                        <ItemsControl ItemsSource="{Binding TeamCompare}" Margin="0,8,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <rc:CompareBar Label="{Binding Label}" Blue="{Binding Blue}"
+                                                   Orange="{Binding Orange}" Format="{Binding Format}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== goals ===== -->
+                <Border Style="{StaticResource RaCard}" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Every goal" Style="{StaticResource RaHeading}"/>
+                        <TextBlock Style="{StaticResource RaBody}" Margin="0,4,0,0" Text="No goals were scored."
+                                   Visibility="{Binding Goals.Count, Converter={StaticResource RaZeroVis}}"/>
+                        <ItemsControl ItemsSource="{Binding Goals}" Margin="0,8,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="44"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Column="0" Style="{StaticResource RaSideTick}" Margin="0,2,10,2"
+                                                rc:ToneBrush.Background="{Binding Tone}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding TimeText}" Margin="0,1,0,0"
+                                                   FontFamily="{StaticResource RaNumFont}" FontSize="12.5"
+                                                   Foreground="{DynamicResource TextDim}"/>
+                                        <StackPanel Grid.Column="2" Margin="0,0,10,0">
+                                            <TextBlock Text="{Binding Scorer}" FontSize="13" FontWeight="SemiBold"
+                                                       rc:ToneBrush.Foreground="{Binding Tone}"/>
+                                            <TextBlock Text="{Binding DetailText}" FontSize="11.5" Margin="0,1,0,0"
+                                                       Foreground="{DynamicResource TextDim}"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="3">
+                                            <TextBlock Text="{Binding ScoreText}" HorizontalAlignment="Right"
+                                                       FontFamily="{StaticResource RaNumFont}" FontSize="13"
+                                                       Foreground="{DynamicResource TextPrimary}"/>
+                                            <TextBlock Text="{Binding SpeedText}" HorizontalAlignment="Right" Margin="0,1,0,0"
+                                                       FontFamily="{StaticResource RaNumFont}" FontSize="11"
+                                                       Foreground="{DynamicResource TextFaint}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

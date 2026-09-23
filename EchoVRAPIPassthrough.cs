@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net.Http;
 using System.Text;
@@ -14,9 +14,9 @@ namespace Spark
 	{
 		private static void AddDefaultHeaders(HttpContext context)
 		{
-			context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-			context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
-			context.Response.Headers.Add("Content-Type", "application/json");
+			context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+			context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+			context.Response.Headers.Append("Content-Type", "application/json");
 		}
 
 		public static void MapRoutes(IEndpointRouteBuilder endpoints)

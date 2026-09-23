@@ -1,0 +1,256 @@
+<UserControl x:Class="Spark.ReplayAnalyser.Views.CoachingView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:rc="clr-namespace:Spark.ReplayAnalyser.Controls">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Spark;component/ReplayAnalyser/Views/ReplayAnalyserStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- One player reviewed, shown for the whole roster at once. -->
+            <DataTemplate x:Key="RosterCard">
+                <Border Background="{DynamicResource SurfaceRaised}" CornerRadius="7" Padding="12,10,12,8">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" Margin="10,0,0,0"
+                                       FontSize="11" Foreground="{DynamicResource TextFaint}"
+                                       Text="{Binding BestArea, StringFormat='{}{0} strongest'}"
+                                       Visibility="{Binding HasBestArea, Converter={StaticResource RaBoolVis}}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Style="{StaticResource RaSideTick}" Height="15" Margin="0,0,8,0"
+                                        rc:ToneBrush.Background="{Binding Tone}"/>
+                                <TextBlock Text="{Binding Name}" FontSize="13.5" FontWeight="SemiBold" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextPrimary}"/>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <TextBlock Text="{Binding CompactStats}" FontFamily="{StaticResource RaNumFont}" FontSize="11"
+                                   Foreground="{DynamicResource TextDim}" Margin="11,6,0,0" TextWrapping="Wrap"/>
+
+                        <ItemsControl ItemsSource="{Binding Highlights}" Margin="11,8,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,6">
+                                        <DockPanel>
+                                            <Ellipse DockPanel.Dock="Left" Width="6" Height="6" Margin="0,6,7,0" VerticalAlignment="Top"
+                                                     Fill="{DynamicResource StatusGood}"/>
+                                            <TextBlock Text="{Binding Title}" FontSize="12.5" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource TextPrimary}"/>
+                                        </DockPanel>
+                                        <TextBlock Text="{Binding Detail}" Style="{StaticResource RaBody}" FontSize="11.5" LineHeight="16"
+                                                   Margin="13,1,0,0"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <ItemsControl ItemsSource="{Binding Fixes}" Margin="11,2,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,6">
+                                        <DockPanel>
+                                            <Ellipse DockPanel.Dock="Left" Width="6" Height="6" Margin="0,6,7,0" VerticalAlignment="Top"
+                                                     rc:ToneBrush.Fill="{Binding Tone}"/>
+                                            <TextBlock Text="{Binding Title}" FontSize="12.5" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource TextPrimary}"/>
+                                        </DockPanel>
+                                        <TextBlock Text="{Binding Action}" Style="{StaticResource RaBody}" FontSize="11.5" LineHeight="16"
+                                                   Margin="13,1,0,0"
+                                                   Visibility="{Binding HasAction, Converter={StaticResource RaBoolVis}}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Style="{StaticResource RaBody}" FontSize="11.5" Margin="11,2,0,2"
+                                   Foreground="{DynamicResource TextFaint}"
+                                   Text="Nothing separated them from the rest of this lobby."
+                                   Visibility="{Binding HasAnything, Converter={StaticResource RaNotBoolVis}}"/>
+                    </StackPanel>
+                </Border>
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title and scope switch stay put whatever is loaded, so the all-time report is
+             always reachable — including before any replay has been opened. -->
+        <StackPanel Grid.Row="0" Margin="16,14,16,0">
+            <DockPanel>
+                <Border DockPanel.Dock="Right" VerticalAlignment="Top" Margin="12,2,0,0" Padding="3" CornerRadius="7"
+                        Background="{DynamicResource SurfaceChrome}" BorderBrush="{DynamicResource SurfaceBorder}" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Content="This match" Style="{StaticResource RaSegment}" GroupName="RaCoachScope"
+                                     IsChecked="{Binding CoachAllTime, Converter={StaticResource RaNot}}"/>
+                        <RadioButton Content="All time" Style="{StaticResource RaSegment}" GroupName="RaCoachScope"
+                                     IsChecked="{Binding CoachAllTime}"/>
+                    </StackPanel>
+                </Border>
+                <StackPanel>
+                    <TextBlock Text="Coaching report" Style="{StaticResource RaPageTitle}"/>
+                    <TextBlock Style="{StaticResource RaBody}" Margin="0,3,0,0"
+                               Visibility="{Binding CoachMatchScope, Converter={StaticResource RaBoolVis}}"
+                               Text="Every point below is measured against the other players in this same lobby, so the advice holds whether this was a casual public game or a scrim."/>
+                    <TextBlock Style="{StaticResource RaBody}" Margin="0,3,0,0"
+                               Visibility="{Binding CoachAllTime, Converter={StaticResource RaBoolVis}}"
+                               Text="Built from every indexed replay these players appear in, measured against the people they actually share lobbies with. One game says what somebody did once; a season says what they will do again."/>
+                </StackPanel>
+            </DockPanel>
+
+            <TextBlock Text="{Binding CoachScopeNote}" Style="{StaticResource RaBody}" FontSize="11" Margin="0,6,0,0"
+                       Foreground="{DynamicResource TextFaint}"
+                       Visibility="{Binding CoachAllTime, Converter={StaticResource RaBoolVis}}"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" Style="{StaticResource RaBody}" Margin="16"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" MaxWidth="440"
+                   Text="Pick a replay from the Library for a match report, or switch to All time above to build a plan on somebody across every indexed game."
+                   Visibility="{Binding CoachingReady, Converter={StaticResource RaNotBoolVis}}"/>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                      Visibility="{Binding CoachingReady, Converter={StaticResource RaBoolVis}}">
+            <StackPanel Margin="16,12,16,16">
+
+                <!-- ===== self review ===== -->
+                <Border Style="{StaticResource RaCard}">
+                    <StackPanel>
+                        <DockPanel>
+                            <Grid DockPanel.Dock="Right" Margin="12,0,0,0">
+                                <ComboBox Style="{StaticResource RaPicker}" Width="220"
+                                          ItemsSource="{Binding Players}"
+                                          SelectedItem="{Binding SelectedPlayer}"
+                                          ItemTemplate="{StaticResource RaPlayerName}"
+                                          Visibility="{Binding CoachMatchScope, Converter={StaticResource RaBoolVis}}"/>
+                                <ComboBox Style="{StaticResource RaPicker}" Width="220"
+                                          ItemsSource="{Binding CoachRoster}"
+                                          SelectedItem="{Binding CoachSelfName}"
+                                          Visibility="{Binding CoachAllTime, Converter={StaticResource RaBoolVis}}"/>
+                            </Grid>
+                            <StackPanel>
+                                <TextBlock Text="Your game" Style="{StaticResource RaHeading}"/>
+                                <TextBlock Text="What went well, what cost you, and what to drill next."
+                                           Style="{StaticResource RaBody}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <rc:Columns Margin="0,12,0,0" MinColumnWidth="300" Weights="3,2" Gap="16">
+                            <StackPanel>
+                                <Border Style="{StaticResource RaWell}">
+                                    <TextBlock Text="{Binding SelfSummary}" Style="{StaticResource RaBody}"
+                                               Foreground="{DynamicResource TextPrimary}"/>
+                                </Border>
+                                <ItemsControl ItemsSource="{Binding SelfInsights}" Margin="0,10,0,0"
+                                              ItemTemplate="{StaticResource RaInsightCard}"
+                                              ItemsPanel="{StaticResource RaCardStack}"/>
+                            </StackPanel>
+
+                            <StackPanel>
+                                <TextBlock Text="AREA RATINGS" Style="{StaticResource RaCaption}"/>
+                                <TextBlock Style="{StaticResource RaBody}" FontSize="11.5" LineHeight="16" Margin="0,2,0,0"
+                                           Text="Percentile against the rest of this lobby. Solid is you, dashed is the opponent you are scouting."
+                                           Visibility="{Binding CoachMatchScope, Converter={StaticResource RaBoolVis}}"/>
+                                <TextBlock Style="{StaticResource RaBody}" FontSize="11.5" LineHeight="16" Margin="0,2,0,0"
+                                           Text="Edge over the players they share lobbies with: 50 is level with the room, higher is ahead. Solid is you, dashed is the player you are scouting."
+                                           Visibility="{Binding CoachAllTime, Converter={StaticResource RaBoolVis}}"/>
+                                <rc:RadarChart Height="300" Margin="0,6,0,0"
+                                               Axes="{Binding SelfRadar}"
+                                               Compare="{Binding ScoutRadar}"
+                                               Tone="Accent" CompareTone="Orange"/>
+                            </StackPanel>
+                        </rc:Columns>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== scouting ===== -->
+                <Border Style="{StaticResource RaCard}" Margin="0,12,0,0">
+                    <StackPanel>
+                        <DockPanel>
+                            <Grid DockPanel.Dock="Right" Margin="12,0,0,0">
+                                <ComboBox Style="{StaticResource RaPicker}" Width="220"
+                                          ItemsSource="{Binding Players}"
+                                          SelectedItem="{Binding SelectedOpponent}"
+                                          ItemTemplate="{StaticResource RaPlayerName}"
+                                          Visibility="{Binding CoachMatchScope, Converter={StaticResource RaBoolVis}}"/>
+                                <ComboBox Style="{StaticResource RaPicker}" Width="220"
+                                          ItemsSource="{Binding CoachRoster}"
+                                          SelectedItem="{Binding CoachOpponentName}"
+                                          Visibility="{Binding CoachAllTime, Converter={StaticResource RaBoolVis}}"/>
+                            </Grid>
+                            <StackPanel>
+                                <TextBlock Text="How to play against them" Style="{StaticResource RaHeading}"/>
+                                <TextBlock Text="A scouting read on one opponent: what they want to do, and how to take it away."
+                                           Style="{StaticResource RaBody}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </DockPanel>
+
+                        <Border Style="{StaticResource RaWell}" Margin="0,12,0,0">
+                            <TextBlock Text="{Binding ScoutSummary}" Style="{StaticResource RaBody}"
+                                       Foreground="{DynamicResource TextPrimary}"/>
+                        </Border>
+                        <ItemsControl ItemsSource="{Binding ScoutInsights}" Margin="0,10,0,0"
+                                      ItemTemplate="{StaticResource RaInsightCard}"
+                                      ItemsPanel="{StaticResource RaCardColumns}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== team shape (only meaningful for a single match) ===== -->
+                <Border Style="{StaticResource RaCard}" Margin="0,12,0,0"
+                        Visibility="{Binding CoachMatchScope, Converter={StaticResource RaBoolVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Team shape" Style="{StaticResource RaHeading}"/>
+                        <TextBlock Style="{StaticResource RaBody}" Margin="0,2,0,0"
+                                   Text="Rotation, spacing and how often the back was left open. Both sides are shown, so you can see what the other team was doing to you as well as what you did."/>
+                        <rc:Columns Margin="0,12,0,0" MinColumnWidth="320" Gap="12">
+                            <StackPanel>
+                                <TextBlock Text="BLUE" Style="{StaticResource RaCaption}"
+                                           Foreground="{DynamicResource TeamBlue}" Margin="0,0,0,8"/>
+                                <ItemsControl ItemsSource="{Binding BlueTeamInsights}"
+                                              ItemTemplate="{StaticResource RaInsightCard}"
+                                              ItemsPanel="{StaticResource RaCardStack}"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="ORANGE" Style="{StaticResource RaCaption}"
+                                           Foreground="{DynamicResource TeamOrange}" Margin="0,0,0,8"/>
+                                <ItemsControl ItemsSource="{Binding OrangeTeamInsights}"
+                                              ItemTemplate="{StaticResource RaInsightCard}"
+                                              ItemsPanel="{StaticResource RaCardStack}"/>
+                            </StackPanel>
+                        </rc:Columns>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== whole roster (only meaningful for a single match) ===== -->
+                <Border Style="{StaticResource RaCard}" Margin="0,12,0,0"
+                        Visibility="{Binding CoachMatchScope, Converter={StaticResource RaBoolVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Everyone in this match" Style="{StaticResource RaHeading}"/>
+                        <TextBlock Style="{StaticResource RaBody}" Margin="0,2,0,0"
+                                   Text="Every player reviewed at once: what each of them did well, and the clearest thing for them to work on."/>
+                        <rc:Columns Margin="0,12,0,0" MinColumnWidth="320" Gap="12">
+                            <StackPanel>
+                                <TextBlock Text="BLUE" Style="{StaticResource RaCaption}"
+                                           Foreground="{DynamicResource TeamBlue}" Margin="0,0,0,8"/>
+                                <ItemsControl ItemsSource="{Binding BlueCards}"
+                                              ItemTemplate="{StaticResource RosterCard}"
+                                              ItemsPanel="{StaticResource RaCardStack}"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="ORANGE" Style="{StaticResource RaCaption}"
+                                           Foreground="{DynamicResource TeamOrange}" Margin="0,0,0,8"/>
+                                <ItemsControl ItemsSource="{Binding OrangeCards}"
+                                              ItemTemplate="{StaticResource RosterCard}"
+                                              ItemsPanel="{StaticResource RaCardStack}"/>
+                            </StackPanel>
+                        </rc:Columns>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

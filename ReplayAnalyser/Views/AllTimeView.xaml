@@ -1,0 +1,192 @@
+<UserControl x:Class="Spark.ReplayAnalyser.Views.AllTimeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:rc="clr-namespace:Spark.ReplayAnalyser.Controls">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Spark;component/ReplayAnalyser/Views/ReplayAnalyserStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <DataTemplate x:Key="MetricRow">
+                <StackPanel Margin="0,0,0,12">
+                    <rc:MetricBar Edge="{Binding Edge}" Label="{Binding Name}"
+                                  ValueText="{Binding ValueText}" PeerText="{Binding PeerText}"/>
+                    <DockPanel Margin="0,1,0,0">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Top">
+                            <TextBlock Text="{Binding Verdict}" FontSize="11" FontWeight="SemiBold"
+                                       rc:ToneBrush.Foreground="{Binding VerdictTone}"/>
+                            <TextBlock Text="·" Margin="6,0" FontSize="11" Foreground="{DynamicResource TextFaint}"/>
+                            <TextBlock Text="{Binding TrendText}" FontSize="11"
+                                       rc:ToneBrush.Foreground="{Binding TrendTone}"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Description}" Style="{StaticResource RaBody}" FontSize="11" LineHeight="15"
+                                   Foreground="{DynamicResource TextFaint}"/>
+                    </DockPanel>
+                </StackPanel>
+            </DataTemplate>
+
+            <Style x:Key="Tally" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource RaNumFont}"/>
+                <Setter Property="FontSize" Value="20"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            </Style>
+
+            <Style x:Key="TallyCaption" TargetType="TextBlock" BasedOn="{StaticResource RaCaption}">
+                <Setter Property="Margin" Value="0,2,0,0"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+            </Style>
+
+            <Style x:Key="TallyTile" TargetType="Border" BasedOn="{StaticResource RaWell}">
+                <Setter Property="Padding" Value="11,8,11,9"/>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="420" Margin="16"
+                    Visibility="{Binding HasCareer, Converter={StaticResource RaNotBoolVis}}">
+            <TextBlock Text="{Binding CareerStatus}" Style="{StaticResource RaBody}" TextAlignment="Center"/>
+            <TextBlock Style="{StaticResource RaBody}" FontSize="11" TextAlignment="Center" Margin="0,6,0,0"
+                       Foreground="{DynamicResource TextFaint}"
+                       Text="Index the folder on the Library page, then come back."/>
+        </StackPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      Visibility="{Binding HasCareer, Converter={StaticResource RaBoolVis}}">
+            <StackPanel Margin="16,14,16,16">
+
+                <DockPanel>
+                    <ComboBox DockPanel.Dock="Right" Style="{StaticResource RaPicker}" Width="220" Margin="12,2,0,0"
+                              ItemsSource="{Binding CareerPlayers}"
+                              SelectedItem="{Binding SelectedCareerPlayer}"/>
+                    <StackPanel>
+                        <TextBlock Text="All-time" Style="{StaticResource RaPageTitle}"/>
+                        <TextBlock Style="{StaticResource RaBody}" Margin="0,3,0,0"
+                                   Text="Every indexed replay you appear in, judged against the players you actually played with rather than against fixed numbers — so it stays honest whether you are in scrims or public lobbies."/>
+                    </StackPanel>
+                </DockPanel>
+
+                <!-- ===== headline ===== -->
+                <Border Style="{StaticResource RaCard}" Margin="0,12,0,0" DataContext="{Binding Career}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Summary}" Style="{StaticResource RaBody}" FontSize="13.5" LineHeight="19"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+                        <TextBlock Text="{Binding SpanText}" Style="{StaticResource RaCaption}" FontWeight="Normal" Margin="0,5,0,0"
+                                   Visibility="{Binding SpanText, Converter={StaticResource RaNotEmptyVis}}"/>
+
+                        <rc:Columns Margin="0,12,0,0" MinColumnWidth="84" MaxColumns="7" Gap="8">
+                            <Border Style="{StaticResource TallyTile}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding MatchesText}" Style="{StaticResource Tally}"/>
+                                    <TextBlock Text="MATCHES" Style="{StaticResource TallyCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource TallyTile}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding MinutesText}" Style="{StaticResource Tally}"/>
+                                    <TextBlock Text="MIN LIVE" Style="{StaticResource TallyCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource TallyTile}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding PointsText}" Style="{StaticResource Tally}"/>
+                                    <TextBlock Text="POINTS" Style="{StaticResource TallyCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource TallyTile}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding GoalsText}" Style="{StaticResource Tally}"/>
+                                    <TextBlock Text="GOALS" Style="{StaticResource TallyCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource TallyTile}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding AssistsText}" Style="{StaticResource Tally}"/>
+                                    <TextBlock Text="ASSISTS" Style="{StaticResource TallyCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource TallyTile}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding SavesText}" Style="{StaticResource Tally}"/>
+                                    <TextBlock Text="SAVES" Style="{StaticResource TallyCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource TallyTile}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding StunsText}" Style="{StaticResource Tally}"/>
+                                    <TextBlock Text="STUNS" Style="{StaticResource TallyCaption}"/>
+                                </StackPanel>
+                            </Border>
+                        </rc:Columns>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== mess-ups ===== -->
+                <Border Style="{StaticResource RaCard}" Margin="0,12,0,0" DataContext="{Binding Career}">
+                    <StackPanel>
+                        <TextBlock Text="Mess-ups" Style="{StaticResource RaHeading}"/>
+                        <TextBlock Style="{StaticResource RaBody}" Margin="0,2,0,0"
+                                   Text="Errors picked out frame by frame. A missed grab is a loose disc that came within arm's length of your hand while you were free to take it — stunned moments are excluded, and being beaten to a genuine fifty-fifty is counted separately."/>
+
+                        <rc:Columns Margin="0,12,0,0" MinColumnWidth="112" MaxColumns="5" Gap="8">
+                            <Border Style="{StaticResource TallyTile}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding GrabRateText}" Style="{StaticResource Tally}"
+                                               Foreground="{DynamicResource ControlAccent}"/>
+                                    <TextBlock Text="LOOSE DISCS TAKEN" Style="{StaticResource TallyCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource TallyTile}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding MissedGrabsText}" Style="{StaticResource Tally}"/>
+                                    <TextBlock Text="MISSED GRABS" Style="{StaticResource TallyCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource TallyTile}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding GrabChancesText}" Style="{StaticResource Tally}"/>
+                                    <TextBlock Text="CHANCES IN REACH" Style="{StaticResource TallyCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource TallyTile}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding CarriedIntoStunText}" Style="{StaticResource Tally}"/>
+                                    <TextBlock Text="STUNNED ON DISC" Style="{StaticResource TallyCaption}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource TallyTile}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding TurnoversAtHomeText}" Style="{StaticResource Tally}"/>
+                                    <TextBlock Text="GIVEAWAYS AT HOME" Style="{StaticResource TallyCaption}"/>
+                                </StackPanel>
+                            </Border>
+                        </rc:Columns>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== metrics vs the room ===== -->
+                <Border Style="{StaticResource RaCard}" Margin="0,12,0,0" DataContext="{Binding Career}">
+                    <StackPanel>
+                        <TextBlock Text="Against the room" Style="{StaticResource RaHeading}"/>
+                        <TextBlock Style="{StaticResource RaBody}" Margin="0,2,0,0"
+                                   Text="Each habit against the same figure for everyone else in your lobbies. The centre line is level with them; right is better, left is worse."/>
+                        <ItemsControl ItemsSource="{Binding Metrics}" ItemTemplate="{StaticResource MetricRow}" Margin="0,14,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== what to work on ===== -->
+                <Border Style="{StaticResource RaCard}" Margin="0,12,0,0" DataContext="{Binding Career}">
+                    <StackPanel>
+                        <TextBlock Text="What to work on" Style="{StaticResource RaHeading}"/>
+                        <TextBlock Style="{StaticResource RaBody}" Margin="0,2,0,0"
+                                   Text="Your clearest edges, the things costing you most, and anything that has moved since your earliest recordings."/>
+                        <ItemsControl ItemsSource="{Binding Insights}" Margin="0,12,0,0"
+                                      ItemTemplate="{StaticResource RaMatchupCard}"
+                                      ItemsPanel="{StaticResource RaCardColumns}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

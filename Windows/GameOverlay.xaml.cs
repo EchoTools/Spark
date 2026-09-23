@@ -1,4 +1,4 @@
-﻿using Microsoft.Web.WebView2.Core;
+using Microsoft.Web.WebView2.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Media;
 using Button = System.Windows.Controls.Button;
+using EchoVRAPI;
 
 namespace Spark
 {
@@ -94,14 +95,20 @@ namespace Spark
 				string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "IgniteVR", "Spark", "WebView");
 				CoreWebView2Environment webView2Environment = await CoreWebView2Environment.CreateAsync(null, path);
 				await WebView.EnsureCoreWebView2Async(webView2Environment);
-				if (SparkSettings.instance.gameOverlayUrl.StartsWith('/'))
+				string overlayUrl = SparkSettings.instance.gameOverlayUrl;
+				if (overlayUrl.StartsWith('/'))
 				{
-					WebView.Source = new Uri("http://localhost:6724" + SparkSettings.instance.gameOverlayUrl);
+					overlayUrl = "http://localhost:6724" + overlayUrl;
 				}
-				else
+
+				if (overlayUrl == "http://localhost:6724/configurable_overlay" || overlayUrl == "http://localhost:6724/full_overlay" || overlayUrl == "http://localhost:6724/combat_overlay" || overlayUrl == "http://localhost:6724/combat_overlay_simple")
 				{
-					WebView.Source = new Uri(SparkSettings.instance.gameOverlayUrl);
+					Program.NewFrame -= UpdateOverlayUrl;
+					Program.NewFrame += UpdateOverlayUrl;
+					UpdateOverlayUrl(null);
 				}
+
+				WebView.Source = new Uri(overlayUrl);
 			}
 			catch (FileNotFoundException ex)
 			{
@@ -112,6 +119,24 @@ namespace Spark
 			{
 				Logger.LogRow(Logger.LogType.Error, "1239: Failed to load WebView for an unknown reason.\n" + ex);
 				new MessageBox("Failed to load. Please report this to NtsFranz. ( ╯□╰ )").Show();
+			}
+		}
+		private string lastLoadedUrl = "";
+
+		private void UpdateOverlayUrl(Frame frame)
+		{
+			if (frame == null) return;
+			string url = frame.InCombat ? "http://localhost:6724/combat_overlay_simple" : "http://localhost:6724/full_overlay";
+			if (url != lastLoadedUrl)
+			{
+				lastLoadedUrl = url;
+				Dispatcher.Invoke(() =>
+				{
+					if (WebView != null && WebView.CoreWebView2 != null)
+					{
+						WebView.Source = new Uri(url);
+					}
+				});
 			}
 		}
 

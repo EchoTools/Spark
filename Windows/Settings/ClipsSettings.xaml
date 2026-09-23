@@ -9,121 +9,197 @@
              mc:Ignorable="d"
              d:DesignHeight="900"
              d:DesignWidth="900"
-             Background="{DynamicResource ControlDarkerBackground}"
+             Background="{DynamicResource SurfaceGround}"
              FontSize="14"
              DataContext="{Binding RelativeSource={RelativeSource Self}}">
+    <UserControl.Resources>
+        <Style x:Key="CardHeading" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFaint}"/>
+            <Setter Property="Margin" Value="2,0,0,10"/>
+        </Style>
+
+        <Style x:Key="SettingsCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource SurfaceCard}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="14"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
+
+        <Style x:Key="ThemedCheckBox" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Margin" Value="0,0,0,9"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="ThemedComboBox" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Background" Value="{DynamicResource SurfaceRaised}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorder}"/>
+            <Setter Property="Padding" Value="8,4"/>
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="Label">
+            <Setter Property="Foreground" Value="{DynamicResource TextDim}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="0,4,8,4"/>
+        </Style>
+
+        <Style x:Key="ThemedTextBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Background" Value="{DynamicResource SurfaceRaised}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="ThemedPasswordBox" TargetType="PasswordBox">
+            <Setter Property="Background" Value="{DynamicResource SurfaceRaised}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource SurfaceRaised}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource ControlMouseOverBackground}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HintText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextFaint}"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+    </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="4,0,4,10">
-            <Label Content="{x:Static p:Resources.ClipsTitle_Content}" FontSize="16" Margin="5,5,5,5" />
+        <StackPanel Margin="14,14,14,14">
+            <TextBlock Text="{x:Static p:Resources.ClipsTitle_Content}" FontSize="18" FontWeight="Bold"
+                       Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,12" />
 
-            <TabControl SelectionChanged="ClipTypeTabChanged">
-                <TabItem Header="{x:Static p:Resources.NVIDIA_Highlights}" Padding="8,6,8,6"
-                         Foreground="{DynamicResource ControlPrimaryDefaultBackground}">
-                    <StackPanel Margin="10,0,10,10">
-                        <Label Content="{x:Static p:Resources.NVIDIA_Highlights_Settings}" FontSize="16"
-                               Margin="5,5,5,5" Visibility="Collapsed" />
-
+            <TabControl SelectionChanged="ClipTypeTabChanged" Margin="0,0,0,14">
+                <TabItem Header="{x:Static p:Resources.NVIDIA_Highlights}" Padding="8,6,8,6">
+                    <StackPanel Margin="14,14,14,14">
                         <TextBlock x:Name="instructionsLabel" Text="{x:Static p:Resources.nvhighlights_description_1}"
-                                   TextWrapping="Wrap" Margin="5,5,5,5"
-                                   Foreground="{DynamicResource ControlDisabledGlythColour}" />
+                                   Style="{StaticResource HintText}" />
                         <TextBlock x:Name="instructionsLabel_Copy"
-                                   Text="{x:Static p:Resources.nvhighlights_description_2}" TextWrapping="Wrap"
-                                   Margin="5,5,5,5" Foreground="{DynamicResource ControlDisabledGlythColour}" />
+                                   Text="{x:Static p:Resources.nvhighlights_description_2}" Style="{StaticResource HintText}" />
 
                         <CheckBox x:Name="enableNVHighlightsCheckbox" Content="{Binding EnableHighlightsContent}"
-                                  Margin="5,5,5,5" IsChecked="{Binding NVHighlightsEnabled}"
+                                  Style="{StaticResource ThemedCheckBox}" IsChecked="{Binding NVHighlightsEnabled}"
                                   IsEnabled="{Binding HighlightsSupported}" />
-                        <GroupBox x:Name="nvHighlightsBox" Header="{x:Static p:Resources.NVIDIA_Highlights}"
-                                  Margin="5,5,5,5" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                            <StackPanel Background="{DynamicResource ControlDarkerBackground}">
+
+                        <TextBlock Text="NVIDIA HIGHLIGHTS" Style="{StaticResource CardHeading}"/>
+                        <Border x:Name="nvHighlightsBox" Style="{StaticResource SettingsCard}">
+                            <StackPanel>
                                 <TextBlock x:Name="textBlock"
                                            Text="{x:Static p:Resources.Clear_unsaved_highlight_clips_on_Spark_exit__If_disabled__highlights_will_be_retained_forever_unless_manually_deleted_from_temp_folder}"
-                                           TextWrapping="Wrap" Margin="5,10,5,0" />
+                                           Style="{StaticResource HintText}" />
                                 <CheckBox x:Name="clearHighlightsOnExitCheckbox" Content="{x:Static p:Resources.Clear_Highlights_On_Exit}"
-                                          Margin="5,5,5,5" IsChecked="{l:SettingBinding clearHighlightsOnExit}" />
+                                          Style="{StaticResource ThemedCheckBox}" IsChecked="{l:SettingBinding clearHighlightsOnExit}" />
                                 <Button x:Name="clearHighlightsButton" Content="{Binding ClearHighlightsButtonContent}"
+                                        Style="{StaticResource SecondaryButtonStyle}"
                                         Width="230" IsEnabled="{Binding DoNVClipsExist}"
-                                        HorizontalAlignment="Left" Margin="5,5,5,5" Height="32"
-                                        Click="ClearHighlightsEvent" />
-
+                                        HorizontalAlignment="Left" Click="ClearHighlightsEvent" />
                             </StackPanel>
-                        </GroupBox>
+                        </Border>
                     </StackPanel>
                 </TabItem>
                 <TabItem Header="{x:Static p:Resources._echoreplay_Clips}" Padding="8,6,8,6">
-                    <StackPanel>
+                    <StackPanel Margin="14,14,14,14">
                         <CheckBox x:Name="enableReplayCheckbox"
-                                  Content="{x:Static p:Resources.enableReplayCheckbox_Content}" Margin="5,5,5,5"
+                                  Content="{x:Static p:Resources.enableReplayCheckbox_Content}" Style="{StaticResource ThemedCheckBox}"
                                   IsChecked="{l:SettingBinding enableReplayBuffer}" />
                         <Button Content="{x:Static p:Resources.Save_Clip_Now}" Click="ClipNow"
+                                Style="{StaticResource SecondaryButtonStyle}"
                                 IsEnabled="{Binding ElementName=enableReplayCheckbox, Path=IsChecked}"
-                                HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5,5,5,5" Padding="5,5,5,5"
-                                Width="200" />
-
+                                HorizontalAlignment="Left" Width="200" />
                     </StackPanel>
                 </TabItem>
                 <TabItem Header="{x:Static p:Resources.OBS}" Padding="8,6,8,6">
-
-                    <StackPanel>
-                        <TextBlock Margin="8,8,8,8" TextWrapping="Wrap">
+                    <StackPanel Margin="14,14,14,14">
+                        <TextBlock Style="{StaticResource HintText}">
                             <Run Text="OBS integration requires OBS v28 or greater. You can configure settings for the websocket in Tools->obs-websocket Settings" />
                         </TextBlock>
-                        <!-- <TextBlock Margin="8,8,8,8" TextWrapping="Wrap"> -->
-                        <!--     <Run Text="{x:Static p:Resources.OBS_integration_requires_the_OBS_Websocket_plugin_}" /> -->
-                        <!--     <LineBreak /> -->
-                        <!--     <Hyperlink -->
-                        <!--         NavigateUri="https://github.com/Palakis/obs-websocket/releases/download/4.9.1/obs-websocket-4.9.1-Windows-Installer.exe" -->
-                        <!--         RequestNavigate="Hyperlink_RequestNavigate"> -->
-                        <!--         <Run Text="{x:Static p:Resources.Download_Installer}"></Run> -->
-                        <!--     </Hyperlink> -->
-                        <!--     <Hyperlink NavigateUri="https://github.com/Palakis/obs-websocket/releases" -->
-                        <!--                RequestNavigate="Hyperlink_RequestNavigate"> -->
-                        <!--         (GitHub) -->
-                        <!--     </Hyperlink> -->
-                        <!-- </TextBlock> -->
-                        <StackPanel Orientation="Horizontal">
-                            <Label Content="{x:Static p:Resources.IP_Address_}" Margin="4,4,0,4" Padding="4,4,4,4" />
-                            <TextBox Text="{l:SettingBinding obsIP}" Width="160" Margin="4,4,4,4" Padding="4,4,4,4" Background="{DynamicResource ControlDefaultBackground}"/>
-                            <Label Content="{x:Static p:Resources.Password_}" Margin="4,4,0,4" Padding="4,4,4,4" />
-                            <PasswordBox x:Name="obsPasswordBox" Password="" Width="140" Margin="4,4,4,4"
-                                         Padding="4,4,4,4" PasswordChanged="OBSPasswordChanged" Background="{DynamicResource ControlDefaultBackground}"/>
-                            <Button x:Name="obsConnectButton" Content="{x:Static p:Resources.Connect}"
-                                    Click="OBSConnect" Margin="4,4,4,4" Padding="4,4,4,4" />
-                        </StackPanel>
-                        <CheckBox Content="{x:Static p:Resources.Auto_connect}"
-                                  IsChecked="{l:SettingBinding obsAutoconnect}" Margin="5,5,5,5" />
-                        <StackPanel Orientation="Horizontal">
-                            <CheckBox Content="{x:Static p:Resources.Auto_start_Replay_Buffer}"
-                                      IsChecked="{l:SettingBinding obsAutostartReplayBuffer}" Margin="5,5,5,5" />
-                            <Label x:Name="ReplayBufferNotEnabled" Visibility="Collapsed">Replay Buffer is not enabled in OBS. Enable it in the OBS settings!</Label>
-                            <Button x:Name="obsStartReplayBufferButton"
-                                    Content="{x:Static p:Resources.Start_Replay_Buffer}" Click="OBSStartReplayBuffer"
-                                    Margin="4,4,4,4" Padding="4,4,4,4" />
-                            <Button x:Name="obsStopReplayBufferButton"
-                                    Content="{x:Static p:Resources.Stop_Replay_Buffer}" Click="OBSStopReplayBuffer"
-                                    Margin="4,4,4,4" Padding="4,4,4,4" />
-                        </StackPanel>
-                        <CheckBox Content="Pause recording with game clock" IsChecked="{l:SettingBinding obsPauseRecordingWithGameClock}" Margin="5,5,5,5" />
-                        <!-- <Button Content="Add Spark Sources to Current Scene" Margin="5,5,5,5" Click="AddSparkSourcesOBS" IsEnabled="{Binding IsOBSConnected}"/> -->
-                        <GroupBox Header="{x:Static p:Resources.Automatic_Scene_Switching}" Margin="0,0,0,5" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                            <StackPanel Margin="5,5,5,5" Background="{DynamicResource ControlDarkerBackground}">
-                                <Label Content="{x:Static p:Resources.In_game_Scene_}" />
-                                <ComboBox x:Name="inGameScene" Width="300" HorizontalAlignment="Left" SelectedIndex="0">
+
+                        <TextBlock Text="CONNECTION" Style="{StaticResource CardHeading}"/>
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <StackPanel Margin="0,0,10,0">
+                                        <Label Content="{x:Static p:Resources.IP_Address_}" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
+                                        <TextBox Text="{l:SettingBinding obsIP}" Style="{StaticResource ThemedTextBox}" Width="160"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,10,0">
+                                        <Label Content="{x:Static p:Resources.Password_}" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
+                                        <PasswordBox x:Name="obsPasswordBox" Password="" Style="{StaticResource ThemedPasswordBox}" Width="140"
+                                                     PasswordChanged="OBSPasswordChanged"/>
+                                    </StackPanel>
+                                    <Button x:Name="obsConnectButton" Content="{x:Static p:Resources.Connect}" Style="{StaticResource SecondaryButtonStyle}"
+                                            Click="OBSConnect" VerticalAlignment="Bottom"/>
+                                </StackPanel>
+                                <CheckBox Content="{x:Static p:Resources.Auto_connect}" Style="{StaticResource ThemedCheckBox}"
+                                          IsChecked="{l:SettingBinding obsAutoconnect}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox Content="{x:Static p:Resources.Auto_start_Replay_Buffer}" Style="{StaticResource ThemedCheckBox}"
+                                              IsChecked="{l:SettingBinding obsAutostartReplayBuffer}" VerticalAlignment="Center" Margin="0,0,10,9"/>
+                                    <Label x:Name="ReplayBufferNotEnabled" Visibility="Collapsed" Foreground="{DynamicResource StatusWarn}" FontSize="11.5">Replay Buffer is not enabled in OBS. Enable it in the OBS settings!</Label>
+                                    <Button x:Name="obsStartReplayBufferButton"
+                                            Content="{x:Static p:Resources.Start_Replay_Buffer}" Style="{StaticResource SecondaryButtonStyle}" Click="OBSStartReplayBuffer"
+                                            Margin="0,0,8,9" />
+                                    <Button x:Name="obsStopReplayBufferButton"
+                                            Content="{x:Static p:Resources.Stop_Replay_Buffer}" Style="{StaticResource SecondaryButtonStyle}" Click="OBSStopReplayBuffer"
+                                            Margin="0,0,0,9" />
+                                </StackPanel>
+                                <CheckBox Content="Pause recording with game clock" Style="{StaticResource ThemedCheckBox}" Margin="0"
+                                          IsChecked="{l:SettingBinding obsPauseRecordingWithGameClock}" />
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="AUTOMATIC SCENE SWITCHING" Style="{StaticResource CardHeading}"/>
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <Label Content="{x:Static p:Resources.In_game_Scene_}" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="inGameScene" Style="{StaticResource ThemedComboBox}" Width="300" HorizontalAlignment="Left" SelectedIndex="0" Margin="0,0,0,12">
                                     <ComboBoxItem Content="--- Do Not Switch ---" />
                                 </ComboBox>
-                                <Label Content="{x:Static p:Resources.Between_game_Scene_}" />
-                                <ComboBox x:Name="betweenGameScene" Width="300" HorizontalAlignment="Left"
+                                <Label Content="{x:Static p:Resources.Between_game_Scene_}" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="betweenGameScene" Style="{StaticResource ThemedComboBox}" Width="300" HorizontalAlignment="Left"
                                           SelectedIndex="0">
                                     <ComboBoxItem Content="--- Do Not Switch ---" />
                                 </ComboBox>
                             </StackPanel>
-                        </GroupBox>
+                        </Border>
                     </StackPanel>
                 </TabItem>
                 <TabItem Header="Medal.tv" Padding="8,6,8,6">
-
-                    <StackPanel>
-                        <TextBlock Margin="8,8,8,8" TextWrapping="Wrap">
+                    <StackPanel Margin="14,14,14,14">
+                        <TextBlock Style="{StaticResource HintText}">
                             <Run Text="{x:Static p:Resources.Install_Medal_tv_here__}" />
                             <Hyperlink
                                 NavigateUri="https://medal.tv/download"
@@ -131,116 +207,112 @@
                                 https://medal.tv/download
                             </Hyperlink>
                         </TextBlock>
-                        <TextBlock Margin="8,8,8,8" TextWrapping="Wrap" Text="{x:Static p:Resources.Customize_your_hotkey_in_Medal_by_going_to_Settings__bottom_left_____Hotkeys__The_default_is_F8__but_this_also_hides_player_nametags_and_the_HUD_in_Echo__so_you_may_want_to_change_the_default__F12_should_be_good_for_most_people_}"></TextBlock>
-                        <ComboBox x:Name="medalClipHotkeyDropdown" Margin="8,8,8,8" HorizontalAlignment="Left" Width="200" SelectionChanged="MedalClipHotkeyDropdownOnSelectionChanged">
+                        <TextBlock Style="{StaticResource HintText}" Text="{x:Static p:Resources.Customize_your_hotkey_in_Medal_by_going_to_Settings__bottom_left_____Hotkeys__The_default_is_F8__but_this_also_hides_player_nametags_and_the_HUD_in_Echo__so_you_may_want_to_change_the_default__F12_should_be_good_for_most_people_}"/>
+                        <Label Content="Clip hotkey:" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="medalClipHotkeyDropdown" Style="{StaticResource ThemedComboBox}" HorizontalAlignment="Left" Width="200" Margin="0,0,0,14" SelectionChanged="MedalClipHotkeyDropdownOnSelectionChanged">
                             <ComboBoxItem>F8</ComboBoxItem>
                             <ComboBoxItem>F12</ComboBoxItem>
                             <ComboBoxItem>\</ComboBoxItem>
                             <ComboBoxItem>Home</ComboBoxItem>
                             <ComboBoxItem>ScrollLock</ComboBoxItem>
                         </ComboBox>
-                        <TextBlock Margin="8,8,8,8" TextWrapping="Wrap" Text="{x:Static p:Resources.You_can_use_Medal_to_record_your_entire_session__and_have_Spark_make_bookmarks_instead_of_saving_clips__Enable_this_feature_in_Medal_s_Settings__Recorder__Special_Features__Full_Session_Recording__Set__Seconds_After__to_0s_to_have_the_correct_event_timing_in_this_case_}"></TextBlock>
-                        <TextBlock Margin="8,8,8,8" TextWrapping="Wrap" Text="{x:Static p:Resources.Change_clip_length_in_the_medal_settings_window___Settings__Recorder_}"></TextBlock>
-
+                        <TextBlock Style="{StaticResource HintText}" Text="{x:Static p:Resources.You_can_use_Medal_to_record_your_entire_session__and_have_Spark_make_bookmarks_instead_of_saving_clips__Enable_this_feature_in_Medal_s_Settings__Recorder__Special_Features__Full_Session_Recording__Set__Seconds_After__to_0s_to_have_the_correct_event_timing_in_this_case_}"/>
+                        <TextBlock Style="{StaticResource HintText}" Margin="0" Text="{x:Static p:Resources.Change_clip_length_in_the_medal_settings_window___Settings__Recorder_}"/>
                     </StackPanel>
                 </TabItem>
-                <TabItem Header="{x:Static p:Resources.Voice_Recognition}" Padding="8,6,8,6"
-                         Foreground="{DynamicResource ControlPrimaryDefaultBackground}">
-                    <StackPanel Margin="10,0,10,10">
-                        <Label Content="{x:Static p:Resources.NVIDIA_Highlights_Settings}" FontSize="16"
-                               Margin="5,5,5,5"
-                               Visibility="Collapsed" />
-
+                <TabItem Header="{x:Static p:Resources.Voice_Recognition}" Padding="8,6,8,6">
+                    <StackPanel Margin="14,14,14,14">
                         <TextBlock
                             Text="{x:Static p:Resources.Voice_recognition_is_powered_by_Vosk__All_audio_data_is_processed_locally_on_your_device_and_not_uploaded_to_a_server_}"
-                            TextWrapping="Wrap" Margin="5,5,5,5"
-                            Foreground="{DynamicResource ControlDisabledGlythColour}" />
+                            Style="{StaticResource HintText}" />
 
-                        <CheckBox Content="{x:Static p:Resources.Enable_Voice_Recognition}" Margin="5,5,5,5"
+                        <CheckBox Content="{x:Static p:Resources.Enable_Voice_Recognition}" Style="{StaticResource ThemedCheckBox}"
                                   IsChecked="{l:SettingBinding enableVoiceRecognition}"
                                   Checked="VoiceRecognitionChecked"
                                   Unchecked="VoiceRecognitionUnchecked" />
-                        <GroupBox Header="{x:Static p:Resources.Settings}" Margin="5,5,5,5" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                            <StackPanel Background="{DynamicResource ControlDarkerBackground}">
-                                <Label Content="{x:Static p:Resources.Audio_Source}"></Label>
-                                <CheckBox IsChecked="{l:SettingBinding enableVoiceRecognitionMic}" Margin="10,10,10,5">Microphone</CheckBox>
-                                <ComboBox x:Name="MicSelection" SelectionChanged="MicrophoneSelectionChanged"
-                                          Margin="10,0,10,2">
-                                </ComboBox>
-                                <ProgressBar x:Name="MicLevel"  Minimum="0" Maximum="1" Height="10" Margin="10,0,10,10"></ProgressBar>
-                                <CheckBox Content="{x:Static p:Resources.Desktop_Audio}" Visibility="Collapsed" IsChecked="{l:SettingBinding enableVoiceRecognitionSpeaker}"
-                                          Margin="10,10,10,5">
-                                </CheckBox>
-                                <ComboBox Visibility="Collapsed" x:Name="SpeakerSelection" SelectionChanged="SpeakerSelectionChanged"
-                                          Margin="10,0,10,2">
-                                </ComboBox>
-                                <ProgressBar Visibility="Collapsed" x:Name="SpeakerLevel" Minimum="0" Maximum="1" Height="10" Margin="10,0,10,10"></ProgressBar>
-                                <TextBlock Text="{x:Static p:Resources.Say__Clip_That__at_any_point_to_save_a_clip}"
-                                           TextWrapping="Wrap" Margin="5,10,5,0" />
-                                <CheckBox Content="{x:Static p:Resources._Clip_That__detection__NVIDIA_Highlights_}"
-                                          IsChecked="{l:SettingBinding clipThatDetectionNVHighlights}"
-                                          Margin="5,5,5,5" />
-                                <CheckBox Content="{x:Static p:Resources._Clip_That__detection__Medal_tv_}"
-                                          IsChecked="{l:SettingBinding clipThatDetectionMedal}"
-                                          Margin="5,5,5,5" />
-                                <CheckBox Visibility="Collapsed" Content="Bad word detection (for reporting)"
-                                          IsChecked="{l:SettingBinding badWordDetection}"
-                                          Margin="5,5,5,5" />
 
+                        <TextBlock Text="SETTINGS" Style="{StaticResource CardHeading}"/>
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <Label Content="{x:Static p:Resources.Audio_Source}" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
+                                <CheckBox IsChecked="{l:SettingBinding enableVoiceRecognitionMic}" Style="{StaticResource ThemedCheckBox}">Microphone</CheckBox>
+                                <ComboBox x:Name="MicSelection" Style="{StaticResource ThemedComboBox}" SelectionChanged="MicrophoneSelectionChanged"
+                                          Margin="0,0,0,6">
+                                </ComboBox>
+                                <ProgressBar x:Name="MicLevel" Minimum="0" Maximum="1" Height="8" Margin="0,0,0,12"></ProgressBar>
+                                <CheckBox Content="{x:Static p:Resources.Desktop_Audio}" Visibility="Collapsed" Style="{StaticResource ThemedCheckBox}" IsChecked="{l:SettingBinding enableVoiceRecognitionSpeaker}">
+                                </CheckBox>
+                                <ComboBox Visibility="Collapsed" x:Name="SpeakerSelection" Style="{StaticResource ThemedComboBox}" SelectionChanged="SpeakerSelectionChanged"
+                                          Margin="0,0,0,6">
+                                </ComboBox>
+                                <ProgressBar Visibility="Collapsed" x:Name="SpeakerLevel" Minimum="0" Maximum="1" Height="8" Margin="0,0,0,12"></ProgressBar>
+
+                                <Border Height="1" Background="{DynamicResource SurfaceBorderSoft}" Margin="0,0,0,12"/>
+
+                                <TextBlock Text="{x:Static p:Resources.Say__Clip_That__at_any_point_to_save_a_clip}"
+                                           Style="{StaticResource HintText}" />
+                                <CheckBox Content="{x:Static p:Resources._Clip_That__detection__NVIDIA_Highlights_}"
+                                          Style="{StaticResource ThemedCheckBox}"
+                                          IsChecked="{l:SettingBinding clipThatDetectionNVHighlights}" />
+                                <CheckBox Content="{x:Static p:Resources._Clip_That__detection__Medal_tv_}"
+                                          Style="{StaticResource ThemedCheckBox}"
+                                          IsChecked="{l:SettingBinding clipThatDetectionMedal}" />
+                                <CheckBox Visibility="Collapsed" Content="Bad word detection (for reporting)"
+                                          Style="{StaticResource ThemedCheckBox}" Margin="0"
+                                          IsChecked="{l:SettingBinding badWordDetection}" />
                             </StackPanel>
-                        </GroupBox>
+                        </Border>
                     </StackPanel>
                 </TabItem>
-                
+
                 <!-- Controller Clipping Tab -->
                 <TabItem Header="Controller" Padding="8,6,8,6">
-                    <StackPanel Margin="10,6,10,10">
+                    <StackPanel Margin="14,14,14,14">
 
-                        <TextBlock TextWrapping="Wrap" Margin="4,4,4,4" Opacity="0.65" FontSize="12"
+                        <TextBlock Style="{StaticResource HintText}"
                                    Text="Trigger a keyboard shortcut from inside EchoVR using the mute button. Use this to clip with OBS, Medal, ShadowPlay, or any other tool."/>
-                        <TextBlock TextWrapping="Wrap" Margin="4,0,4,10" Opacity="0.65" FontSize="12">
-                            <Run FontWeight="SemiBold">How it works:</Run>
+                        <TextBlock Style="{StaticResource HintText}" Margin="0,0,0,14">
+                            <Run FontWeight="SemiBold" Foreground="{DynamicResource TextDim}">How it works:</Run>
                             <Run>Choose a trigger type — Hold (press and hold the mute button for a set duration) or Click Pattern (press the mute button a set number of times quickly). When triggered, Spark sends the keyboard shortcut you configure below to your system, activating your clipping software. This feature cannot be used at the same time as the Media Controller.</Run>
                         </TextBlock>
 
                         <!-- Status bar -->
-                        <Border Background="{DynamicResource ContainerBackground}"
-                                CornerRadius="4" BorderBrush="{DynamicResource ControlDefaultBorderBrush}"
-                                BorderThickness="1" Padding="10,8" Margin="0,0,0,10">
+                        <Border Background="{DynamicResource SurfaceCard}"
+                                CornerRadius="8" BorderBrush="{DynamicResource SurfaceBorder}"
+                                BorderThickness="1" Padding="12,10" Margin="0,0,0,10">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <Ellipse x:Name="ClipStatusDot" Width="10" Height="10"
-                                         Fill="#c0392b" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <Ellipse x:Name="ClipStatusDot" Width="9" Height="9"
+                                         Fill="{DynamicResource StatusBad}" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                 <TextBlock x:Name="ClipStatusText" Text="EchoVR: Disconnected"
-                                           VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                <TextBlock x:Name="ClipActionText" Text="" Opacity="0.7" FontSize="12"
+                                           Foreground="{DynamicResource TextPrimary}"
+                                           VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12.5"/>
+                                <TextBlock x:Name="ClipActionText" Text="" Foreground="{DynamicResource TextFaint}" FontSize="11.5"
                                            Margin="16,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Exclusivity warning -->
                         <Border x:Name="ExclusivityWarning" Visibility="Collapsed"
-                                Background="#33c0392b" CornerRadius="4"
-                                BorderBrush="#c0392b" BorderThickness="1"
-                                Padding="10,8" Margin="0,0,0,10">
-                            <TextBlock TextWrapping="Wrap" FontSize="12"
-                                       Text="⚠  Cannot enable — the Media Controller is currently active. Disable it in the Media Controller tab first."/>
+                                Background="{DynamicResource StatusBadTint}" CornerRadius="8"
+                                BorderBrush="{DynamicResource StatusBadEdge}" BorderThickness="1"
+                                Padding="12,10" Margin="0,0,0,10">
+                            <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource StatusBad}"
+                                       Text="Cannot enable — the Media Controller is currently active. Disable it in the Media Controller tab first."/>
                         </Border>
 
-                        <CheckBox Content="Enable Controller Clipping"
+                        <CheckBox Content="Enable Controller Clipping" Style="{StaticResource ThemedCheckBox}"
                                   IsChecked="{l:SettingBinding mediaControllerCustomEnabled}"
-                                  Margin="4,0,0,10"
+                                  Margin="0,0,0,14"
                                   Checked="CustomEnabledChanged"
                                   Unchecked="CustomEnabledChanged"/>
 
                         <!-- Trigger config -->
-                        <GroupBox Header="Trigger" Margin="0,0,0,10"
-                                  Background="{DynamicResource ControlDarkerBackground}"
-                                  BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                            <StackPanel Margin="8,6,8,8" Background="{DynamicResource ControlDarkerBackground}">
-
-                                <StackPanel Orientation="Horizontal" Margin="0,4,0,4">
-                                    <Label Content="Trigger Type:" Width="140"/>
-                                    <ComboBox x:Name="CustomTriggerTypeComboBox" Width="160"
+                        <TextBlock Text="TRIGGER" Style="{StaticResource CardHeading}"/>
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <Label Content="Trigger Type:" Style="{StaticResource FieldLabel}" Width="140" VerticalAlignment="Center"/>
+                                    <ComboBox x:Name="CustomTriggerTypeComboBox" Style="{StaticResource ThemedComboBox}" Width="160"
                                               SelectedIndex="{l:SettingBinding mediaControllerCustomTrigger}"
                                               SelectionChanged="CustomSettingChanged">
                                         <ComboBoxItem Content="None"/>
@@ -249,159 +321,147 @@
                                     </ComboBox>
                                 </StackPanel>
 
-                                <StackPanel x:Name="CustomHoldPanel" Orientation="Horizontal" Margin="0,4,0,4">
-                                    <Label Content="Hold Duration:" Width="140"/>
-                                    <TextBox Text="{l:SettingBinding mediaControllerCustomHoldThreshold}"
-                                             Width="60" Padding="4,2" VerticalContentAlignment="Center"
-                                             Background="{DynamicResource ControlDefaultBackground}"
+                                <StackPanel x:Name="CustomHoldPanel" Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Label Content="Hold Duration:" Style="{StaticResource FieldLabel}" Width="140" VerticalAlignment="Center"/>
+                                    <TextBox Text="{l:SettingBinding mediaControllerCustomHoldThreshold}" Style="{StaticResource ThemedTextBox}"
+                                             Width="60" VerticalAlignment="Center"
                                              PreviewTextInput="NumberValidationTextBox"/>
-                                    <Label Content="seconds" Margin="4,0,0,0" Opacity="0.7"/>
+                                    <Label Content="seconds" Foreground="{DynamicResource TextFaint}" FontSize="11.5" Margin="8,0,0,0" VerticalAlignment="Center"/>
                                 </StackPanel>
 
-                                <StackPanel x:Name="CustomClicksPanel" Orientation="Horizontal" Margin="0,4,0,4">
-                                    <Label Content="Clicks Required:" Width="140"/>
-                                    <TextBox Text="{l:SettingBinding mediaControllerCustomClicks}"
-                                             Width="60" Padding="4,2" VerticalContentAlignment="Center"
-                                             Background="{DynamicResource ControlDefaultBackground}"
+                                <StackPanel x:Name="CustomClicksPanel" Orientation="Horizontal">
+                                    <Label Content="Clicks Required:" Style="{StaticResource FieldLabel}" Width="140" VerticalAlignment="Center"/>
+                                    <TextBox Text="{l:SettingBinding mediaControllerCustomClicks}" Style="{StaticResource ThemedTextBox}"
+                                             Width="60" VerticalAlignment="Center"
                                              PreviewTextInput="NumberValidationTextBox"/>
-                                    <Label Content="clicks" Margin="4,0,0,0" Opacity="0.7"/>
+                                    <Label Content="clicks" Foreground="{DynamicResource TextFaint}" FontSize="11.5" Margin="8,0,0,0" VerticalAlignment="Center"/>
                                 </StackPanel>
-
                             </StackPanel>
-                        </GroupBox>
+                        </Border>
 
                         <!-- Keyboard shortcut -->
-                        <GroupBox Header="Keyboard Shortcut" Margin="0,0,0,10"
-                                  Background="{DynamicResource ControlDarkerBackground}"
-                                  BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                            <StackPanel Margin="8,6,8,8" Background="{DynamicResource ControlDarkerBackground}">
-
+                        <TextBlock Text="KEYBOARD SHORTCUT" Style="{StaticResource CardHeading}"/>
+                        <Border Style="{StaticResource SettingsCard}">
+                            <StackPanel>
                                 <TextBlock Text="Set one key, or a modifier + key combination."
-                                           Opacity="0.65" FontSize="12" Margin="0,0,0,6"/>
+                                           Style="{StaticResource HintText}"/>
 
-                                <StackPanel Orientation="Horizontal" Margin="0,4,0,4">
-                                    <Label Content="Modifier (optional):" Width="140"/>
-                                    <ComboBox x:Name="CustomKey1ComboBox" Width="200"
-                                              Background="{DynamicResource ControlDefaultBackground}"
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Label Content="Modifier (optional):" Style="{StaticResource FieldLabel}" Width="140" VerticalAlignment="Center"/>
+                                    <ComboBox x:Name="CustomKey1ComboBox" Style="{StaticResource ThemedComboBox}" Width="200"
                                               SelectionChanged="CustomKey1Changed"
                                               DisplayMemberPath="Name" SelectedValuePath="Value"/>
                                 </StackPanel>
 
-                                <StackPanel Orientation="Horizontal" Margin="0,4,0,4">
-                                    <Label Content="Key:" Width="140"/>
-                                    <ComboBox x:Name="CustomKey2ComboBox" Width="200"
-                                              Background="{DynamicResource ControlDefaultBackground}"
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <Label Content="Key:" Style="{StaticResource FieldLabel}" Width="140" VerticalAlignment="Center"/>
+                                    <ComboBox x:Name="CustomKey2ComboBox" Style="{StaticResource ThemedComboBox}" Width="200"
                                               SelectionChanged="CustomKey2Changed"
                                               DisplayMemberPath="Name" SelectedValuePath="Value"/>
                                 </StackPanel>
 
-                                <Separator Margin="0,8,0,8"/>
+                                <Border Height="1" Background="{DynamicResource SurfaceBorderSoft}" Margin="0,0,0,12"/>
 
-                                <TextBlock Opacity="0.75" FontSize="12">
-                                    <Run FontWeight="SemiBold">Examples:</Run>
+                                <TextBlock Foreground="{DynamicResource TextFaint}" FontSize="11.5">
+                                    <Run FontWeight="SemiBold" Foreground="{DynamicResource TextDim}">Examples:</Run>
                                     <LineBreak/>
-                                    <Run FontFamily="Consolas">Alt + F10</Run><Run>  →  ShadowPlay instant replay</Run>
+                                    <Run FontFamily="Consolas">Alt + F10</Run><Run>  -  ShadowPlay instant replay</Run>
                                     <LineBreak/>
-                                    <Run FontFamily="Consolas">F8</Run><Run>       →  Medal.tv clip (set Modifier to None)</Run>
+                                    <Run FontFamily="Consolas">F8</Run><Run>       -  Medal.tv clip (set Modifier to None)</Run>
                                 </TextBlock>
-
                             </StackPanel>
-                        </GroupBox>
-
+                        </Border>
                     </StackPanel>
                 </TabItem>
             </TabControl>
 
+            <Border x:Name="clipsEventsBox" Style="{StaticResource SettingsCard}">
+                <StackPanel>
+                    <TextBlock x:Name="clipsEventsBoxHeader" Text="{x:Static p:Resources.Clip_Settings}" Style="{StaticResource CardHeading}" Margin="0,0,0,12"/>
 
-            <GroupBox x:Name="clipsEventsBox" Header="{x:Static p:Resources.Clip_Settings}" Background="{DynamicResource ControlDarkerBackground}" BorderBrush="{DynamicResource ControlDefaultBorderBrush}">
-                <StackPanel Background="{DynamicResource ControlDarkerBackground}">
-
-                    <Label Content="{x:Static p:Resources.Highlight_Scope}" Margin="5,5,5,0" />
-                    <ComboBox x:Name="highlightScope" Width="197" HorizontalAlignment="Left" Margin="5,5,5,5"
+                    <Label Content="{x:Static p:Resources.Highlight_Scope}" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
+                    <ComboBox x:Name="highlightScope" Style="{StaticResource ThemedComboBox}" Width="197" HorizontalAlignment="Left" Margin="0,0,0,10"
                               SelectedIndex="{Binding ClipsPlayerScope}">
                         <ComboBoxItem Content="{x:Static p:Resources.Me_Only}" />
                         <ComboBoxItem Content="{x:Static p:Resources.My_Team_Only}" />
                         <ComboBoxItem Content="{x:Static p:Resources.All_Players__both_teams_}" />
                     </ComboBox>
                     <CheckBox x:Name="recordAllInSpectator"
-                              Content="{x:Static p:Resources.Record_all_events_in_Spectator}" Margin="10,5,10,10"
+                              Content="{x:Static p:Resources.Record_all_events_in_Spectator}" Style="{StaticResource ThemedCheckBox}"
                               IsChecked="{Binding ClipsSpectatorRecord}" />
 
+                    <Border Height="1" Background="{DynamicResource SurfaceBorderSoft}" Margin="0,2,0,12"/>
 
-                    <Label x:Name="timeLabel" Content="{x:Static p:Resources.Clip_Duration_}" Margin="0,10,0,0" />
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <Label x:Name="labelBefore" Content="{x:Static p:Resources.Seconds_Before_}" />
-                        <TextBox x:Name="secondsBefore" Text="{Binding SecondsBefore}" TextWrapping="Wrap" Width="64"
-                                 FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" Background="{DynamicResource ControlDefaultBackground}"/>
-                        <Label x:Name="labelAfter" Content="{x:Static p:Resources.Seconds_After_}" />
-                        <TextBox x:Name="secondsAfter" Text="{Binding SecondsAfter}" TextWrapping="Wrap" Width="64"
-                                 FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" Background="{DynamicResource ControlDefaultBackground}"/>
-                        <Label x:Name="labelTotal" Content="{x:Static p:Resources.Length_}" Margin="8,0,0,0" />
-                        <TextBox x:Name="totalSeconds" Text="0" TextWrapping="Wrap" Width="40"
-                                 FontSize="16" Height="25" IsReadOnly="True" IsEnabled="False" Background="{DynamicResource ControlDefaultBackground}"/>
+                    <Label x:Name="timeLabel" Content="{x:Static p:Resources.Clip_Duration_}" Style="{StaticResource FieldLabel}" Margin="0,0,0,4"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <Label x:Name="labelBefore" Content="{x:Static p:Resources.Seconds_Before_}" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                        <TextBox x:Name="secondsBefore" Text="{Binding SecondsBefore}" Style="{StaticResource ThemedTextBox}" Width="60"
+                                 TextAlignment="Center" Margin="0,0,10,0" PreviewTextInput="NumberValidationTextBox"/>
+                        <Label x:Name="labelAfter" Content="{x:Static p:Resources.Seconds_After_}" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                        <TextBox x:Name="secondsAfter" Text="{Binding SecondsAfter}" Style="{StaticResource ThemedTextBox}" Width="60"
+                                 TextAlignment="Center" Margin="0,0,10,0" PreviewTextInput="NumberValidationTextBox"/>
+                        <Label x:Name="labelTotal" Content="{x:Static p:Resources.Length_}" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                        <TextBox x:Name="totalSeconds" Text="0" Style="{StaticResource ThemedTextBox}" Width="44"
+                                 TextAlignment="Center" IsReadOnly="True" IsEnabled="False"/>
                     </StackPanel>
 
                     <TextBlock x:Name="nvHighlightsChooseEventsInOverlayLabel"
                                Text="{x:Static p:Resources.Choose_the_events_you_want_to_clip_in_the_NVIDIA_overlay__ALT_Z_}"
-                               Margin="5,5,5,5" Foreground="{DynamicResource ControlDisabledGlythColour}" />
+                               Style="{StaticResource HintText}" Margin="0,0,0,4"/>
                     <StackPanel x:Name="eventsToChoose">
-                        <CheckBox Content="{x:Static p:Resources.Emote_Activation}" Margin="5,5,5,5"
+                        <CheckBox Content="{x:Static p:Resources.Emote_Activation}" Style="{StaticResource ThemedCheckBox}"
                                   IsChecked="{Binding ClipEmoteSetting}" />
-                        <CheckBox Content="{x:Static p:Resources.Playspace_Abuse}" Margin="5,5,5,5"
+                        <CheckBox Content="{x:Static p:Resources.Playspace_Abuse}" Style="{StaticResource ThemedCheckBox}"
                                   IsChecked="{Binding ClipPlayspaceSetting}" />
-                        <CheckBox Content="{x:Static p:Resources.Goal}" Margin="5,5,5,5"
+                        <CheckBox Content="{x:Static p:Resources.Goal}" Style="{StaticResource ThemedCheckBox}"
                                   IsChecked="{Binding ClipGoalSetting}" />
-                        <StackPanel x:Name="goalReplaySceneBox">
-                            <StackPanel Orientation="Horizontal" Margin="15,5,5,5">
-                                <Label Content="{x:Static p:Resources.Replay_Scene}" />
-                                <ComboBox x:Name="goalReplayScene" Width="300" HorizontalAlignment="Left"
+                        <StackPanel x:Name="goalReplaySceneBox" Margin="24,0,0,9">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Label Content="{x:Static p:Resources.Replay_Scene}" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="goalReplayScene" Style="{StaticResource ThemedComboBox}" Width="260" HorizontalAlignment="Left"
                                           SelectedIndex="0">
                                     <ComboBoxItem Content="--- Do Not Switch ---" />
                                 </ComboBox>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="15,5,5,5">
-                                <Label x:Name="labelGoalAfter" Content="{x:Static p:Resources.Replay_Delay}" />
-                                <TextBox x:Name="secondsAfterGoal" Text="{Binding GoalSecondsAfter}"
-                                         TextWrapping="Wrap" Width="64"
-                                         FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" Background="{DynamicResource ControlDefaultBackground}"/>
-                                <Label x:Name="labelGoalLength" Content="{x:Static p:Resources.Replay_Length}" />
-                                <TextBox x:Name="replayGoalLength" Text="{Binding GoalReplayLength}"
-                                         TextWrapping="Wrap" Width="64"
-                                         FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" Background="{DynamicResource ControlDefaultBackground}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Label x:Name="labelGoalAfter" Content="{x:Static p:Resources.Replay_Delay}" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                                <TextBox x:Name="secondsAfterGoal" Text="{Binding GoalSecondsAfter}" Style="{StaticResource ThemedTextBox}"
+                                         Width="56" TextAlignment="Center" Margin="0,0,10,0" PreviewTextInput="NumberValidationTextBox"/>
+                                <Label x:Name="labelGoalLength" Content="{x:Static p:Resources.Replay_Length}" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                                <TextBox x:Name="replayGoalLength" Text="{Binding GoalReplayLength}" Style="{StaticResource ThemedTextBox}"
+                                         Width="56" TextAlignment="Center" PreviewTextInput="NumberValidationTextBox"/>
                             </StackPanel>
                         </StackPanel>
-                        <CheckBox Content="{x:Static p:Resources.Score_Assist}" Margin="5,5,5,5"
+                        <CheckBox Content="{x:Static p:Resources.Score_Assist}" Style="{StaticResource ThemedCheckBox}"
                                   IsChecked="{Binding ClipAssistSetting}" />
-                        <CheckBox Content="{x:Static p:Resources.Save}" Margin="5,5,5,5"
+                        <CheckBox Content="{x:Static p:Resources.Save}" Style="{StaticResource ThemedCheckBox}"
                                   IsChecked="{Binding ClipSaveSetting}" />
-                        <StackPanel x:Name="saveReplaySceneBox">
-                            <StackPanel Orientation="Horizontal" Margin="15,5,5,5">
-                                <Label Content="{x:Static p:Resources.Replay_Scene}" />
-                                <ComboBox x:Name="saveReplayScene" Width="300" HorizontalAlignment="Left"
+                        <StackPanel x:Name="saveReplaySceneBox" Margin="24,0,0,9">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Label Content="{x:Static p:Resources.Replay_Scene}" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="saveReplayScene" Style="{StaticResource ThemedComboBox}" Width="260" HorizontalAlignment="Left"
                                           SelectedIndex="0">
                                     <ComboBoxItem Content="--- Do Not Switch ---" />
                                 </ComboBox>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="15,5,5,5">
-                                <Label x:Name="labelSaveAfter" Content="{x:Static p:Resources.Replay_Delay}" />
-                                <TextBox x:Name="secondsAfterSave" Text="{Binding SaveSecondsAfter}"
-                                         TextWrapping="Wrap" Width="64"
-                                         FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" Background="{DynamicResource ControlDefaultBackground}"/>
-                                <Label x:Name="labelSaveLength" Content="{x:Static p:Resources.Replay_Length}" />
-                                <TextBox x:Name="replaySaveLength" Text="{Binding SaveReplayLength}"
-                                         TextWrapping="Wrap" Width="64"
-                                         FontSize="16" Height="25" PreviewTextInput="NumberValidationTextBox" Background="{DynamicResource ControlDefaultBackground}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Label x:Name="labelSaveAfter" Content="{x:Static p:Resources.Replay_Delay}" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                                <TextBox x:Name="secondsAfterSave" Text="{Binding SaveSecondsAfter}" Style="{StaticResource ThemedTextBox}"
+                                         Width="56" TextAlignment="Center" Margin="0,0,10,0" PreviewTextInput="NumberValidationTextBox"/>
+                                <Label x:Name="labelSaveLength" Content="{x:Static p:Resources.Replay_Length}" Style="{StaticResource FieldLabel}" VerticalAlignment="Center"/>
+                                <TextBox x:Name="replaySaveLength" Text="{Binding SaveReplayLength}" Style="{StaticResource ThemedTextBox}"
+                                         Width="56" TextAlignment="Center" PreviewTextInput="NumberValidationTextBox"/>
                             </StackPanel>
                         </StackPanel>
-                        <CheckBox Content="{x:Static p:Resources.Interception}" Margin="5,5,5,5"
+                        <CheckBox Content="{x:Static p:Resources.Interception}" Style="{StaticResource ThemedCheckBox}"
                                   IsChecked="{Binding ClipInterceptionSetting}" />
-                        <CheckBox Content="{x:Static p:Resources.Neutral_Joust}" Margin="5,5,5,5"
+                        <CheckBox Content="{x:Static p:Resources.Neutral_Joust}" Style="{StaticResource ThemedCheckBox}"
                                   IsChecked="{Binding ClipNeutralJoustSetting}" />
-                        <CheckBox Content="{x:Static p:Resources.Defensive_Joust}" Margin="5,5,5,5"
+                        <CheckBox Content="{x:Static p:Resources.Defensive_Joust}" Style="{StaticResource ThemedCheckBox}" Margin="0"
                                   IsChecked="{Binding ClipDefensiveJoustSetting}" />
                     </StackPanel>
                 </StackPanel>
-            </GroupBox>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

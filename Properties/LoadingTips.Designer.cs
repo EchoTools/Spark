@@ -73,7 +73,7 @@ namespace Spark.Properties {
         /// </summary>
         public static string _93__of_players_in_the_VR_Master_League_are_High_Diamond_ {
             get {
-                return ResourceManager.GetString("93% of players in the VR Master League are High Diamond!", resourceCulture);
+                return ResourceManager.GetString("2% of echo players are good.", resourceCulture);
             }
         }
         
@@ -92,7 +92,7 @@ namespace Spark.Properties {
         /// </summary>
         public static string A2 {
             get {
-                return ResourceManager.GetString("A2", resourceCulture);
+                return ResourceManager.GetString("Do Not Play A2", resourceCulture);
             }
         }
         
@@ -101,7 +101,7 @@ namespace Spark.Properties {
         /// </summary>
         public static string Ask_anyone_in_the_beta {
             get {
-                return ResourceManager.GetString("Ask anyone in the beta", resourceCulture);
+                return ResourceManager.GetString("We don\'t have a beta.", resourceCulture);
             }
         }
         
@@ -155,7 +155,7 @@ namespace Spark.Properties {
         /// </summary>
         public static string DOME {
             get {
-                return ResourceManager.GetString("DOME", resourceCulture);
+                return ResourceManager.GetString("Im better", resourceCulture);
             }
         }
         
@@ -164,7 +164,7 @@ namespace Spark.Properties {
         /// </summary>
         public static string DOMErs_only {
             get {
-                return ResourceManager.GetString("DOMErs only", resourceCulture);
+                return ResourceManager.GetString("Vanilla Coke is the best.", resourceCulture);
             }
         }
         
@@ -173,7 +173,7 @@ namespace Spark.Properties {
         /// </summary>
         public static string Echo_Arena_2 {
             get {
-                return ResourceManager.GetString("Echo Arena 2", resourceCulture);
+                return ResourceManager.GetString("Echo Arena 3", resourceCulture);
             }
         }
         
@@ -202,7 +202,7 @@ namespace Spark.Properties {
         /// </summary>
         public static string Get_Bigmand_ {
             get {
-                return ResourceManager.GetString("Get Bigmand!", resourceCulture);
+                return ResourceManager.GetString("Get Bigmad!", resourceCulture);
             }
         }
         
@@ -220,7 +220,7 @@ namespace Spark.Properties {
         /// </summary>
         public static string I_didn_t_get_the_CTO_job_from_John_Carmack_ {
             get {
-                return ResourceManager.GetString("I didn\'t get the CTO job from John Carmack.", resourceCulture);
+                return ResourceManager.GetString("What is a Boz?", resourceCulture);
             }
         }
         
@@ -229,7 +229,7 @@ namespace Spark.Properties {
         /// </summary>
         public static string I_m_not_an_ads_guy {
             get {
-                return ResourceManager.GetString("I\'m not an ads guy", resourceCulture);
+                return ResourceManager.GetString("Screw ads.", resourceCulture);
             }
         }
         
@@ -240,8 +240,7 @@ namespace Spark.Properties {
         /// </summary>
         public static string Ignite_Playercards_show_you_bars_for_your_stats_with_your_percentile_compared_to_other_players_ {
             get {
-                return ResourceManager.GetString("Ignite Playercards show you bars for your stats with your percentile compared to " +
-                        "other players.", resourceCulture);
+                return ResourceManager.GetString("Spark Player Cards can be made inside the app!", resourceCulture);
             }
         }
         
@@ -261,7 +260,7 @@ namespace Spark.Properties {
         /// </summary>
         public static string Lone_Echo_2_releases_tomorrow_ {
             get {
-                return ResourceManager.GetString("Lone Echo 2 releases tomorrow!", resourceCulture);
+                return ResourceManager.GetString("Lone Echo 2 is peak.", resourceCulture);
             }
         }
         
@@ -335,7 +334,7 @@ namespace Spark.Properties {
         /// </summary>
         public static string Spark_is_available_in_both_English_and_Japanese_ {
             get {
-                return ResourceManager.GetString("Spark is available in both English and Japanese!", resourceCulture);
+                return ResourceManager.GetString("Spark is available in both English and mostly Japanese!", resourceCulture);
             }
         }
         
@@ -430,7 +429,7 @@ namespace Spark.Properties {
         /// </summary>
         public static string Try_Rumble_today_ {
             get {
-                return ResourceManager.GetString("Try Rumble today!", resourceCulture);
+                return ResourceManager.GetString("Aqua is my favourite mod!", resourceCulture);
             }
         }
         

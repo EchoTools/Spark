@@ -1,0 +1,374 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  /* Sibling of dashboard.html — same classes, same values, same custom properties pushed in live
+     from ThemesController's three colours. Anything changed here should be changed there too. */
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; font-size: 13px; overflow: hidden;
+    font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+    background: var(--ground); color: var(--text);
+    -webkit-font-smoothing: antialiased; user-select: none;
+  }
+  .m { font-family: Consolas, 'Cascadia Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .cap { font-size: 9.5px; letter-spacing: 0.9px; text-transform: uppercase; font-weight: 600; color: var(--text-faint); white-space: nowrap; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px; display: flex; flex-direction: column; min-height: 0;
+  }
+  .tile { background: var(--raised); border: 1px solid var(--border); border-radius: 5px; padding: 7px 9px; }
+  .track { background: var(--track); border-radius: 3px; overflow: hidden; }
+  .row { display: flex; align-items: center; }
+  .grow { flex-grow: 1; min-width: 0; }
+  .ell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<div style="height:100%; padding:12px; display:flex; flex-direction:column; gap:12px;">
+
+  <!-- ROW 1 -->
+  <div style="display:flex; gap:12px; height:292px; flex-shrink:0;">
+
+    <!-- Match: score, clock, objective, team totals -->
+    <div class="card" style="width:340px; flex-shrink:0;">
+      <div class="row" style="justify-content:space-between; align-items:baseline;">
+        <div class="cap">Match</div>
+        <div class="cap" id="mapName" style="color:var(--text-dim);">--</div>
+      </div>
+
+      <div class="row" style="margin-top:10px; align-items:flex-end;">
+        <div style="width:92px;">
+          <div class="cap" style="font-size:9px; color:var(--blue);">Blue</div>
+          <div class="m" id="blueScore" style="font-size:30px; font-weight:700; line-height:1; color:var(--blue); margin-top:3px;">--</div>
+        </div>
+        <div class="grow" style="text-align:center;">
+          <div class="m" id="clock" style="font-size:16px; line-height:1;">--:--</div>
+          <div class="cap" id="roundLabel" style="font-size:8.5px; margin-top:4px;">No round</div>
+        </div>
+        <div style="width:92px; text-align:right;">
+          <div class="cap" style="font-size:9px; color:var(--orange);">Orange</div>
+          <div class="m" id="orangeScore" style="font-size:30px; font-weight:700; line-height:1; color:var(--orange); margin-top:3px;">--</div>
+        </div>
+      </div>
+
+      <div style="height:1px; background:var(--border-soft); margin:12px 0;"></div>
+
+      <!-- Objective. Dyson and Combustion run a capture point; Fission and Surge run a payload.
+           Both live in this one fixed-height slot so the card never reflows when the map changes
+           between rounds. -->
+      <div>
+        <div class="row" style="justify-content:space-between;">
+          <div class="cap" id="objLabel">Objective</div>
+          <div class="row" style="gap:5px;">
+            <div id="objDot" style="width:5px; height:5px; border-radius:3px; background:var(--text-faint);"></div>
+            <div id="objState" style="font-size:10px; color:var(--text-faint);">--</div>
+          </div>
+        </div>
+
+        <div id="captureView">
+          <div class="row" style="margin-top:9px; height:11px;">
+            <div class="track" style="width:50%; height:7px; border-radius:3px 0 0 3px; display:flex; justify-content:flex-end;">
+              <div id="captureBlue" style="width:0%; height:100%; background:var(--blue);"></div>
+            </div>
+            <div style="width:1px; height:11px; background:var(--text-faint); flex-shrink:0;"></div>
+            <div class="track" style="width:50%; height:7px; border-radius:0 3px 3px 0;">
+              <div id="captureOrange" style="width:0%; height:100%; background:var(--orange);"></div>
+            </div>
+          </div>
+          <div class="row" style="justify-content:space-between; margin-top:6px;">
+            <div class="m" id="captureBluePct" style="font-size:11px; color:var(--blue);">--</div>
+            <div class="cap" style="font-size:8.5px;">Hold</div>
+            <div class="m" id="captureOrangePct" style="font-size:11px; color:var(--orange);">--</div>
+          </div>
+        </div>
+
+        <div id="payloadView" style="display:none;">
+          <div style="position:relative; margin-top:9px; height:11px; display:flex; align-items:center;">
+            <div class="track" style="height:7px; width:100%;">
+              <div id="payloadFill" style="width:0%; height:100%; background:var(--accent);"></div>
+            </div>
+            <div id="payloadMark" style="position:absolute; top:0; left:0%; width:3px; height:11px; border-radius:2px; background:var(--text); margin-left:-1.5px;"></div>
+          </div>
+          <div class="row" style="justify-content:space-between; margin-top:6px; gap:10px;">
+            <div class="row" style="gap:6px;">
+              <div class="cap" style="font-size:8.5px;">Distance</div>
+              <div class="m" id="payloadDistance" style="font-size:11.5px;">--</div>
+            </div>
+            <div class="row" style="gap:6px;">
+              <div class="cap" style="font-size:8.5px;">Speed</div>
+              <div class="m" id="payloadSpeed" style="font-size:11.5px;">--</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:1px; background:var(--border-soft); margin:12px 0;"></div>
+
+      <div class="row" style="justify-content:space-between; margin-bottom:7px;">
+        <div class="cap">Team totals</div>
+        <div class="row">
+          <div class="cap" style="font-size:8.5px; width:30px; text-align:right;">K</div>
+          <div class="cap" style="font-size:8.5px; width:50px; text-align:right;">Dmg</div>
+          <div class="cap" style="font-size:8.5px; width:44px; text-align:right;">Obj</div>
+        </div>
+      </div>
+      <div id="totalsList" style="display:flex; flex-direction:column; gap:3px;"></div>
+    </div>
+
+    <!-- Kill feed -->
+    <div class="card" style="width:216px; flex-shrink:0;">
+      <div class="row" style="justify-content:space-between; margin-bottom:8px;">
+        <div class="cap">Kill feed</div>
+        <div class="m" id="killTotal" style="font-size:10px; color:var(--text-faint);"></div>
+      </div>
+      <div id="killList" class="grow no-scrollbar" style="display:flex; flex-direction:column; gap:2px; overflow-y:auto;"></div>
+    </div>
+
+    <!-- Network. Same anatomy as the Arena dashboard's card, on the same data. -->
+    <div class="card grow">
+      <div class="row" style="justify-content:space-between; margin-bottom:10px;">
+        <div class="cap">Network</div>
+        <div class="row" style="gap:6px; height:20px; padding:0 8px; border-radius:10px; background:var(--raised); border:1px solid var(--border);">
+          <div id="netChipDot" style="width:5px; height:5px; border-radius:3px; background:var(--text-faint);"></div>
+          <div id="netChipText" style="font-size:10.5px; color:var(--text-dim);">--</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-bottom:11px;">
+        <div class="tile grow"><div class="cap" style="font-size:9px;">Avg ping</div><div class="m" style="font-size:17px; font-weight:600; margin-top:2px;"><span id="avgPing">--</span><span style="font-size:10px; color:var(--text-faint); font-weight:400;"> ms</span></div></div>
+        <div class="tile grow"><div class="cap" style="font-size:9px;">Loss</div><div class="m" style="font-size:17px; font-weight:600; margin-top:2px;"><span id="loss" style="color:var(--good);">--</span><span style="font-size:10px; color:var(--text-faint); font-weight:400;"> %</span></div></div>
+        <div class="tile grow"><div class="cap" style="font-size:9px;">Worst</div><div class="m" style="font-size:17px; font-weight:600; margin-top:2px;"><span id="worst">--</span><span style="font-size:10px; color:var(--text-faint); font-weight:400;"> ms</span></div></div>
+      </div>
+
+      <div id="pingList" class="grow no-scrollbar" style="display:flex; flex-direction:column; gap:6px; overflow-y:auto;"></div>
+
+      <div class="row" style="gap:8px; padding-top:9px; border-top:1px solid var(--border-soft);">
+        <div class="cap" style="font-size:9px;">Server score</div>
+        <div class="track grow" style="height:4px;"><div id="scoreFill" style="width:0%; height:100%; background:var(--accent);"></div></div>
+        <div class="m" id="serverScore" style="font-size:11px; color:var(--text-dim);">--</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 2: rosters -->
+  <div style="display:flex; gap:12px; flex-grow:1; min-height:0;">
+    <div class="card grow">
+      <div class="row" style="justify-content:space-between; margin-bottom:8px;">
+        <div class="cap" style="color:var(--blue);">Blue team</div>
+        <div class="m" id="blueSummary" style="font-size:10.5px; color:var(--text-faint);"></div>
+      </div>
+      <div class="row" style="gap:8px; padding:0 8px 5px;">
+        <div class="cap grow" style="font-size:8.5px;">Player</div>
+        <div class="cap" style="font-size:8.5px; width:20px; text-align:right;">K</div>
+        <div class="cap" style="font-size:8.5px; width:20px; text-align:right;">A</div>
+        <div class="cap" style="font-size:8.5px; width:20px; text-align:right;">D</div>
+        <div class="cap" style="font-size:8.5px; width:44px; text-align:right;">Dmg</div>
+      </div>
+      <div id="blueRoster" class="grow no-scrollbar" style="display:flex; flex-direction:column; gap:1px; overflow-y:auto;"></div>
+    </div>
+
+    <div class="card grow">
+      <div class="row" style="justify-content:space-between; margin-bottom:8px;">
+        <div class="cap" style="color:var(--orange);">Orange team</div>
+        <div class="m" id="orangeSummary" style="font-size:10.5px; color:var(--text-faint);"></div>
+      </div>
+      <div class="row" style="gap:8px; padding:0 8px 5px;">
+        <div class="cap grow" style="font-size:8.5px;">Player</div>
+        <div class="cap" style="font-size:8.5px; width:20px; text-align:right;">K</div>
+        <div class="cap" style="font-size:8.5px; width:20px; text-align:right;">A</div>
+        <div class="cap" style="font-size:8.5px; width:20px; text-align:right;">D</div>
+        <div class="cap" style="font-size:8.5px; width:44px; text-align:right;">Dmg</div>
+      </div>
+      <div id="orangeRoster" class="grow no-scrollbar" style="display:flex; flex-direction:column; gap:1px; overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- palette: identical derivation to dashboard.html and ThemesController ---------- */
+const INK_LIGHT = [236,236,236], INK_DARK = [20,22,26];
+const toRgb = h => { h = String(h||'').trim().replace('#',''); if (h.length===8) h=h.slice(2);
+  return h.length===6 ? [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)] : [21,21,21]; };
+const toHex = c => '#' + c.map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+const lin = v => { const s=v/255; return s<=0.03928 ? s/12.92 : Math.pow((s+0.055)/1.055,2.4); };
+const lum = c => 0.2126*lin(c[0]) + 0.7152*lin(c[1]) + 0.0722*lin(c[2]);
+const mix = (a,b,t) => [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+const contrast = (a,b) => { const x=lum(a), y=lum(b); return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05); };
+function inkOn(c) {
+  const d = contrast(INK_DARK,c), l = contrast(INK_LIGHT,c), preferDark = d >= l;
+  if (Math.max(d,l) >= 4.5) return preferDark ? INK_DARK : INK_LIGHT;
+  return preferDark ? [0,0,0] : [255,255,255];
+}
+
+function applyTheme(darkHex, midHex, lightHex) {
+  const dark = toRgb(darkHex), mid = toRgb(midHex), light = toRgb(lightHex);
+  const ink = inkOn(dark);
+  const deep = lum(ink) < 0.5;
+  const away = deep ? [0,0,0] : [255,255,255];
+  const step = t => toHex(mix(dark, away, t));
+
+  let accent = light;
+  for (let i = 0; i < 8 && contrast(accent, dark) < 3.5; i++) accent = mix(accent, ink, 0.3);
+
+  const blue   = deep ? [49,80,122]  : [110,147,214];
+  const orange = deep ? [140,92,42]  : [212,148,30];
+  const good   = deep ? [58,96,66]   : [126,158,94];
+  const warn   = deep ? [122,84,24]  : [201,162,39];
+  const bad    = deep ? [138,46,46]  : [192,122,74];
+
+  const s = document.documentElement.style;
+  s.setProperty('--ground', toHex(dark));
+  s.setProperty('--card', step(0.075));
+  s.setProperty('--raised', step(0.115));
+  s.setProperty('--border', step(0.17));
+  s.setProperty('--border-soft', step(0.10));
+  s.setProperty('--track', step(0.20));
+  s.setProperty('--text', toHex(ink));
+  s.setProperty('--text-dim', toHex(mix(ink, dark, 0.34)));
+  s.setProperty('--text-faint', toHex(mix(ink, dark, 0.55)));
+  s.setProperty('--accent', toHex(accent));
+  s.setProperty('--blue', toHex(blue));
+  s.setProperty('--blue-tint', toHex(mix(blue, dark, 0.84)));
+  s.setProperty('--orange', toHex(orange));
+  s.setProperty('--orange-tint', toHex(mix(orange, dark, 0.84)));
+  s.setProperty('--good', toHex(good));
+  s.setProperty('--warn', toHex(warn));
+  s.setProperty('--bad', toHex(bad));
+}
+
+/* ---------- live data ---------- */
+const $ = id => document.getElementById(id);
+const set = (id, v) => { const e = $(id); if (e && e.textContent !== v) e.textContent = v; };
+const pingVar = p => p <= 0 ? 'var(--text-faint)' : p < 70 ? 'var(--good)' : p < 110 ? 'var(--warn)' : 'var(--bad)';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num = n => Math.round(n).toLocaleString('en-US');
+
+function rosterRows(players, team, peak) {
+  return players.map((p, i) => `
+    <div style="padding:6px 8px; border-radius:4px; ${i===0?'background:var(--raised);':''} flex-shrink:0;">
+      <div class="row" style="gap:8px;">
+        <div style="width:3px; height:11px; border-radius:2px; background:var(--${team}); flex-shrink:0;"></div>
+        <div class="ell grow" style="font-size:11.5px;">${esc(p.name)}</div>
+        <div class="m" style="width:20px; text-align:right; font-size:11.5px; font-weight:600;">${p.kills}</div>
+        <div class="m" style="width:20px; text-align:right; font-size:11.5px; color:var(--text-dim);">${p.assists}</div>
+        <div class="m" style="width:20px; text-align:right; font-size:11.5px; color:var(--text-faint);">${p.deaths}</div>
+        <div class="m" style="width:44px; text-align:right; font-size:11.5px;">${num(p.damage)}</div>
+      </div>
+      <div class="row" style="gap:8px; margin-top:3px; margin-left:11px;">
+        <div class="ell" style="font-size:9.5px; color:var(--text-dim); width:52px;">${esc(p.weapon)}</div>
+        <div class="ell grow" style="font-size:9.5px; color:var(--text-faint);">${esc(p.mods)}</div>
+        <div class="track" style="width:70px; height:3px; flex-shrink:0;"><div style="width:${(p.damage/peak*100).toFixed(0)}%; height:100%; background:var(--${team});"></div></div>
+      </div>
+    </div>`).join('');
+}
+
+function applyData(d) {
+  // header
+  set('mapName', d.map || '--');
+  set('blueScore', d.blueScore != null ? String(d.blueScore) : '--');
+  set('orangeScore', d.orangeScore != null ? String(d.orangeScore) : '--');
+  set('clock', d.clock || '--:--');
+  set('roundLabel', d.round || '');
+
+  // objective
+  const payload = !!d.isPayload;
+  $('captureView').style.display = payload ? 'none' : 'block';
+  $('payloadView').style.display = payload ? 'block' : 'none';
+  set('objLabel', payload ? 'Payload' : 'Capture point');
+  set('objState', d.objState || '--');
+  $('objDot').style.background = d.objColor || 'var(--text-faint)';
+  $('objState').style.color = d.objColor || 'var(--text-faint)';
+
+  if (payload) {
+    const pct = Math.max(0, Math.min(100, d.payloadPct || 0));
+    $('payloadFill').style.width = pct + '%';
+    $('payloadMark').style.left = pct + '%';
+    set('payloadDistance', (d.payloadDistance || 0).toFixed(1) + ' m');
+    set('payloadSpeed', (d.payloadSpeed || 0).toFixed(2) + ' m/s');
+  } else {
+    const b = Math.max(0, Math.min(100, d.bluePoints || 0));
+    const o = Math.max(0, Math.min(100, d.orangePoints || 0));
+    $('captureBlue').style.width = b + '%';
+    $('captureOrange').style.width = o + '%';
+    set('captureBluePct', b.toFixed(0) + '%');
+    set('captureOrangePct', o.toFixed(0) + '%');
+  }
+
+  // team totals
+  if (d.totals) {
+    $('totalsList').innerHTML = d.totals.map(t => `
+      <div class="row" style="gap:8px; padding:5px 7px; border-radius:4px; background:var(--${t.team}-tint);">
+        <div style="width:3px; height:11px; border-radius:2px; background:var(--${t.team}); flex-shrink:0;"></div>
+        <div class="cap grow" style="font-size:9px; color:var(--${t.team});">${esc(t.name)}</div>
+        <div class="m" style="width:30px; text-align:right; font-size:12px; font-weight:600;">${t.kills}</div>
+        <div class="m" style="width:50px; text-align:right; font-size:11.5px; color:var(--text-dim);">${num(t.damage)}</div>
+        <div class="m" style="width:44px; text-align:right; font-size:11.5px; color:var(--text-faint);">${esc(t.objective)}</div>
+      </div>`).join('');
+  }
+
+  // kill feed
+  if (d.kills) {
+    set('killTotal', d.kills.length ? d.killTotal + ' total' : '');
+    $('killList').innerHTML = d.kills.map((k, i) => `
+      <div style="padding:5px 7px; border-radius:4px; ${i===0?'background:var(--raised);':''} flex-shrink:0;">
+        <div class="row" style="gap:6px;">
+          <div style="width:3px; height:10px; border-radius:2px; background:var(--${k.killerTeam}); flex-shrink:0;"></div>
+          <div class="ell" style="font-size:11px; color:var(--${k.killerTeam}); max-width:72px;">${esc(k.killer)}</div>
+          <svg width="8" height="8" viewBox="0 0 12 12" fill="none" style="flex-shrink:0;">
+            <path d="M2.5 2.5 L9.5 9.5 M9.5 2.5 L2.5 9.5" stroke="var(--text-faint)" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <div class="ell grow" style="font-size:11px; color:var(--${k.victimTeam});">${esc(k.victim)}</div>
+        </div>
+        <div class="ell" style="font-size:9.5px; color:var(--text-faint); margin-left:9px; margin-top:2px;">${esc(k.weapon)}</div>
+      </div>`).join('');
+  }
+
+  // rosters. Damage bars read against the best player in the match, not per team, so the two
+  // cards stay comparable side by side.
+  if (d.blue && d.orange) {
+    const peak = Math.max(1, ...d.blue.concat(d.orange).map(p => p.damage));
+    $('blueRoster').innerHTML = rosterRows(d.blue, 'blue', peak);
+    $('orangeRoster').innerHTML = rosterRows(d.orange, 'orange', peak);
+    const sum = (list, key) => list.reduce((a, p) => a + p[key], 0);
+    set('blueSummary', d.blue.length ? sum(d.blue,'kills') + ' K · ' + num(sum(d.blue,'damage')) + ' dmg' : '');
+    set('orangeSummary', d.orange.length ? sum(d.orange,'kills') + ' K · ' + num(sum(d.orange,'damage')) + ' dmg' : '');
+  }
+
+  // network
+  if (d.players) {
+    $('pingList').innerHTML = d.players.map(p => `
+      <div class="row" style="gap:9px; flex-shrink:0;">
+        <div style="width:3px; height:11px; border-radius:2px; background:var(--${p.team}); flex-shrink:0;"></div>
+        <div class="ell" style="width:86px; font-size:11.5px;">${esc(p.name)}</div>
+        <div class="track grow" style="height:5px;"><div style="width:${Math.min(100,p.ping/2)}%; height:100%; background:${pingVar(p.ping)};"></div></div>
+        <div class="m" style="width:34px; text-align:right; font-size:11px; color:${pingVar(p.ping)};">${p.ping > 0 ? p.ping : '--'}</div>
+      </div>`).join('');
+  }
+
+  set('avgPing', d.avgPing != null ? String(d.avgPing) : '--');
+  set('worst', d.worstPing ? String(d.worstPing) : '--');
+  set('loss', d.loss != null ? d.loss.toFixed(1) : '--');
+  if (d.loss != null) $('loss').style.color = d.loss < 1 ? 'var(--good)' : d.loss < 3 ? 'var(--warn)' : 'var(--bad)';
+
+  set('netChipText', d.serverStatus || '--');
+  $('netChipDot').style.background = d.serverWarn ? 'var(--warn)' : 'var(--text-faint)';
+  $('netChipText').style.color = d.serverWarn ? 'var(--warn)' : 'var(--text-dim)';
+  set('serverScore', d.serverScore > 0 ? d.serverScore.toFixed(1) : '--');
+  $('scoreFill').style.width = Math.max(0, Math.min(100, (d.serverScore||0)*10)) + '%';
+}
+
+applyTheme('#151515', '#363636', '#3E3E3E');
+window.applyTheme = applyTheme;
+window.applyData = applyData;
+</script>
+</body>
+</html>

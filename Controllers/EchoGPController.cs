@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
@@ -153,14 +153,7 @@ namespace Spark
 			}
 		};
 
-		[Serializable]
-		[Obsolete]
-		public class TriggerRegion
-		{
-			public Vector3 position;
-			public Vector3 eulerAngles;
-			public Vector3 scale;
-		}
+
 
 		[Serializable]
 		public class TriggerSphere
@@ -325,74 +318,7 @@ namespace Spark
 			return distance < region.radius / 2f;
 		}
 
-		private static bool InTrigger(Frame f, TriggerRegion region)
-		{
-			(Vector3 pos, _) = f.GetCameraTransform();
 
-			(pos.X, pos.Z) = (pos.Z, pos.X);
-
-			float distance = Vector3.Distance(region.position, pos);
-			float maxRadius = MathF.Max(MathF.Max(region.scale.X, region.scale.Y), region.scale.Z);
-
-			return distance < maxRadius;
-		}
-
-		private static bool InTrigger3(Frame f, TriggerRegion region)
-		{
-			// https://stackoverflow.com/a/53559963
-
-			Vector3 I = region.position;
-			(Vector3 P, Quaternion rotation) = f.GetCameraTransform();
-
-			// var xLocal = 
-
-			// b1,b2,b3,b4,t1,t2,t3,t4 = cube3d
-			//
-			// dir1 = (t1-b1)
-			// size1 = np.linalg.norm(dir1)
-			// dir1 = dir1 / size1
-			//
-			// dir2 = (b2-b1)
-			// size2 = np.linalg.norm(dir2)
-			// dir2 = dir2 / size2
-			//
-			// dir3 = (b4-b1)
-			// size3 = np.linalg.norm(dir3)
-			// dir3 = dir3 / size3
-			//
-			// cube3d_center = (b1 + t3)/2.0
-			//
-			// dir_vec = points - cube3d_center
-			//
-			// res1 = np.where( (np.absolute(np.dot(dir_vec, dir1)) * 2) > size1 )[0]
-			// res2 = np.where( (np.absolute(np.dot(dir_vec, dir2)) * 2) > size2 )[0]
-			// res3 = np.where( (np.absolute(np.dot(dir_vec, dir3)) * 2) > size3 )[0]
-			//
-			// return list( set().union(res1, res2, res3) )
-			return false;
-		}
-
-		private static bool InTrigger2(Frame f, TriggerRegion region)
-		{
-			(Vector3 pos, Quaternion rot) = f.GetCameraTransform();
-
-			(pos.X, pos.Z) = (pos.Z, pos.X);
-
-
-			Vector3 localSpace = InverseTransformPoint(region.position, region.eulerAngles, Vector3.One, pos);
-
-			// Matrix4x4 rotMatrix = GetRotationMatrix(region.eulerAngles);
-			// Matrix4x4.Invert(rotMatrix, out Matrix4x4 inverse);
-			// Vector3 localSpace = Vector3.Transform(pos - region.position, inverse);
-
-			return MathF.Abs(localSpace.X) < region.scale.X &&
-			       MathF.Abs(localSpace.Y) < region.scale.Y &&
-			       MathF.Abs(localSpace.Z) < region.scale.Z;
-
-			// return MathF.Abs(localSpace.X) < 1 &&
-			//        MathF.Abs(localSpace.Y) < 1 &&
-			//        MathF.Abs(localSpace.Z) < 1;
-		}
 
 		private void Start()
 		{

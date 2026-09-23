@@ -74,7 +74,7 @@ private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
 
             // URL for the specific 'ignore' tag
             string latestReleaseUrl = "https://api.github.com/repos/heisthecat31/Spark/releases/tags/ignore";
-            
+
             // Download the JSON
             string json = await client.DownloadStringTaskAsync(latestReleaseUrl);
 
@@ -95,6 +95,22 @@ private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
             _latestVersion = titleName?.TrimStart('v') ?? "Unknown";
 
             LatestVersionText.Text = _latestVersion;
+
+            var latestMatch = System.Text.RegularExpressions.Regex.Match(_latestVersion, @"\d+\.\d+(\.\d+)?");
+            bool isNewer = latestMatch.Success &&
+                Version.TryParse(latestMatch.Value, out Version latestVer) &&
+                Version.TryParse(_currentVersion, out Version currentVer) &&
+                latestVer > currentVer;
+
+            if (!isNewer)
+            {
+                StatusText.Text = $"You're up to date (v{_currentVersion}).";
+                UpdateDetailsText.Text += $"[{DateTime.Now}] No update available. Latest: {_latestVersion}, Current: {_currentVersion}\n";
+                ColorVersionDropdown.IsEnabled = false;
+                DownloadUpdateButton.IsEnabled = false;
+                return;
+            }
+
             StatusText.Text = $"Version found: {_latestVersion}";
 
             string releaseNotes = release["body"]?.ToString();
@@ -112,9 +128,9 @@ private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
     {
         StatusText.Text = "Error: Tag not found or API error.";
         UpdateDetailsText.Text += $"[{DateTime.Now}] Error: {ex.Message}\n";
-        
+
         if (ex.Message.Contains("404")) {
-            UpdateDetailsText.Text += "Tip: Check that the tag 'ignore' exists in your GitHub Releases.\n";
+            UpdateDetailsText.Text += "Somehow a 404, Bad! Get Bryson!\n";
         }
         
         ColorVersionDropdown.IsEnabled = false;
@@ -487,7 +503,6 @@ exit
                         throw new Exception("SparkTTSCache.zip not found in release assets");
                     }
 
-                    // Use the custom cache folder configured in settings, or the default Spark directory fallback
                     string ttsCacheFolder = TTSController.CacheFolder;
 
                     if (Directory.Exists(ttsCacheFolder))
@@ -603,6 +618,142 @@ exit
             }
         }
 
+        private async void DownloadCombatUpdateButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                DownloadCombatUpdateButton.IsEnabled = false;
+                
+                Action<string> statusCallback = (msg) => 
+                {
+                    Dispatcher.Invoke(() => 
+                    {
+                        if (msg.StartsWith("Status: "))
+                        {
+                            CombatUpdateStatus.Text = msg.Substring(8);
+                        }
+                        else
+                        {
+                            UpdateDetailsText.Text += $"[{DateTime.Now}] {msg}\n";
+                        }
+                    });
+                };
+
+                await InstallCombatUpdateAsync(statusCallback);
+            }
+            finally
+            {
+                DownloadCombatUpdateButton.IsEnabled = true;
+            }
+        }
+
+        public static async Task InstallCombatUpdateAsync(Action<string> statusCallback = null)
+        {
+            try
+            {
+                if (SparkSettings.instance == null || string.IsNullOrEmpty(SparkSettings.instance.echoVRPath))
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        new MessageBox("Error: EchoVR Path is not set in Spark Settings. Please set it in the main settings first.").Show();
+                    });
+                    return;
+                }
+
+                string echoDir = Path.GetDirectoryName(SparkSettings.instance.echoVRPath);
+                if (!Directory.Exists(echoDir))
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        new MessageBox($"Error: EchoVR directory not found at:\n{echoDir}").Show();
+                    });
+                    return;
+                }
+
+                string targetBaseDir = Path.GetFullPath(Path.Combine(echoDir, "..", "..", "_data", "5932408047", "rad15", "win10"));
+
+                if (!Directory.Exists(targetBaseDir))
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        new MessageBox($"Error: Combat update target directory not found at:\n{targetBaseDir}\nAre you sure Echo VR is fully installed?").Show();
+                    });
+                    return;
+                }
+
+                statusCallback?.Invoke("Status: Downloading Combat Update...");
+                statusCallback?.Invoke("Starting Combat Update download...");
+
+                string _tempFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spark", "Temp");
+                if (!Directory.Exists(_tempFolder))
+                {
+                    Directory.CreateDirectory(_tempFolder);
+                }
+
+                string url = "https://github.com/heisthecat31/EchoVR-Updater/releases/download/combat/combatmod.zip";
+                string zipPath = Path.Combine(_tempFolder, "combatmod.zip");
+                string extractPath = Path.Combine(_tempFolder, "CombatMod_Extracted");
+
+                using (WebClient client = new WebClient())
+                {
+                    client.Headers.Add("User-Agent", "Spark-Updater");
+                    await client.DownloadFileTaskAsync(new Uri(url), zipPath);
+                }
+
+                statusCallback?.Invoke("Download complete. Extracting...");
+
+                if (Directory.Exists(extractPath))
+                    Directory.Delete(extractPath, true);
+                
+                ZipFile.ExtractToDirectory(zipPath, extractPath);
+
+                // Copy files recursively
+                void CopyDirectory(string sourceDir, string destinationDir)
+                {
+                    var dir = new DirectoryInfo(sourceDir);
+                    if (!dir.Exists) return;
+
+                    Directory.CreateDirectory(destinationDir);
+
+                    foreach (FileInfo file in dir.GetFiles())
+                    {
+                        string targetFilePath = Path.Combine(destinationDir, file.Name);
+                        file.CopyTo(targetFilePath, true);
+                        statusCallback?.Invoke($"Copying {file.Name} to {destinationDir}");
+                    }
+
+                    foreach (DirectoryInfo subDir in dir.GetDirectories())
+                    {
+                        string newDestinationDir = Path.Combine(destinationDir, subDir.Name);
+                        CopyDirectory(subDir.FullName, newDestinationDir);
+                    }
+                }
+
+                CopyDirectory(extractPath, targetBaseDir);
+
+                // Cleanup
+                if (File.Exists(zipPath)) File.Delete(zipPath);
+                if (Directory.Exists(extractPath)) Directory.Delete(extractPath, true);
+
+                statusCallback?.Invoke("Status: Combat Update installed successfully!");
+                statusCallback?.Invoke("Combat Update installed successfully.");
+                
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    new MessageBox("Success: Combat Update installed successfully!").Show();
+                });
+            }
+            catch (Exception ex)
+            {
+                statusCallback?.Invoke("Status: Error installing Combat Update.");
+                statusCallback?.Invoke($"Error installing Combat Update: {ex.Message}");
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    new MessageBox($"Error installing Combat Update: {ex.Message}").Show();
+                });
+            }
+        }
+
         private void OpenTempFolderButton_Click(object sender, RoutedEventArgs e)
         {
             if (Directory.Exists(_tempFolder))
@@ -617,6 +768,100 @@ exit
             CheckUpdateButton.IsEnabled = true;
             ColorVersionDropdown.IsEnabled = true;
             UpdateProgressBar.Visibility = Visibility.Collapsed;
+        }
+
+        public static async Task CheckForUpdatesBackgroundAsync()
+        {
+            try
+            {
+                using (var client = new WebClient())
+                {
+                    client.Headers.Add("User-Agent", "Spark-Updater");
+                    client.Headers.Add("Accept", "application/vnd.github.v3+json");
+
+                    string latestReleaseUrl = "https://api.github.com/repos/heisthecat31/Spark/releases/tags/ignore";
+
+                    string json = await client.DownloadStringTaskAsync(latestReleaseUrl);
+
+                    var release = JObject.Parse(json);
+                    
+                    string titleName = release["name"]?.ToString();
+                    if (string.IsNullOrWhiteSpace(titleName))
+                    {
+                        titleName = release["tag_name"]?.ToString();
+                    }
+
+                    string latestVersionStr = "0.0.0";
+                    var match = System.Text.RegularExpressions.Regex.Match(titleName ?? "", @"\d+\.\d+(\.\d+)?");
+                    if (match.Success)
+                    {
+                        latestVersionStr = match.Value;
+                    }
+                    
+                    var currentAssemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
+                    string currentVersionStr = $"{currentAssemblyVersion.Major}.{currentAssemblyVersion.Minor}.{currentAssemblyVersion.Build}";
+
+                    Logger.Error($"[Updater] Parsed latestVersionStr: {latestVersionStr} from release name '{titleName}'");
+                    Logger.Error($"[Updater] Parsed currentVersionStr: {currentVersionStr}");
+
+                    if (latestVersionStr.Equals(SparkSettings.instance.ignoredUpdateVersion, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Logger.Error($"[Updater] Skipping update check because version {latestVersionStr} is marked as ignored.");
+                        return;
+                    }
+
+                    if (Version.TryParse(latestVersionStr, out Version latestVersion) &&
+                        Version.TryParse(currentVersionStr, out Version currentVersion))
+                    {
+                        Logger.Error($"[Updater] Comparing versions: latest {latestVersion} vs current {currentVersion}. Result: latest > current = {latestVersion > currentVersion}");
+                        if (latestVersion > currentVersion)
+                        {
+                            string downloadUrl = null;
+                            string zipFileName = "Spark.zip";
+                            var assets = release["assets"] as JArray;
+                            if (assets != null)
+                            {
+                                var targetAsset = assets.FirstOrDefault(asset =>
+                                    "Spark.zip".Equals(asset["name"]?.ToString(), StringComparison.OrdinalIgnoreCase));
+                                    
+                                if (targetAsset == null)
+                                {
+                                    targetAsset = assets.FirstOrDefault(asset =>
+                                    {
+                                        string name = asset["name"]?.ToString();
+                                        return name != null &&
+                                               name.StartsWith("Spark", StringComparison.OrdinalIgnoreCase) &&
+                                               name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) &&
+                                               !name.Equals("SparkTTSCache.zip", StringComparison.OrdinalIgnoreCase);
+                                    });
+                                }
+                                
+                                if (targetAsset != null)
+                                {
+                                    downloadUrl = targetAsset["browser_download_url"]?.ToString();
+                                    zipFileName = targetAsset["name"]?.ToString();
+                                }
+                            }
+
+                            if (!string.IsNullOrEmpty(downloadUrl))
+                            {
+                                string changelog = release["body"]?.ToString() ?? "No release notes provided.";
+
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    var prompt = new UpdatePromptWindow(latestVersionStr, changelog, downloadUrl, zipFileName);
+                                    prompt.Show();
+                                    prompt.Focus();
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"[Updater] Background update check failed: {ex.Message}\n{ex.StackTrace}");
+            }
         }
     }
 }

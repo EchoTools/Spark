@@ -1,4 +1,4 @@
-﻿using OBSWebsocketDotNet;
+using OBSWebsocketDotNet;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -261,7 +261,7 @@ namespace Spark
 						ws.StartReplayBuffer();
 					}
 				}
-				catch (Exception exp)
+				catch (Exception)
 				{
 					Debug.WriteLine("Replay buffer not enabled in startup");
 				}

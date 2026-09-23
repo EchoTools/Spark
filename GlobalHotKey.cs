@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -120,7 +120,7 @@ namespace Spark
 					Debug.WriteLine("Regsistre");
 					hotKey.Register();
 				}
-				catch (Exception e)
+				catch (Exception)
 				{
 					Logger.LogRow(Logger.LogType.Error, "Error passing hotkey to system.");
 				}

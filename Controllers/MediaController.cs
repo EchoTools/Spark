@@ -359,7 +359,13 @@ namespace Spark.Controllers
 				{
 					if ((currentTime - _lastReleaseTime) < debounce)
 					{
-						_lastState = currentState;
+						// Don't advance _lastState here — leaving it at 0 means this same
+						// rising edge gets re-evaluated (and re-debounced) on the next poll
+						// tick instead of being silently latched as a press. Setting it to 1
+						// used to fool the "sustained press" branch below into computing
+						// `held` against a stale _pressStartTime from a previous press,
+						// which could fire ProcessHold() instantly or swallow a click
+						// entirely during fast multi-click patterns.
 						return;
 					}
 

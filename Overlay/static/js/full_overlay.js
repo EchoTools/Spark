@@ -152,18 +152,24 @@ if (orange_goal_banner !== null && blue_goal_banner !== null) {
     sw.subscribe("goal", goal => {
         if (goal["team_scored"] === "orange") {
             orange_goal_banner.classList.add("visible");
-            orange_goal_type.innerText = goal["goal_type"];
-            orange_goal_player_name.innerText = goal["player_name"];
-            orange_goal_point_value.innerText = goal["point_value"];
+            if (orange_goal_banner_text) orange_goal_banner_text.innerText = goal["goal_type"];
+            if (orange_goal_banner_secondary) orange_goal_banner_secondary.innerText = goal["player_name"];
+            if (orange_goal_banner_point_value) orange_goal_banner_point_value.innerText = goal["point_value"];
+            if (orange_goal_type) orange_goal_type.innerText = goal["goal_type"];
+            if (orange_goal_player_name) orange_goal_player_name.innerText = goal["player_name"];
+            if (orange_goal_point_value) orange_goal_point_value.innerText = goal["point_value"];
             // hide it after a delay
             setTimeout(function () {
                 orange_goal_banner.classList.remove("visible");
             }, 10000);
         } else if (goal["team_scored"] === "blue") {
             blue_goal_banner.classList.add("visible");
-            blue_goal_type.innerText = goal["goal_type"];
-            blue_goal_player_name.innerText = goal["player_name"];
-            blue_goal_point_value.innerText = goal["point_value"];
+            if (blue_goal_banner_text) blue_goal_banner_text.innerText = goal["goal_type"];
+            if (blue_goal_banner_secondary) blue_goal_banner_secondary.innerText = goal["player_name"];
+            if (blue_goal_banner_point_value) blue_goal_banner_point_value.innerText = goal["point_value"];
+            if (blue_goal_type) blue_goal_type.innerText = goal["goal_type"];
+            if (blue_goal_player_name) blue_goal_player_name.innerText = goal["player_name"];
+            if (blue_goal_point_value) blue_goal_point_value.innerText = goal["point_value"];
             // hide it after a delay
             setTimeout(function () {
                 blue_goal_banner.classList.remove("visible");

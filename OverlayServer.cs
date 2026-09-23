@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -24,9 +24,9 @@ namespace Spark
 {
     public class OverlayServer
     {
-        private IWebHost server;
+        private IHost server;
         private readonly SemaphoreSlim restartLock = new SemaphoreSlim(1, 1);
-        private bool isRestarting = false;
+
 
         public static string StaticOverlayFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "IgniteVR", "Spark", "Overlays");
 
@@ -55,7 +55,7 @@ namespace Spark
 
             try
             {
-                isRestarting = true;
+
 
                 // Fetch data needed for the server
                 await OverlaysCustom.FetchOverlayData();
@@ -68,11 +68,14 @@ namespace Spark
                 }
 
                 // Create and start the server
-                server = WebHost
+                server = Host
                     .CreateDefaultBuilder()
-                    .UseKestrel(x => { x.ListenAnyIP(6724); })
-                    .ConfigureLogging((logging) => { /* Configure logging if needed, or keep silent to save perf */ })
-                    .UseStartup<Routes>()
+                    .ConfigureWebHostDefaults(webBuilder =>
+                    {
+                        webBuilder.UseKestrel(x => { x.ListenAnyIP(6724); })
+                                  .ConfigureLogging((logging) => { /* Configure logging if needed, or keep silent to save perf */ })
+                                  .UseStartup<Routes>();
+                    })
                     .Build();
 
                 await server.StartAsync();
@@ -83,7 +86,7 @@ namespace Spark
             }
             finally
             {
-                isRestarting = false;
+
                 restartLock.Release();
             }
         }
@@ -136,6 +139,26 @@ namespace Spark
                 // Global CORS policy - applied before static files
                 app.UseCors("CorsPolicy");
 
+                string buildArenaPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Overlay", "build_arena");
+                string buildCombatPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Overlay", "build_combat");
+
+                app.Use(async (context, next) =>
+                {
+                    if (!context.Request.Path.Value.Contains("."))
+                    {
+                        string pathWithHtml = context.Request.Path.Value + ".html";
+                        string relativePath = pathWithHtml.TrimStart('/');
+                        
+                        if (File.Exists(Path.Combine(StaticOverlayFolder, relativePath)) ||
+                            File.Exists(Path.Combine(buildArenaPath, relativePath)) ||
+                            File.Exists(Path.Combine(buildCombatPath, relativePath)))
+                        {
+                            context.Request.Path = pathWithHtml;
+                        }
+                    }
+                    await next();
+                });
+
                 // Serve from AppData Overlays folder
                 app.UseFileServer(new FileServerOptions
                 {
@@ -150,17 +173,34 @@ namespace Spark
                     }
                 });
 
-                // Serve from Build folder
-                string buildPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Overlay", "build");
-                if (Directory.Exists(buildPath))
+                // Serve from Arena Build folder
+                if (Directory.Exists(buildArenaPath))
                 {
                     app.UseFileServer(new FileServerOptions
                     {
-                        FileProvider = new PhysicalFileProvider(buildPath),
+                        FileProvider = new PhysicalFileProvider(buildArenaPath),
                         RequestPath = "",
                         EnableDefaultFiles = true,
                         StaticFileOptions =
                         {
+                            ServeUnknownFileTypes = true,
+                            ContentTypeProvider = provider,
+                            OnPrepareResponse = onPrepareResponse
+                        }
+                    });
+                }
+
+                // Serve from Combat Build folder
+                if (Directory.Exists(buildCombatPath))
+                {
+                    app.UseFileServer(new FileServerOptions
+                    {
+                        FileProvider = new PhysicalFileProvider(buildCombatPath),
+                        RequestPath = "",
+                        EnableDefaultFiles = true,
+                        StaticFileOptions =
+                        {
+                            ServeUnknownFileTypes = true,
                             ContentTypeProvider = provider,
                             OnPrepareResponse = onPrepareResponse
                         }
@@ -331,7 +371,7 @@ namespace Spark
                                 _ => "application/octet-stream"
                             };
 
-                            context.Response.Headers.Add("content-type", contentType);
+                            context.Response.Headers.Append("content-type", contentType);
                             // Prefer loading from disk if available (for dev/modding), fall back to resource
                             if (sparkPath != null)
                             {

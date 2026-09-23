@@ -5,7 +5,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Name>Spark.Installer</Name>
-    <BindInputPaths>..\bin\$(Configuration)\net10.0-windows10.0.17763.0</BindInputPaths>
+    <!-- Spark's build output. It is the folder harvested into the MSI, the bind path
+         the harvested Source= paths resolve against, and where the version stamped on
+         the package is read from, so every path below derives from this one. -->
+    <SparkOutputDir>..\bin\$(Configuration)\net10.0-windows10.0.17763.0</SparkOutputDir>
+    <BindInputPaths>$(SparkOutputDir)</BindInputPaths>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DefineConstants>Debug</DefineConstants>
@@ -16,7 +20,7 @@
     <Compile Include="Product.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <HarvestDirectory Include="..\bin\$(Configuration)\net10.0-windows10.0.17763.0">
+    <HarvestDirectory Include="$(SparkOutputDir)">
       <ComponentGroupName>PublishedComponents</ComponentGroupName>
       <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
       <SuppressCom>true</SuppressCom>
@@ -38,6 +42,10 @@
       <DoNotHarvest>True</DoNotHarvest>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+      <!-- AppendRuntimeIdentifierToOutputPath=false keeps this build of Spark flat in
+           $(SparkOutputDir) instead of nesting it under win-x64\, which is where the
+           harvest above and the bind path both expect to find it. -->
+      <Properties>SelfContained=true;RuntimeIdentifier=win-x64;AppendRuntimeIdentifierToOutputPath=false</Properties>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
@@ -47,21 +55,68 @@
   <PropertyGroup>
     <RunWixToolsOutOfProc Condition=" '$(PROCESSOR_ARCHITECTURE)'!='x86' ">true</RunWixToolsOutOfProc>
   </PropertyGroup>
-  <Target Name="SetBuildVersion" BeforeTargets="BeforeBuild">
-    <GetAssemblyIdentity AssemblyFiles="..\bin\$(Configuration)\net10.0-windows10.0.17763.0\Spark.dll">
+  <!--
+    Spark.csproj sets RuntimeIdentifier=win-x64 unconditionally, so building it on its
+    own writes a second, complete copy of the app to $(SparkOutputDir)\win-x64. heat
+    harvests recursively, so that copy lands in the MSI a second time and the package
+    comes out at roughly double its real size.
+
+    Deleting the folder alone is not enough: heat's incrementality compares the files
+    currently under the harvest root against the generated manifest, which cannot see
+    deletions, so a manifest generated while win-x64 existed keeps listing those files
+    and the build fails with one WIX0103 per missing file. Drop the manifest whenever
+    the folder was there, so heat regenerates it against the flat output only.
+
+    This runs before GetHarvestDirectoryContent, which is where the file list heat uses
+    is globbed, so the nested copy is gone before it can be picked up.
+  -->
+  <Target Name="RemoveNestedRuntimeOutput" BeforeTargets="GetHarvestDirectoryContent">
+    <PropertyGroup>
+      <_NestedRuntimeOutput>$(SparkOutputDir)\win-x64</_NestedRuntimeOutput>
+    </PropertyGroup>
+    <ItemGroup>
+      <_NestedRuntimeFile Include="$(_NestedRuntimeOutput)\**\*" />
+    </ItemGroup>
+    <PropertyGroup>
+      <!-- Only a populated win-x64 can have got into the manifest. The build leaves an
+           empty one behind, which harvests nothing, so ignore that case and let the
+           harvest stay incremental. -->
+      <_NestedRuntimeOutputHadFiles Condition=" '@(_NestedRuntimeFile)' != '' ">true</_NestedRuntimeOutputHadFiles>
+    </PropertyGroup>
+    <Message Importance="high" Text="Removing nested runtime output $(_NestedRuntimeOutput) so it is not packed a second time." Condition=" '$(_NestedRuntimeOutputHadFiles)' == 'true' " />
+    <RemoveDir Directories="$(_NestedRuntimeOutput)" />
+    <Delete Files="@(HarvestDirectory->'$(IntermediateOutputPath)_%(ComponentGroupName)_dir.wxs')" Condition=" '$(_NestedRuntimeOutputHadFiles)' == 'true' " />
+  </Target>
+  <Target Name="SetBuildVersion" AfterTargets="ResolveProjectReferences">
+    <GetAssemblyIdentity AssemblyFiles="$(SparkOutputDir)\Spark.dll">
       <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
     </GetAssemblyIdentity>
     <PropertyGroup>
       <DefineConstants>$(DefineConstants);BuildVersion=%(AssemblyVersion.Version)</DefineConstants>
     </PropertyGroup>
   </Target>
-  <Target Name="AfterBuild">
-    <!-- Get assembly version -->
-    <GetAssemblyIdentity AssemblyFiles="..\bin\$(Configuration)\net10.0-windows10.0.17763.0\Spark.dll">
-      <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
+  <!--
+    Named AfterTargets="Build" rather than "AfterBuild": the SDK imports
+    Microsoft.Common.CurrentVersion.targets after this file, and that defines an empty
+    AfterBuild target, so a target literally named AfterBuild here is overridden and
+    silently never runs.
+  -->
+  <Target Name="MoveInstallerToInstalls" AfterTargets="Build">
+    <GetAssemblyIdentity AssemblyFiles="$(SparkOutputDir)\Spark.dll">
+      <Output TaskParameter="Assemblies" ItemName="SparkAssembly" />
     </GetAssemblyIdentity>
-    <!-- Rename and move final MSI -->
-    <Exec Command="if not exist Installs mkdir Installs" />
-    <Exec Command="move bin\$(Platform)\$(Configuration)\en-us\$(OutputName).msi Installs\SparkInstaller_v%(AssemblyVersion.Version).msi" />
+    <PropertyGroup>
+      <SparkVersion>%(SparkAssembly.Version)</SparkVersion>
+    </PropertyGroup>
+    <!-- Globbed rather than hardcoded to en-us\, so it still resolves if the culture changes. -->
+    <ItemGroup>
+      <_BuiltInstaller Include="$(OutDir)**\$(TargetFileName)" />
+    </ItemGroup>
+    <Error Text="No $(TargetFileName) found under $(OutDir) to move into Installs\." Condition=" '@(_BuiltInstaller)' == '' " />
+    <Copy SourceFiles="@(_BuiltInstaller)" DestinationFiles="Installs\SparkInstaller_v$(SparkVersion).msi" />
+    <!-- CopyFilesToOutputDirectory has no Inputs/Outputs, so it re-copies from obj\ on
+         the next build and moving the file out of $(OutDir) stays incremental-safe. -->
+    <Delete Files="@(_BuiltInstaller)" />
+    <Message Importance="high" Text="Installer written to $(MSBuildProjectDirectory)\Installs\SparkInstaller_v$(SparkVersion).msi" />
   </Target>
 </Project>

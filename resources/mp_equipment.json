@@ -1,0 +1,123 @@
+{
+  "gear_table": {
+    "weapons": [
+      {
+        "name": "assault",
+        "display_name": "PULSAR",
+        "aliases": [
+          "assault rifle"
+        ]
+      },
+      {
+        "name": "blaster",
+        "display_name": "NOVA",
+        "aliases": [
+          "blaster",
+          "blaster_cone"
+        ]
+      },
+      {
+        "name": "scout",
+        "display_name": "COMET",
+        "aliases": [
+          "scout rifle",
+          "scout rifle explosion",
+          "scout_aoe"
+        ]
+      },
+      {
+        "name": "rocket",
+        "display_name": "METEOR",
+        "aliases": [
+          "rocket_aoe"
+        ]
+      },
+      {
+        "name": "magnum",
+        "display_name": "PROTOSTAR",
+        "cut": true
+      },
+      {
+        "name": "smg",
+        "display_name": "QUARK",
+        "cut": true
+      },
+      {
+        "name": "chain",
+        "display_name": "BLAZAR",
+        "cut": true
+      },
+      {
+        "name": "rifle",
+        "display_name": "STARBURST",
+        "cut": true
+      }
+    ],
+    "ordnances": [
+      {
+        "name": "det",
+        "display_name": "DETONATOR"
+      },
+      {
+        "name": "stun",
+        "display_name": "STUN FIELD"
+      },
+      {
+        "name": "arc",
+        "display_name": "ARC MINE"
+      },
+      {
+        "name": "burst",
+        "display_name": "INSTANT REPAIR"
+      },
+      {
+        "name": "loc",
+        "display_name": "TRANSLOCATOR",
+        "cut": true
+      },
+      {
+        "name": "dot",
+        "display_name": "DOT FIELD",
+        "cut": true
+      },
+      {
+        "name": "drone",
+        "display_name": "ATTACK DRONE",
+        "cut": true
+      }
+    ],
+    "tacmods": [
+      {
+        "name": "heal",
+        "display_name": "REPAIR MATRIX"
+      },
+      {
+        "name": "sensor",
+        "display_name": "THREAT SCANNER"
+      },
+      {
+        "name": "shield",
+        "display_name": "ENERGY BARRIER"
+      },
+      {
+        "name": "wraith",
+        "display_name": "PHASE SHIFT"
+      },
+      {
+        "name": "buff",
+        "display_name": "POWER BOOST",
+        "cut": true
+      },
+      {
+        "name": "smoke",
+        "display_name": "UMBRAL VEIL",
+        "cut": true
+      },
+      {
+        "name": "point",
+        "display_name": "POINT BLANK",
+        "cut": true
+      }
+    ]
+  }
+}

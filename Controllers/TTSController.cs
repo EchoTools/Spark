@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -10,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using System.Speech.Synthesis;
 using Newtonsoft.Json;
 using Spark.Properties;
 
@@ -23,7 +25,7 @@ namespace Spark
 			{ { "en-US-Standard-D", "en-US-Standard-C" }, { "ja-JP-Standard-D", "ja-JP-Standard-B" } }
 		};
 
-		private bool playing = true;
+
 		private readonly Thread ttsThread;
 		private readonly Queue<DateTime> rateLimiterQueue = new Queue<DateTime>();
 		private const float rateLimitPerSecond = 15;
@@ -32,6 +34,7 @@ namespace Spark
 		
 		// Use BlockingCollection for efficient threading (no polling/sleep loops)
 		private readonly BlockingCollection<string> ttsQueue = new BlockingCollection<string>();
+		private readonly SpeechSynthesizer synth;
 
 		public static string CacheFolder {
 			get {
@@ -54,10 +57,13 @@ namespace Spark
 
 		public TTSController()
 		{
+			synth = new SpeechSynthesizer();
+			SetOutputToDefaultAudioDevice();
 			LoadTtsSpeed();
 			
 			ttsThread = new Thread(TTSThread);
 			ttsThread.IsBackground = true;
+			ttsThread.SetApartmentState(ApartmentState.STA); // Ensure STA for MediaPlayer
 			ttsThread.Start();
 
 			Task.Run(async () =>
@@ -125,14 +131,14 @@ namespace Spark
 			{
 				if (SparkSettings.instance.throwSpeedTTS && frame.last_throw.total_speed > 10)
 				{
-					SpeakAsync($"{frame.last_throw.total_speed:N1}");
+					SpeakAsync(SparkSettings.instance.ttsSpecific ? $"{frame.last_throw.total_speed:N2}" : $"{frame.last_throw.total_speed:N1}");
 				}
 			};
 			Program.BigBoost += (frame, team, player, speed, howLongAgo) =>
 			{
 				if (SparkSettings.instance.maxBoostSpeedTTS && player.name == frame.client_name)
 				{
-					SpeakAsync($"{speed:N0} {Resources.tts_meters_per_second}");
+					SpeakAsync(SparkSettings.instance.ttsSpecific ? $"{speed:N1} {Resources.tts_meters_per_second}" : $"{speed:N0} {Resources.tts_meters_per_second}");
 				}
 			};
 			Program.PlayspaceAbuse += (frame, team, player, playspacePos) =>
@@ -144,32 +150,38 @@ namespace Spark
 			};
 			Program.Joust += (frame, team, player, isNeutral, joustTime, maxSpeed, maxTubeExitSpeed) =>
 			{
+				string joustTimeStr = SparkSettings.instance.ttsSpecific ? $"{joustTime:N2}" : $"{joustTime:N1}";
+				string maxSpeedStr = SparkSettings.instance.ttsSpecific ? $"{maxSpeed:N1}" : $"{maxSpeed:N0}";
+
 				if (SparkSettings.instance.joustTimeTTS && !SparkSettings.instance.joustSpeedTTS)
 				{
-					SpeakAsync($"{team.color} {joustTime:N1}");
+					SpeakAsync($"{team.color} {joustTimeStr}");
 				}
 				else if (!SparkSettings.instance.joustTimeTTS && SparkSettings.instance.joustSpeedTTS)
 				{
-					SpeakAsync($"{team.color} {maxSpeed:N0} {Resources.tts_meters_per_second}");
+					SpeakAsync($"{team.color} {maxSpeedStr} {Resources.tts_meters_per_second}");
 				}
 				else if (SparkSettings.instance.joustTimeTTS && SparkSettings.instance.joustSpeedTTS)
 				{
-					SpeakAsync($"{team.color} {joustTime:N1} {maxSpeed:N0} {Resources.tts_meters_per_second}");
+					SpeakAsync($"{team.color} {joustTimeStr} {maxSpeedStr} {Resources.tts_meters_per_second}");
 				}
 			};
 			Program.Goal += (frame, goalEvent) =>
 			{
+				string distanceStr = SparkSettings.instance.ttsSpecific ? $"{frame.last_score.distance_thrown:N2}" : $"{frame.last_score.distance_thrown:N1}";
+				string speedStr = SparkSettings.instance.ttsSpecific ? $"{frame.last_score.disc_speed:N2}" : $"{frame.last_score.disc_speed:N1}";
+
 				if (SparkSettings.instance.goalDistanceTTS && SparkSettings.instance.goalSpeedTTS)
 				{
-					SpeakAsync($"{frame.last_score.distance_thrown:N1} {Resources.tts_meters}. {frame.last_score.disc_speed:N1} {Resources.tts_meters_per_second}");
+					SpeakAsync($"{distanceStr} {Resources.tts_meters}. {speedStr} {Resources.tts_meters_per_second}");
 				}
 				else if (SparkSettings.instance.goalDistanceTTS)
 				{
-					SpeakAsync($"{frame.last_score.distance_thrown:N1} {Resources.tts_meters}");
+					SpeakAsync($"{distanceStr} {Resources.tts_meters}");
 				}
 				else if (SparkSettings.instance.goalSpeedTTS)
 				{
-					SpeakAsync($"{frame.last_score.disc_speed:N1} {Resources.tts_meters_per_second}");
+					SpeakAsync($"{speedStr} {Resources.tts_meters_per_second}");
 				}
 			};
 			Program.RulesChanged += frame =>
@@ -180,27 +192,85 @@ namespace Spark
 				}
 				lastRulesChangedTimer.Restart();
 			};
+			Program.LargePing += (frame, team, player) =>
+			{
+				if (SparkSettings.instance.pingSpikeTTS &&
+				    (!SparkSettings.instance.pingSpikeTTSPrivateOnly || frame.private_match))
+				{
+					SpeakAsync($"{player.name}'s ping spiked to {player.ping}");
+				}
+			};
 		}
 
 		~TTSController()
 		{
-			ttsThread?.Abort();
+			try
+			{
+				ttsQueue?.CompleteAdding();
+				synth?.Dispose();
+			}
+			catch { }
+		}
+
+		/// <summary>
+		/// The speeds on offer, as multiples of the voice's normal pace: tenths from half speed to
+		/// double. That is the range the neural voices behind the Spark API document for their speaking
+		/// rate, so every step sounds different online. The offline Windows voice moves one step of its
+		/// own -10..10 rate per tenth, as the four speeds this replaced already did.
+		/// </summary>
+		public static readonly IReadOnlyList<SpeedOption> SpeedOptions = Enumerable.Range(5, 16)
+			.Select(tenths => new SpeedOption(tenths / 10.0))
+			.ToList();
+
+		public sealed class SpeedOption
+		{
+			public SpeedOption(double rate)
+			{
+				Rate = rate;
+			}
+
+			public double Rate { get; }
+
+			/// <summary>
+			/// "1.4x", plus the name the old four-speed list used where this is one of those speeds, so
+			/// whatever someone had picked is still easy to find.
+			/// </summary>
+			public string Label
+			{
+				get
+				{
+					string name = Rate switch
+					{
+						0.6 => Resources.Slow,
+						1.0 => Resources.Normal,
+						1.4 => Resources.Fast,
+						1.8 => Resources.Very_Fast,
+						_ => null,
+					};
+					string speed = $"{Rate:0.0}x";
+					return name == null ? speed : $"{speed} ({name})";
+				}
+			}
+
+			public override string ToString() => Label;
+		}
+
+		/// <summary>The offered speed closest to <paramref name="speed"/>, or normal speed if it isn't usable.</summary>
+		public static double NearestSpeed(double speed)
+		{
+			if (double.IsNaN(speed) || speed <= 0) return 1.0;
+			return SpeedOptions.OrderBy(option => Math.Abs(option.Rate - speed)).First().Rate;
 		}
 
 		public void LoadTtsSpeed()
 		{
 			try
 			{
-				int savedValue = SparkSettings.instance.ttsSpeedIndex;
-				// Validate range
-				if (savedValue < 1 || savedValue > 4) savedValue = 2; // Default to 2 (1.0x) if invalid
-				
-				int index = savedValue - 1;
-				SetRateInternal(index);
+				ApplyRate(NearestSpeed(SparkSettings.instance.ttsSpeedMultiplier));
 			}
 			catch
 			{
-				SetRateInternal(1);
+				ApplyRate(1.0);
 			}
 		}
 
@@ -209,7 +279,6 @@ namespace Spark
 			MediaPlayer mediaPlayer = new MediaPlayer();
 			mediaPlayer.MediaEnded += (sender, e) =>
 			{
-				playing = false;
 			};
 			
 			// Use GetConsumingEnumerable to block until item exists (CPU efficient)
@@ -219,20 +288,46 @@ namespace Spark
 
 				try
 				{
-					// Ensure previous playback stops
-					mediaPlayer.Stop();
-					mediaPlayer.Open(new Uri(result));
-					playing = true;
-					mediaPlayer.Play();
-					
-					// Only trim cache probabilistically to save IO
-					if (_rng.Next(0, 10) == 0)
+					if (result.StartsWith("OFFLINE|"))
 					{
-						Task.Run(TrimCacheFolder);
+						string offlineText = result.Substring(8);
+						mediaPlayer.Stop(); // Ensure any playing audio stops
+						synth.SpeakAsyncCancelAll(); // Stop any currently playing offline speech
+						
+						try
+						{
+							if (SparkSettings.instance.ttsVoice == 0)
+							{
+								synth.SelectVoiceByHints(VoiceGender.Male);
+							}
+							else
+							{
+								synth.SelectVoiceByHints(VoiceGender.Female);
+							}
+						}
+						catch { }
+						
+						synth.SpeakAsync(offlineText);
+						Thread.Sleep(50);
 					}
-					
-					// Small buffer to prevent stutter if rapid fire
-					Thread.Sleep(50);
+					else
+					{
+						synth.SpeakAsyncCancelAll(); // Stop offline speech if API audio plays
+						// Ensure previous playback stops
+						mediaPlayer.Stop();
+						mediaPlayer.Open(new Uri(result));
+
+						mediaPlayer.Play();
+						
+						// Only trim cache probabilistically to save IO
+						if (_rng.Next(0, 10) == 0)
+						{
+							Task.Run(TrimCacheFolder);
+						}
+						
+						// Small buffer to prevent stutter if rapid fire
+						Thread.Sleep(50);
+					}
 				}
 				catch
 				{
@@ -243,17 +338,13 @@ namespace Spark
 
 		public float Rate => currentRate;
 
-		public void SetRate(int speedIndex)
+		/// <param name="speed">A multiple of normal speed; snapped to the nearest of <see cref="SpeedOptions"/>.</param>
+		public void SetRate(double speed)
 		{
-			if (speedIndex < 0) speedIndex = 1;
-			if (speedIndex > 3) speedIndex = 1;
-			
-			int value = speedIndex + 1;
-			
-			SparkSettings.instance.TTSSpeed = value;
-			SparkSettings.instance.ttsSpeedIndex = value;
-			
-			Task.Run(() => 
+			speed = NearestSpeed(speed);
+			SparkSettings.instance.ttsSpeedMultiplier = speed;
+
+			Task.Run(() =>
 			{
 				try
 				{
@@ -261,26 +352,28 @@ namespace Spark
 				}
 				catch { }
 			});
-			
-			SetRateInternal(speedIndex);
+
+			ApplyRate(speed);
 		}
-		
-		private void SetRateInternal(int speedIndex)
+
+		private void ApplyRate(double speed)
 		{
-			switch (speedIndex)
-			{
-				case 0: currentRate = 0.6f; break;
-				case 1: currentRate = 1.0f; break;
-				case 2: currentRate = 1.4f; break;
-				case 3: currentRate = 1.8f; break;
-				default: currentRate = 1.0f; break;
-			}
-			
-			currentRateString = currentRate.ToString("F1");
+			currentRate = (float)speed;
+			// A step of the offline voice's -10..10 rate per tenth: the old speeds used exactly this
+			// (0.6x was -4, 1.4x was 4, 1.8x was 8).
+			synth.Rate = Math.Clamp((int)Math.Round((speed - 1.0) * 10), -10, 10);
+			// Goes into every cached clip's filename. Invariant, and still "1.4" rather than "1.40", so
+			// clips cached at the old speeds keep being found.
+			currentRateString = speed.ToString("0.0#", CultureInfo.InvariantCulture);
 		}
 
 		public void SetOutputToDefaultAudioDevice()
 		{
+			try
+			{
+				synth.SetOutputToDefaultAudioDevice();
+			}
+			catch { }
 		}
 
 		public void SpeakAsync(string text)
@@ -332,7 +425,7 @@ namespace Spark
 				cleanText = cleanText.Substring(0, 50);
 			}
 			
-			string filePath = Path.Combine(CacheFolder, $"{currentRateString}_{SparkSettings.instance.languageIndex}_{SparkSettings.instance.useWavenetVoices}_{SparkSettings.instance.ttsVoice}_{cleanText}.mp3");
+			string filePath = Path.Combine(CacheFolder, $"v2_{currentRateString}_{SparkSettings.instance.languageIndex}_{SparkSettings.instance.ttsVoice}_{cleanText}.mp3");
 
 			if (File.Exists(filePath))
 			{
@@ -343,24 +436,27 @@ namespace Spark
 			// Run network request
 			try
 			{
+				string voiceName = SparkSettings.instance.ttsVoice == 1 ? "en-US-Wavenet-C" : "en-US-Wavenet-D";
+
 				string json = JsonConvert.SerializeObject(new Dictionary<string, object>
 				{
 					{"text", text},
-					{"language_code", voiceTypes[SparkSettings.instance.useWavenetVoices ? 0 : 1, SparkSettings.instance.languageIndex, SparkSettings.instance.ttsVoice]},
-					{"voice_name", voiceTypes[SparkSettings.instance.useWavenetVoices ? 0 : 1, SparkSettings.instance.languageIndex, SparkSettings.instance.ttsVoice]},
+					{"language_code", voiceName},
+					{"voice_name", voiceName},
 					{"speaking_rate", currentRate},
 				});
 				
 				HttpRequestMessage request = new HttpRequestMessage
 				{
 					Method = HttpMethod.Post,
-					RequestUri = new Uri($"{Program.APIURL}/tts"),
+					RequestUri = new Uri("https://sparkapi-production-e6df.up.railway.app/tts"),
 					Content = new StringContent(json, Encoding.UTF8, MediaTypeNames.Application.Json),
 				};
 				
 				// Synchronous wait here is fine because we are already in Task.Run from SpeakAsync
 				// and we want to ensure the file is written before queueing
 				HttpResponseMessage response = FetchUtils.client.SendAsync(request).Result;
+				response.EnsureSuccessStatusCode();
 				byte[] bytes = response.Content.ReadAsByteArrayAsync().Result;
 			
 				if (bytes.Length > 0)
@@ -368,10 +464,15 @@ namespace Spark
 					File.WriteAllBytes(filePath, bytes);
 					ttsQueue.Add(filePath);
 				}
+				else
+				{
+					ttsQueue.Add("OFFLINE|" + text);
+				}
 			}
 			catch
 			{
-				// Ignore TTS generation errors
+				// Ignore TTS generation errors and fallback to offline
+				ttsQueue.Add("OFFLINE|" + text);
 			}
 		}
 
